@@ -245,14 +245,14 @@
                     <button class="btn-action btn-save" onclick="saveContract(true)">حفظ</button>
                     <button class="btn-action btn-delete" onclick="deleteContract()">حذف العقد</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="window.location.href='index.html'">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             } else {
                 bar.innerHTML = `
                     <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
                     <button class="btn-action btn-save" onclick="saveContract(false)">حفظ</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="window.location.href='index.html'">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             }
             toggleInputsLock(true);
