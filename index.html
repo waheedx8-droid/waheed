@@ -14,18 +14,28 @@
     .form-group { margin-bottom: 15px; text-align: right; }
     .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
     .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
+    
     .btn-submit { width: 100%; background: #2980b9; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-submit:hover { background: #2471a3; }
 
-    /* لوحة التحكم والأزرار الداخلية */
+    /* لوحة التحكم والأزرار */
     .admin-dashboard { display: none; }
     .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
     
     .btn-dashboard { display: block; width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; text-decoration: none; text-align: center; }
     .btn-dashboard:hover { background: #219150; }
     
+    .btn-pass-admin { display: block; width: 100%; background: #8e44ad; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-decoration: none; text-align: center; }
+    .btn-pass-admin:hover { background: #732d91; }
+    
+    .btn-pass-user { display: block; width: 100%; background: #d35400; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-decoration: none; text-align: center; }
+    .btn-pass-user:hover { background: #b04100; }
+
     .btn-logout { width: 100%; background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .btn-logout:hover { background: #c0392b; }
+
+    /* قسم تغيير كلمة المرور */
+    .pass-change-section { display: none; margin-top: 15px; text-align: right; border-top: 1px solid #eee; padding-top: 15px; }
   </style>
 </head>
 <body>
@@ -34,29 +44,44 @@
     
     <div id="loginSection">
       <h2>تسجيل الدخول</h2>
-      <div class="form-group">
-        <label>اسم المستخدم</label>
-        <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور</label>
-        <input type="password" id="password" placeholder="أدخل كلمة المرور...">
-      </div>
-      <button type="button" class="btn-submit" onclick="handleLogin()">تسجيل الدخول</button>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>اسم المستخدم</label>
+          <input type="text" id="username" required placeholder="أدخل اسم المستخدم...">
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <input type="password" id="password" required placeholder="أدخل كلمة المرور...">
+        </div>
+        <button type="submit" class="btn-submit">تسجيل الدخول</button>
+      </form>
     </div>
 
     <div id="adminDashboard" class="admin-dashboard">
-      <div class="welcome-msg" id="welcomeMsg">أهلاً بك في اللوحة</div>
+      <div class="welcome-msg" id="welcomeMsg">لوحة التحكم</div>
       
-      <a href="calendar.html" class="btn-dashboard">التقويم</a>
+      <a href="./calendar.html" class="btn-dashboard">التقويم</a>
       
+      <button type="button" class="btn-pass-admin" id="adminPassBtn" onclick="togglePassSection('admin')">تغيير كلمة مرور الأدمن</button>
+      <button type="button" class="btn-pass-user" id="userPassBtn" onclick="togglePassSection('user')">تغيير كلمة مرور المستخدم</button>
+
+      <div id="passChangeSection" class="pass-change-section">
+        <h3 id="passSectionTitle" style="font-size:15px; margin-bottom:10px; color:#333;">تغيير كلمة المرور</h3>
+        <div class="form-group">
+          <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة...">
+        </div>
+        <button type="button" class="btn-submit" onclick="saveNewPassword()">حفظ كلمة المرور</button>
+      </div>
+
       <button type="button" class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
     </div>
 
   </div>
 
   <script>
-    // عند فتح التطبيق: التحقق من الجلسة الحالية أو عرض شاشة الدخول تلقائياً
+    let targetAccountToChange = '';
+
+    // عند فتح التطبيق: فحص الجلسة المؤقتة
     document.addEventListener("DOMContentLoaded", function () {
       const isLoggedIn = sessionStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
@@ -67,28 +92,73 @@
     });
 
     // دالة تسجيل الدخول
-    function handleLogin() {
+    function handleLogin(e) {
+      if(e) e.preventDefault();
+      
       const userVal = document.getElementById("username").value.trim().toLowerCase();
       const passVal = document.getElementById("password").value.trim();
 
-      // القبول بحساب admin أو user
-      if (userVal === "admin" || userVal === "user") {
-        // حفظ الجلسة مؤقتاً في sessionStorage لكي تنتهي فور إغلاق التطبيق
-        sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("currentUser", userVal);
+      // جلب كلمات المرور المعتمدة أو الافتراضية
+      const savedAdminPass = localStorage.getItem("adminPass") || "admin";
+      const savedUserPass = localStorage.getItem("userPass") || "user";
 
+      if (userVal === "admin" && passVal === savedAdminPass) {
+        sessionStorage.setItem("isLoggedIn", "true");
+        sessionStorage.setItem("currentUser", "admin");
+        showDashboard();
+      } else if (userVal === "user" && passVal === savedUserPass) {
+        sessionStorage.setItem("isLoggedIn", "true");
+        sessionStorage.setItem("currentUser", "user");
         showDashboard();
       } else {
-        alert("اسم المستخدم أو كلمة المرور غير صحيحة");
+        alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
       }
     }
 
-    // إظهار لوحة التحكم
+    // إظهار لوحة التحكم وتخصيص الصلاحيات
     function showDashboard() {
-      const user = sessionStorage.getItem("currentUser") || "";
-      document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + user.toUpperCase();
+      const currentUser = sessionStorage.getItem("currentUser");
+      document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
+      
       document.getElementById("loginSection").style.display = "none";
       document.getElementById("adminDashboard").style.display = "block";
+
+      // إذا كان يوزر عادي: إخفاء أزرار تعديل كلمة مرور الأدمن
+      if (currentUser === "user") {
+        document.getElementById("adminPassBtn").style.display = "none";
+      } else {
+        document.getElementById("adminPassBtn").style.display = "block";
+      }
+    }
+
+    // إظهار قسم تغيير كلمة المرور
+    function togglePassSection(type) {
+      targetAccountToChange = type;
+      const section = document.getElementById("passChangeSection");
+      const title = document.getElementById("passSectionTitle");
+      
+      section.style.display = "block";
+      title.innerText = type === 'admin' ? "تغيير كلمة مرور الأدمن" : "تغيير كلمة مرور المستخدم";
+    }
+
+    // حفظ كلمة المرور الجديدة
+    function saveNewPassword() {
+      const newPass = document.getElementById("newPassword").value.trim();
+      if (!newPass) {
+        alert("يرجى إدخال كلمة المرور الجديدة");
+        return;
+      }
+
+      if (targetAccountToChange === 'admin') {
+        localStorage.setItem("adminPass", newPass);
+        alert("تم تغيير كلمة مرور الأدمن بنجاح!");
+      } else {
+        localStorage.setItem("userPass", newPass);
+        alert("تم تغيير كلمة مرور المستخدم بنجاح!");
+      }
+
+      document.getElementById("newPassword").value = "";
+      document.getElementById("passChangeSection").style.display = "none";
     }
 
     // إظهار شاشة الدخول
@@ -99,16 +169,11 @@
       document.getElementById("password").value = "";
     }
 
-    // دالة تسجيل الخروج اليمني
+    // تسجيل الخروج
     function handleLogout() {
       sessionStorage.clear();
       showLogin();
     }
-
-    // إنهاء الجلسة فور إغلاق التطبيق/النافذة
-    window.addEventListener("beforeunload", function () {
-      sessionStorage.clear();
-    });
   </script>
 
 </body>
