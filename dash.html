@@ -232,8 +232,8 @@
     </div>
 
     <script>
-        // إعدادات التخزين السحابي (JSONBin)
-        const BIN_ID = '6aa168c4ffd5d16053f1f1f7';
+        // إعدادات التخزين السحابي المحدثة بالـ Bin الجديد
+        const BIN_ID = '6aa17fcbfd5d16053f256cd';
         const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
         const userRole = localStorage.getItem('currentUserRole') || 'user';
@@ -435,7 +435,7 @@
             };
         }
 
-        // دالة الحفظ الآمنة: تسحب السجل كاملاً، تحدث الحجوزات، وتحافظ على كلمات السر تماماً دون مسحها
+        // دالة الحفظ الآمنة: تسحب السجل كاملاً وتحافظ على كلمات السر تماماً دون مسحها
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -451,14 +451,12 @@
             }
 
             try {
-                // 1. سحب البيانات الكاملة الحالية من السحاب (للحفاظ على كلمات المرور وباقي الحجوزات)
                 const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': API_KEY }
                 });
                 const getData = await getRes.json();
                 const currentFullData = getData.record || {};
                 
-                // التأكد من وجود كائن الحجوزات
                 if (!currentFullData.hallBookings) {
                     currentFullData.hallBookings = {};
                 }
@@ -490,10 +488,8 @@
                     cloudB[eventDate][idx] = contractData;
                 }
 
-                // تحديث الحجوزات ضمن البيانات الكاملة
                 currentFullData.hallBookings = cloudB;
 
-                // 2. إرسال البيانات كاملة مع الحفاظ على الكلمات السرية
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: 'PUT',
                     headers: {
@@ -531,7 +527,6 @@
 
             if (confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحاب؟')) {
                 try {
-                    // 1. سحب البيانات الكاملة أولاً
                     const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                         headers: { 'X-Master-Key': API_KEY }
                     });
@@ -556,7 +551,6 @@
 
                         currentFullData.hallBookings = cloudB;
 
-                        // 2. إعادة إرسال الملف محدثاً مع الحفاظ على كلمات السر
                         const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                             method: 'PUT',
                             headers: {
@@ -579,7 +573,6 @@
             }
         }
 
-        // تشغيل التهيئة عند تحميل الصفحة
         initContractPage();
     </script>
 </body>
