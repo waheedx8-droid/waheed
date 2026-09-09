@@ -3,149 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم الحجوزات - شهباروز</title>
+    <title>تسجيل الدخول - نظام تنظيم الأعراس</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; padding: 20px; color: #333; }
+        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        .login-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; position: relative; text-align: center; }
         
-        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        /* زر الدخول للتقويم (مخفي افتراضياً ولا يظهر إلا بعد تسجيل الدخول) */
+        .top-calendar-btn { position: absolute; top: -50px; left: 0; background: #27ae60; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; display: none; }
+        .top-calendar-btn:hover { background: #219150; }
         
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .calendar-header h2 { font-size: 24px; color: #2c3e50; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .btn-nav:hover { background: #2980b9; }
-        .btn-logout { background: #e74c3c; margin-right: 10px; }
-
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
+        h2 { margin-bottom: 20px; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; text-align: right; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
+        .btn-submit { width: 100%; background: #2980b9; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-submit:hover { background: #2471a3; }
         
-        .day-cell { min-height: 95px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; }
-        .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
-        .day-cell.empty { background: #fafafa; cursor: default; border: none; }
-        
-        .day-number { font-weight: bold; font-size: 16px; text-align: left; padding: 2px 5px; color: #2c3e50; }
-
-        input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
-        .en-num { direction: ltr !important; unicode-bidi: isolate; }
-        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
+        /* لوحة تحكم الأدمن بعد الدخول */
+        .admin-dashboard { display: none; }
+        .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+        .btn-dashboard { width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+        .btn-dashboard:hover { background: #219150; }
+        .btn-pass-admin { background: #8e44ad; }
+        .btn-pass-admin:hover { background: #732d91; }
+        .btn-pass-user { background: #e67e22; }
+        .btn-pass-user:hover { background: #d35400; }
+        .btn-logout { background: #e74c3c; margin-top: 10px; }
+        .btn-logout:hover { background: #c0392b; }
     </style>
 </head>
 <body>
 
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
-            <h2 id="monthYearDisplay"></h2>
-            <div>
-                <span id="roleDisplay" class="user-tag"></span>
-                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
-                <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
+    <div class="login-card">
+        <!-- زر الدخول للتقويم في الأعلى (مخفي ولا يظهر إلا للمسجلين) -->
+        <button id="topCalendarBtn" class="top-calendar-btn" onclick="goToCalendar()">الدخول للتقويم</button>
+
+        <!-- قسم نموذج تسجيل الدخول (الافتراضي) -->
+        <div id="loginSection">
+            <h2>تسجيل الدخول</h2>
+            
+            <div class="form-group">
+                <label>اسم المستخدم:</label>
+                <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
             </div>
+            
+            <div class="form-group">
+                <label>كلمة المرور:</label>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور...">
+            </div>
+
+            <button class="btn-submit" onclick="login()">دخول</button>
         </div>
 
-        <div class="calendar-grid">
-            <div class="day-header">الأحد</div>
-            <div class="day-header">الأثنين</div>
-            <div class="day-header">الثلاثاء</div>
-            <div class="day-header">الأربعاء</div>
-            <div class="day-header">الخميس</div>
-            <div class="day-header">الجمعة</div>
-            <div class="day-header">السبت</div>
+        <!-- لوحة تحكم المسؤول (تظهر فقط عند تسجيل الدخول كأدمن) -->
+        <div id="adminDashboard" class="admin-dashboard">
+            <div class="welcome-msg">أهلاً بك في نظام تنظيم الأعراس</div>
+            
+            <button class="btn-dashboard" onclick="goToCalendar()">انتقل إلى التقويم</button>
+            <button class="btn-dashboard btn-pass-admin" onclick="changeAdminPassword()">تغيير كلمة سر المسؤول</button>
+            <button class="btn-dashboard btn-pass-user" onclick="changeUserPassword()">تغيير كلمة سر المستخدم</button>
+            <button class="btn-dashboard btn-logout" onclick="logout()">تسجيل الخروج</button>
         </div>
-
-        <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
     <script>
-        const monthNames = [
-            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-        ];
+        // قيم افتراضية أول مرة
+        if (!localStorage.getItem('adminUser')) localStorage.setItem('adminUser', 'admin');
+        if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '123456');
+        if (!localStorage.getItem('userUser')) localStorage.setItem('userUser', 'user');
+        if (!localStorage.getItem('userPass')) localStorage.setItem('userPass', '123456');
 
-        let currentDate = new Date(2026, 6, 1);
-        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
-
-        function renderCalendar() {
-            const year = currentDate.getFullYear();
-            const monthIndex = currentDate.getMonth();
-            const monthNumber = monthIndex + 1;
-
-            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> <span class="en-num">${year}</span>`;
-            document.getElementById('monthYearDisplay').innerHTML = headerText;
-
-            const daysContainer = document.getElementById('calendarDays');
-            daysContainer.innerHTML = '';
-
-            const firstDayIndex = new Date(year, monthIndex, 1).getDay();
-            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
-
-            const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
-
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell empty';
-                daysContainer.appendChild(emptyCell);
+        // التحقق عند تحميل الصفحة إذا كان مسجلاً دخول مسبقاً
+        window.onload = function() {
+            const role = localStorage.getItem('currentUserRole');
+            if (role === 'admin') {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                document.getElementById('topCalendarBtn').style.display = 'block';
+            } else if (role === 'user') {
+                document.getElementById('topCalendarBtn').style.display = 'block';
             }
+        };
 
-            for (let day = 1; day <= totalDays; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-
-                const formattedMonth = String(monthNumber).padStart(2, '0');
-                const formattedDay = String(day).padStart(2, '0');
-                const fullDateStr = `${year}-${formattedMonth}-${formattedDay}`;
-
-                let cellContent = `<div class="day-number en-num">${day}</div>`;
-
-                if (savedBookings[fullDateStr]) {
-                    const booking = savedBookings[fullDateStr];
-
-                    // العقد المعلق (مسودة) يظهر باللون الأحمر
-                    if (booking.status === 'pending') {
-                        dayCell.style.backgroundColor = '#e74c3c';
-                        dayCell.style.borderColor = '#c0392b';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 2px;">
-                                ${booking.groomName}<br>(مسودة)
-                            </div>
-                        `;
-                    } 
-                    // العقد المقبول يظهر باللون الأخضر
-                    else if (booking.status === 'approved') {
-                        dayCell.style.backgroundColor = '#27ae60';
-                        dayCell.style.borderColor = '#1e8449';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 13px; font-weight: bold; padding: 5px; border-radius: 4px; margin-top: 4px;">
-                                ${booking.groomName}
-                            </div>
-                        `;
-                    }
-                }
-
-                dayCell.innerHTML = cellContent;
-
-                dayCell.onclick = function() {
-                    window.location.href = `contract.html?date=${fullDateStr}`;
-                };
-
-                daysContainer.appendChild(dayCell);
-            }
+        function goToCalendar() {
+            window.location.href = 'index.html';
         }
 
-        function changeMonth(offset) {
-            currentDate.setMonth(currentDate.getMonth() + offset);
-            renderCalendar();
+        function login() {
+            const inputUser = document.getElementById('username').value.trim();
+            const inputPass = document.getElementById('password').value.trim();
+
+            const adminUser = localStorage.getItem('adminUser');
+            const adminPass = localStorage.getItem('adminPass');
+            const userUser = localStorage.getItem('userUser');
+            const userPass = localStorage.getItem('userPass');
+
+            if (inputUser === adminUser && inputPass === adminPass) {
+                localStorage.setItem('currentUserRole', 'admin');
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                document.getElementById('topCalendarBtn').style.display = 'block';
+            } else if (inputUser === userUser && inputPass === userPass) {
+                localStorage.setItem('currentUserRole', 'user');
+                window.location.href = 'index.html';
+            } else {
+                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+            }
         }
 
         function logout() {
             localStorage.removeItem('currentUserRole');
-            window.location.href = 'login.html';
+            document.getElementById('adminDashboard').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('topCalendarBtn').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
         }
 
-        renderCalendar();
+        function changeAdminPassword() {
+            const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
+            if (currentPass !== localStorage.getItem('adminPass')) {
+                alert('كلمة المرور غير صحيحة!');
+                return;
+            }
+
+            const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
+            if (newPass && newPass.trim() !== '') {
+                localStorage.setItem('adminPass', newPass);
+                alert('تم تغيير كلمة سر المسؤول بنجاح!');
+            }
+        }
+
+        function changeUserPassword() {
+            const adminCheck = prompt('هذا الإجراء يتطلب صلاحية المسؤول. أدخل كلمة سر المسؤول للتأكيد:');
+            if (adminCheck !== localStorage.getItem('adminPass')) {
+                alert('كلمة سر المسؤول غير صحيحة!');
+                return;
+            }
+
+            const newUser = prompt('أدخل اسم المستخدم الجديد للمستخدم:', localStorage.getItem('userUser'));
+            const newPass = prompt('أدخل كلمة المرور الجديدة للمستخدم:');
+            
+            if (newUser) localStorage.setItem('userUser', newUser);
+            if (newPass) localStorage.setItem('userPass', newPass);
+            
+            alert('تم تحديث بيانات المستخدم العادي بنجاح!');
+        }
     </script>
 </body>
 </html>
