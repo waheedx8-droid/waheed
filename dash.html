@@ -20,7 +20,7 @@
         .day-header { font-weight: bold; background: #f8f9fa; padding: 8px 2px; border-radius: 4px; color: #555; font-size: 13px; }
         
         .day-cell { 
-            min-height: 80px; 
+            min-height: 85px; 
             border: 1px solid #e0e0e0; 
             border-radius: 6px; 
             padding: 4px; 
@@ -39,19 +39,19 @@
         
         .day-number { font-weight: bold; font-size: 14px; text-align: left; padding: 2px; color: #2c3e50; }
 
-        /* تنسيق أسماء العقود المتعددة داخل مربع اليوم */
+        /* تنسيق اسم الصالة الظاهر على التقويم من الخارج */
         .event-item {
             font-size: 9px !important;
             background-color: #e3f2fd;
             color: #0d47a1;
-            padding: 2px 3px;
+            padding: 3px 2px;
             margin-top: 2px;
             border-radius: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             width: 100%;
-            text-align: right;
+            text-align: center;
             font-weight: bold;
         }
 
@@ -121,7 +121,6 @@
             const firstDayIndex = new Date(year, monthIndex, 1).getDay();
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
-            // جلب البيانات (ندعم أن تكون البيانات مصفوفة لكل يوم لتعدد العقود)
             const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
             for (let i = 0; i < firstDayIndex; i++) {
@@ -143,7 +142,6 @@
                 let dayEvents = savedBookings[fullDateStr];
 
                 if (dayEvents) {
-                    // إذا كان الحجز مخزناً كنظام قديم (كائن مفرد)، نقوم بتحويله تلقائياً إلى مصفوفة ليدعم النظام الجديد
                     if (!Array.isArray(dayEvents)) {
                         dayEvents = [dayEvents];
                     }
@@ -151,28 +149,16 @@
                     if (dayEvents.length > 0) {
                         cellContent += `<div style="display:flex; flex-direction:column; gap:2px; width:100%; overflow:hidden;">`;
                         dayEvents.forEach(ev => {
-                            let displayName = ev.groomName || ev.name || 'بدون اسم';
-                            let displayHall = ev.hall || '';
-                            cellContent += `<div class="event-item">📌 ${displayName} ${displayHall ? '('+displayHall+')' : ''}</div>`;
+                            // عرض اسم الصالة فقط مباشرة على التقويم من الخارج
+                            let displayHall = ev.hall || ev.hallName || 'صالة محجوزة';
+                            cellContent += `<div class="event-item">🏛️ ${displayHall}</div>`;
                         });
                         cellContent += `</div>`;
-                    }
-
-                    // تلوين خلفية الخلية حسب حالة أول عقد أو بشكل عام
-                    if (dayEvents.length === 1) {
-                        if (dayEvents[0].status === 'pending') {
-                            dayCell.style.borderLeft = '4px solid #e74c3c';
-                        } else if (dayEvents[0].status === 'approved') {
-                            dayCell.style.borderLeft = '4px solid #27ae60';
-                        }
-                    } else if (dayEvents.length > 1) {
-                        dayCell.style.borderLeft = '4px solid #3498db';
                     }
                 }
 
                 dayCell.innerHTML = cellContent;
 
-                // عند الضغط على التاريخ، نعرض النافذة المنبثقة بالعقود الموجودة أو نسمح بإضافة عقد جديد
                 dayCell.onclick = function() {
                     let eventsArray = savedBookings[fullDateStr];
                     if (eventsArray && !Array.isArray(eventsArray)) {
@@ -195,7 +181,6 @@
             window.location.href = 'index.html';
         }
 
-        // دالة تعرض العقود الخاصة باليوم داخل النافذة المنبثقة
         function openDayEventsModal(dateString, eventsArray) {
             document.getElementById('modalDateTitle').innerText = "عقود تاريخ: " + dateString;
             let listContainer = document.getElementById('modalEventsList');
@@ -205,11 +190,10 @@
                 eventsArray.forEach((event, index) => {
                     let item = document.createElement('div');
                     let name = event.groomName || event.name || 'عقد جديد';
-                    let hall = event.hall ? ` - ${event.hall}` : '';
+                    let hall = event.hall || event.hallName ? ` - ${event.hall || event.hallName}` : '';
                     item.innerHTML = `📌 ${name}${hall}`;
                     item.style.cssText = "padding: 10px; margin-bottom: 6px; background: #e3f2fd; color: #0d47a1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;";
                     
-                    // عند الضغط على الخيار، ينقلنا إلى صفحة العقد المطلوب مع الـ Index الصحيح
                     item.onclick = function() {
                         localStorage.setItem("selectedContractDate", dateString);
                         localStorage.setItem("selectedContractIndex", index);
@@ -222,22 +206,18 @@
                 listContainer.innerHTML = "<p style='color:#666; text-align:center; font-size:13px;'>لا توجد عقود مسجلة في هذا اليوم.</p>";
             }
 
-            // زر لإضافة عقد جديد في نفس اليوم مباشرة
             let addBtn = document.createElement('button');
             addBtn.innerText = "+ إضافة عقد جديد لهذا التاريخ";
             addBtn.style.cssText = "width:100%; padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; font-size:13px;";
             addBtn.onclick = function() {
                 localStorage.setItem("selectedContractDate", dateString);
-                // إذا أردت توجيه صفحة العقد لإضافة عقد جديد في هذا التاريخ
                 window.location.href = `contract.html?date=${dateString}&action=new`;
             };
             listContainer.appendChild(addBtn);
 
-            // إظهار النافذة
             document.getElementById('eventModal').style.display = "flex";
         }
 
-        // دالة إغلاق النافذة
         function closeEventModal() {
             document.getElementById('eventModal').style.display = "none";
         }
