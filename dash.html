@@ -28,6 +28,49 @@
         input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
         .en-num { direction: ltr !important; unicode-bidi: isolate; }
         .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
+        /* حل مشكلة قياسات التقويم وعدم خروج العناصر عن الإطار */
+.card, .calendar-container {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+#daysContainer, .days-grid, .weekdays-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 auto;
+}
+
+.day-cell {
+  width: 100% !important;
+  min-height: 45px;
+  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 4px;
+  overflow-y: auto;
+  max-height: 80px;
+}
+
+/* شكل أسماء العقود داخل مربع اليوم في التقويم */
+.event-item {
+  font-size: 10px;
+  background-color: #e3f2fd;
+  color: #0d47a1;
+  padding: 2px 3px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  box-sizing: border-box;
+}
     </style>
 </head>
 <body>
