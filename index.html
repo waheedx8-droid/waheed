@@ -6,42 +6,201 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - نظام تنظيم الأعراس</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-    .login-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; position: relative; text-align: center; }
-    
-    h2 { margin-bottom: 20px; color: #2c3e50; }
-    .form-group { margin-bottom: 15px; text-align: right; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
-    
-    .btn-submit { width: 100%; background: #2980b9; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .btn-submit:hover { background: #2471a3; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      text-align: center;
+    }
+
+    /* زر التقويم في أعلى البطاقة */
+    .top-calendar-btn {
+      position: absolute;
+      top: -50px;
+      left: 0;
+      background: #27ae60;
+      color: #fff;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .top-calendar-btn:hover {
+      background: #219150;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #2980b9;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background: #2471a3;
+    }
 
     /* لوحة التحكم والأزرار */
-    .admin-dashboard { display: none; }
-    .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
-    
-    .btn-dashboard { display: block; width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; text-decoration: none; text-align: center; }
-    .btn-dashboard:hover { background: #219150; }
-    
-    .btn-pass-admin { display: block; width: 100%; background: #8e44ad; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-decoration: none; text-align: center; }
-    .btn-pass-admin:hover { background: #732d91; }
-    
-    .btn-pass-user { display: block; width: 100%; background: #d35400; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-decoration: none; text-align: center; }
-    .btn-pass-user:hover { background: #b04100; }
+    .admin-dashboard {
+      display: none;
+    }
 
-    .btn-logout { width: 100%; background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-    .btn-logout:hover { background: #c0392b; }
+    .welcome-msg {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
 
-    /* قسم تغيير كلمة المرور */
-    .pass-change-section { display: none; margin-top: 15px; text-align: right; border-top: 1px solid #eee; padding-top: 15px; }
+    .btn-dashboard {
+      display: block;
+      width: 100%;
+      background: #27ae60;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 12px;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-dashboard:hover {
+      background: #219150;
+    }
+
+    .btn-pass-admin {
+      display: block;
+      width: 100%;
+      background: #8e44ad;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-pass-admin:hover {
+      background: #732d91;
+    }
+
+    .btn-pass-user {
+      display: block;
+      width: 100%;
+      background: #d35400;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-pass-user:hover {
+      background: #b04100;
+    }
+
+    .btn-logout {
+      width: 100%;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .btn-logout:hover {
+      background: #c0392b;
+    }
+
+    .pass-change-section {
+      display: none;
+      margin-top: 15px;
+      text-align: right;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+    }
   </style>
 </head>
 <body>
 
   <div class="login-card">
-    
+
+    <a href="calendar.html" id="topCalendarBtn" class="top-calendar-btn">الدخول للتقويم</a>
+
     <div id="loginSection">
       <h2>تسجيل الدخول</h2>
       <form onsubmit="handleLogin(event)">
@@ -59,9 +218,9 @@
 
     <div id="adminDashboard" class="admin-dashboard">
       <div class="welcome-msg" id="welcomeMsg">لوحة التحكم</div>
-      
-      <a href="./calendar.html" class="btn-dashboard">التقويم</a>
-      
+
+      <a href="calendar.html" class="btn-dashboard">التقويم</a>
+
       <button type="button" class="btn-pass-admin" id="adminPassBtn" onclick="togglePassSection('admin')">تغيير كلمة مرور الأدمن</button>
       <button type="button" class="btn-pass-user" id="userPassBtn" onclick="togglePassSection('user')">تغيير كلمة مرور المستخدم</button>
 
@@ -81,7 +240,7 @@
   <script>
     let targetAccountToChange = '';
 
-    // عند فتح التطبيق: فحص الجلسة المؤقتة
+    // فحص الجلسة عند فتح التطبيق
     document.addEventListener("DOMContentLoaded", function () {
       const isLoggedIn = sessionStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
@@ -91,16 +250,17 @@
       }
     });
 
-    // دالة تسجيل الدخول
+    // دالة تسجيل الدخول (دعم admin ودعم user مع كلمة مرور 123456)
     function handleLogin(e) {
-      if(e) e.preventDefault();
-      
+      if (e) {
+        e.preventDefault();
+      }
+
       const userVal = document.getElementById("username").value.trim().toLowerCase();
       const passVal = document.getElementById("password").value.trim();
 
-      // جلب كلمات المرور المعتمدة أو الافتراضية
       const savedAdminPass = localStorage.getItem("adminPass") || "admin";
-      const savedUserPass = localStorage.getItem("userPass") || "user";
+      const savedUserPass = localStorage.getItem("userPass") || "123456";
 
       if (userVal === "admin" && passVal === savedAdminPass) {
         sessionStorage.setItem("isLoggedIn", "true");
@@ -115,33 +275,40 @@
       }
     }
 
-    // إظهار لوحة التحكم وتخصيص الصلاحيات
+    // إظهار اللوحة وتخصيص الصلاحيات بناءً على نوع الحساب
     function showDashboard() {
       const currentUser = sessionStorage.getItem("currentUser");
       document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
-      
+
       document.getElementById("loginSection").style.display = "none";
+      document.getElementById("topCalendarBtn").style.display = "none";
       document.getElementById("adminDashboard").style.display = "block";
 
-      // إذا كان يوزر عادي: إخفاء أزرار تعديل كلمة مرور الأدمن
+      // إذا كان يوزر عادي: إخفاء خيارات تعديل كلمة المرور
       if (currentUser === "user") {
         document.getElementById("adminPassBtn").style.display = "none";
+        document.getElementById("userPassBtn").style.display = "none";
       } else {
         document.getElementById("adminPassBtn").style.display = "block";
+        document.getElementById("userPassBtn").style.display = "block";
       }
     }
 
-    // إظهار قسم تغيير كلمة المرور
+    // فتح قسم تغيير كلمة المرور
     function togglePassSection(type) {
       targetAccountToChange = type;
       const section = document.getElementById("passChangeSection");
       const title = document.getElementById("passSectionTitle");
-      
+
       section.style.display = "block";
-      title.innerText = type === 'admin' ? "تغيير كلمة مرور الأدمن" : "تغيير كلمة مرور المستخدم";
+      if (type === 'admin') {
+        title.innerText = "تغيير كلمة مرور الأدمن";
+      } else {
+        title.innerText = "تغيير كلمة مرور المستخدم";
+      }
     }
 
-    // حفظ كلمة المرور الجديدة
+    // حفظ كلمة المرور الجديدة في LocalStorage
     function saveNewPassword() {
       const newPass = document.getElementById("newPassword").value.trim();
       if (!newPass) {
@@ -165,6 +332,7 @@
     function showLogin() {
       document.getElementById("adminDashboard").style.display = "none";
       document.getElementById("loginSection").style.display = "block";
+      document.getElementById("topCalendarBtn").style.display = "inline-block";
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
     }
