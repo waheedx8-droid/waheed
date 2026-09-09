@@ -123,7 +123,7 @@
 
       <button type="button" class="btn btn-calendar" onclick="openCalendar()">الدخول إلى التقويم</button>
 
-      <!-- أزرار تغيير كلمة المرور (للأدمن فقط) -->
+      <!-- أزرار تغيير كلمة المرور (للأدمن فقط وتُحفظ سحابياً لتتغير عند الجميع) -->
       <div id="adminControls" style="display: none;">
         <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
         <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
@@ -144,8 +144,8 @@
   </div>
 
   <script>
-    // بيانات الاتصال السحابي الموحدة
-    const BIN_ID = '6aa168c4ffd5d16053f1f1f7';
+    // بيانات الاتصال السحابي المحدثة بالـ Bin الجديد
+    const BIN_ID = '6aa17fcbfd5d16053f256cd';
     const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
     let activePassType = '';
@@ -170,10 +170,10 @@
       }
     }
 
-    // التعديل هنا: فرض ظهور شاشة تسجيل الدخول دائماً عند فتح الصفحة ومنع التخطي التلقائي
+    // بدء التطبيق دائماً من شاشة تسجيل الدخول النظيفة
     document.addEventListener("DOMContentLoaded", async function () {
       await fetchCloudPasswords();
-      handleLogout(); // يبدأ دائماً من شاشة تسجيل الدخول النظيفة
+      handleLogout(); 
     });
 
     function openCalendar() {
@@ -189,12 +189,12 @@
       const validAdminPass = cloudPasswords.adminPass || "admin";
       const validUserPass = cloudPasswords.userPass || "123456";
 
-      if (user === "admin" && (pass === "admin" || pass === validAdminPass)) {
+      if (user === "admin" && pass === validAdminPass) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("currentUser", "admin");
         localStorage.setItem("currentUserRole", "admin");
         renderDashboard();
-      } else if (user === "user" && (pass === "123456" || pass === validUserPass)) {
+      } else if (user === "user" && pass === validUserPass) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("currentUser", "user");
         localStorage.setItem("currentUserRole", "user");
@@ -229,9 +229,9 @@
       document.getElementById("newPasswordInput").value = "";
 
       if (type === 'admin') {
-        title.innerText = "تغيير كلمة سر الأدمن (سحابياً)";
+        title.innerText = "تغيير كلمة سر الأدمن (سحابياً للجميع)";
       } else {
-        title.innerText = "تغيير كلمة سر اليوزر (سحابياً)";
+        title.innerText = "تغيير كلمة سر اليوزر (سحابياً للجميع)";
       }
     }
 
@@ -267,7 +267,7 @@
         });
 
         if (response.ok) {
-          alert("تم تحديث وحفظ كلمة المرور سحابياً بنجاح!");
+          alert("تم تحديث وحفظ كلمة المرور سحابياً بنجاح لتتغير عند جميع المستخدمين!");
           document.getElementById("passBox").style.display = "none";
         } else {
           alert("حدث خطأ أثناء الحفظ السحابي.");
