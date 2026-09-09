@@ -33,7 +33,6 @@
       text-align: center;
     }
 
-    /* زر التقويم في أعلى البطاقة */
     .top-calendar-btn {
       position: absolute;
       top: -50px;
@@ -97,7 +96,6 @@
       background: #2471a3;
     }
 
-    /* لوحة التحكم والأزرار */
     .admin-dashboard {
       display: none;
     }
@@ -240,9 +238,8 @@
   <script>
     let targetAccountToChange = '';
 
-    // فحص الجلسة عند فتح التطبيق
     document.addEventListener("DOMContentLoaded", function () {
-      const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
         showDashboard();
       } else {
@@ -250,11 +247,8 @@
       }
     });
 
-    // دالة تسجيل الدخول (دعم admin ودعم user مع كلمة مرور 123456)
     function handleLogin(e) {
-      if (e) {
-        e.preventDefault();
-      }
+      if (e) e.preventDefault();
 
       const userVal = document.getElementById("username").value.trim().toLowerCase();
       const passVal = document.getElementById("password").value.trim();
@@ -263,38 +257,36 @@
       const savedUserPass = localStorage.getItem("userPass") || "123456";
 
       if (userVal === "admin" && passVal === savedAdminPass) {
-        sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("currentUser", "admin");
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("currentUser", "admin");
         showDashboard();
       } else if (userVal === "user" && passVal === savedUserPass) {
-        sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("currentUser", "user");
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("currentUser", "user");
         showDashboard();
       } else {
         alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
       }
     }
 
-    // إظهار اللوحة وتخصيص الصلاحيات بناءً على نوع الحساب
     function showDashboard() {
-      const currentUser = sessionStorage.getItem("currentUser");
+      const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
       document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
 
       document.getElementById("loginSection").style.display = "none";
       document.getElementById("topCalendarBtn").style.display = "none";
       document.getElementById("adminDashboard").style.display = "block";
 
-      // إذا كان يوزر عادي: إخفاء خيارات تعديل كلمة المرور
-      if (currentUser === "user") {
-        document.getElementById("adminPassBtn").style.display = "none";
-        document.getElementById("userPassBtn").style.display = "none";
-      } else {
+      // التحقق من الحساب بغض النظر عن حالة الأحرف (كبيرة أو صغيرة)
+      if (currentUser === "admin") {
         document.getElementById("adminPassBtn").style.display = "block";
         document.getElementById("userPassBtn").style.display = "block";
+      } else {
+        document.getElementById("adminPassBtn").style.display = "none";
+        document.getElementById("userPassBtn").style.display = "none";
       }
     }
 
-    // فتح قسم تغيير كلمة المرور
     function togglePassSection(type) {
       targetAccountToChange = type;
       const section = document.getElementById("passChangeSection");
@@ -308,7 +300,6 @@
       }
     }
 
-    // حفظ كلمة المرور الجديدة في LocalStorage
     function saveNewPassword() {
       const newPass = document.getElementById("newPassword").value.trim();
       if (!newPass) {
@@ -328,7 +319,6 @@
       document.getElementById("passChangeSection").style.display = "none";
     }
 
-    // إظهار شاشة الدخول
     function showLogin() {
       document.getElementById("adminDashboard").style.display = "none";
       document.getElementById("loginSection").style.display = "block";
@@ -337,9 +327,9 @@
       document.getElementById("password").value = "";
     }
 
-    // تسجيل الخروج
     function handleLogout() {
-      sessionStorage.clear();
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("currentUser");
       showLogin();
     }
   </script>
