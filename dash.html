@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقويم الحجوزات - شهباروز</title>
@@ -79,9 +80,10 @@
     </div>
 
     <script>
-        const BIN_ID = '6aa17fcbfd5d16053f256cd';
-        // تم تحديث مفتاح الماستر السحابي الصحيح
-        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG81qNSerd.2gm094w/Xf8BzOcV3BY/m7NuTOyy';
+        // إعدادات اتصال Supabase الخاصة بك
+        const SUPABASE_URL = 'ضع_رابط_الـ_Project_هنا'; 
+        const SUPABASE_ANON_KEY = 'ضع_مفتاح_الـ_Anon_Public_هنا';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -95,24 +97,26 @@
         let cloudBookings = {};
         let activeSelectedDate = '';
 
+        // دالة جلب الحجوزات من Supabase (نفس جدول إعدادات النظام أو جدول مخصص للحجوزات)
         async function fetchBookings() {
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                
-                if (!res.ok) throw new Error('فشل جلب الحجوزات من السحاب');
+                const { data, error } = await _supabase
+                    .from('system_settings')
+                    .select('hall_bookings_data')
+                    .eq('id', 'bookings')
+                    .maybeSingle();
 
-                const data = await res.json();
-                const record = data.record || {};
-                cloudBookings = record.hallBookings || {};
-                
-                // حفظ نسخة احتياطية محلياً
-                localStorage.setItem('hallBookings', JSON.stringify(cloudBookings));
+                if (error) throw error;
+
+                if (data && data.hall_bookings_data) {
+                    cloudBookings = data.hall_bookings_data;
+                    localStorage.setItem('hallBookings', JSON.stringify(cloudBookings));
+                } else {
+                    cloudBookings = {};
+                }
                 renderCalendar();
             } catch (e) {
                 console.warn('تعذر جلب الحجوزات سحابياً، جاري الاعتماد على النسخة المحلية:', e);
-                // استخدام التخزين المحلي كبديل فوري في حال انقطاع النت
                 cloudBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
                 renderCalendar();
             }
@@ -151,7 +155,7 @@
                 if (cloudBookings[fullDateStr]) {
                     let bookingsList = cloudBookings[fullDateStr];
                     if (!Array.isArray(bookingsList)) {
-                        bookingsList = [bookingsList]; // دعم البيانات القديمة
+                        bookingsList = [bookingsList]; 
                     }
 
                     if (bookingsList.length > 0) {
@@ -202,7 +206,7 @@
                 bookingsList.forEach((booking, index) => {
                     const groom = booking.groomName || 'زبون بدون اسم';
                     const hall = booking.hallName || 'صالة غير محددة';
-                    const status = booking.status === 'approved' ? 'مقوبول' : 'مسودة';
+                    const status = booking.status === 'approved' ? 'مقبول' : 'مسودة';
                     
                     const btn = document.createElement('button');
                     btn.className = 'contract-item-btn';
