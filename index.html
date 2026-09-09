@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقويم الحجوزات - شهباروز</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; padding: 20px; color: #333; }
+        
+        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-header h2 { font-size: 24px; color: #2c3e50; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-nav:hover { background: #2980b9; }
+        .btn-logout { background: #e74c3c; margin-right: 10px; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
+        
+        .day-cell { min-height: 95px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+        .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
+        .day-cell.empty { background: #fafafa; cursor: default; border: none; }
+        
+        .day-number { font-weight: bold; font-size: 16px; text-align: left; padding: 2px 5px; color: #2c3e50; }
+
+        input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
+        .en-num { direction: ltr !important; unicode-bidi: isolate; }
+        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
+            <h2 id="monthYearDisplay"></h2>
+            <div>
+                <span id="roleDisplay" class="user-tag"></span>
+                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
+                <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="day-header">الأحد</div>
+            <div class="day-header">الأثنين</div>
+            <div class="day-header">الثلاثاء</div>
+            <div class="day-header">الأربعاء</div>
+            <div class="day-header">الخميس</div>
+            <div class="day-header">الجمعة</div>
+            <div class="day-header">السبت</div>
+        </div>
+
+        <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
+    </div>
+
+    <script>
+        const monthNames = [
+            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
+
+        let currentDate = new Date(2026, 6, 1);
+        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
+        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const monthIndex = currentDate.getMonth();
+            const monthNumber = monthIndex + 1;
+
+            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> <span class="en-num">${year}</span>`;
+            document.getElementById('monthYearDisplay').innerHTML = headerText;
+
+            const daysContainer = document.getElementById('calendarDays');
+            daysContainer.innerHTML = '';
+
+            const firstDayIndex = new Date(year, monthIndex, 1).getDay();
+            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+
+            const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysContainer.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+
+                const formattedMonth = String(monthNumber).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const fullDateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+                let cellContent = `<div class="day-number en-num">${day}</div>`;
+
+                if (savedBookings[fullDateStr]) {
+                    const booking = savedBookings[fullDateStr];
+
+                    // العقد المعلق (مسودة) يظهر باللون الأحمر
+                    if (booking.status === 'pending') {
+                        dayCell.style.backgroundColor = '#e74c3c';
+                        dayCell.style.borderColor = '#c0392b';
+                        cellContent = `
+                            <div class="day-number en-num" style="color: #fff;">${day}</div>
+                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 2px;">
+                                ${booking.groomName}<br>(مسودة)
+                            </div>
+                        `;
+                    } 
+                    // العقد المقبول يظهر باللون الأخضر
+                    else if (booking.status === 'approved') {
+                        dayCell.style.backgroundColor = '#27ae60';
+                        dayCell.style.borderColor = '#1e8449';
+                        cellContent = `
+                            <div class="day-number en-num" style="color: #fff;">${day}</div>
+                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 13px; font-weight: bold; padding: 5px; border-radius: 4px; margin-top: 4px;">
+                                ${booking.groomName}
+                            </div>
+                        `;
+                    }
+                }
+
+                dayCell.innerHTML = cellContent;
+
+                dayCell.onclick = function() {
+                    window.location.href = `contract.html?date=${fullDateStr}`;
+                };
+
+                daysContainer.appendChild(dayCell);
+            }
+        }
+
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            renderCalendar();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUserRole');
+            window.location.href = 'login.html';
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
