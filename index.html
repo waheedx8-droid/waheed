@@ -70,8 +70,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-bottom: 10px;
-      text-decoration: none;
-      box-sizing: border-box;
       text-align: center;
     }
 
@@ -119,20 +117,20 @@
       <button type="button" class="btn btn-login" onclick="handleLogin()">تسجيل الدخول</button>
     </div>
 
-    <!-- 2. شاشة الداشبورد (تظهر بعد الدخول) -->
+    <!-- 2. شاشة الداشبورد (تظهر بعد تسجيل الدخول) -->
     <div id="dashboardSection" style="display: none;">
       <h2 id="welcomeMsg">أهلاً بك</h2>
 
-      <!-- رابط مباشر لصفحة التقويم (dash.html) -->
-      <a href="dash.html" class="btn btn-calendar">الدخول إلى التقويم</a>
+      <!-- زر الانتقال للتقويم البرمجي القاطع -->
+      <button type="button" class="btn btn-calendar" onclick="openCalendar()">الدخول إلى التقويم</button>
 
-      <!-- أزرار خاّصة بالأدمن فقط -->
+      <!-- أزرار تغيير كلمة المرور (خاصة بالأدمن فقط) -->
       <div id="adminControls" style="display: none;">
         <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
         <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
       </div>
 
-      <!-- مربع تغيير كلمة المرور -->
+      <!-- مربع إدخال كلمة المرور الجديدة -->
       <div id="passBox" class="pass-box">
         <h4 id="passBoxTitle" style="margin-bottom: 10px; font-size: 14px;">تغيير كلمة المرور</h4>
         <div class="form-group">
@@ -150,7 +148,7 @@
   <script>
     let activePassType = '';
 
-    // عند فتح الصفحة نتحقق إذا كان المستخدم مسجلاً لدخوله سابقاً
+    // التحقق من حالة الجلسة عند التحميل
     document.addEventListener("DOMContentLoaded", function () {
       const isLoggedIn = localStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
@@ -159,6 +157,11 @@
         renderLogin();
       }
     });
+
+    // دالة الانتقال المباشر لصفحة التقويم (تضمن العمل في الـ WebView والتطبيق)
+    function openCalendar() {
+      window.location.assign("dash.html");
+    }
 
     // دالة تسجيل الدخول
     function handleLogin() {
@@ -181,7 +184,7 @@
       }
     }
 
-    // إظهار لوحة التحكم وتحديد صلاحيات الحساب
+    // عرض لوحة التحكم وإخفاء أزرار كلمة المرور تماماً عن اليوزر
     function renderDashboard() {
       const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
       
@@ -189,6 +192,7 @@
       document.getElementById("dashboardSection").style.display = "block";
       document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
 
+      // إظهار أزرار كلمة المرور للأدمن فقط، وإخفاؤها تماماً عن اليوزر
       if (currentUser === "admin") {
         document.getElementById("adminControls").style.display = "block";
       } else {
@@ -198,7 +202,7 @@
       document.getElementById("passBox").style.display = "none";
     }
 
-    // إظهار مربع إدخال كلمة المرور الجديدة
+    // إظهار صندوق تغيير كلمة المرور
     function showPassBox(type) {
       activePassType = type;
       const box = document.getElementById("passBox");
@@ -214,7 +218,7 @@
       }
     }
 
-    // حفظ كلمة المرور الجديدة في LocalStorage
+    // حفظ الكلمة الجديدة
     function savePassword() {
       const newPass = document.getElementById("newPasswordInput").value.trim();
       if (!newPass) {
@@ -233,7 +237,7 @@
       document.getElementById("passBox").style.display = "none";
     }
 
-    // العودة لشاشة تسجيل الدخول
+    // عرض شاشة الدخول
     function renderLogin() {
       document.getElementById("loginSection").style.display = "block";
       document.getElementById("dashboardSection").style.display = "none";
