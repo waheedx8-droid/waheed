@@ -135,8 +135,8 @@
             </div>
 
             <div class="info-row"><label>حجز من قبل :</label><input type="text" id="booked_by" class="contract-input"></div>
-            <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input"></div>
-            <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input"></div>
+            <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input" id="organizer_sign"></div>
+            <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input" id="groom_sign"></div>
             <div class="info-row" style="margin-top: 20px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
         </div>
     </div>
@@ -232,7 +232,7 @@
     </div>
 
     <script>
-        // إعدادات التخزين السحابي المحدثة بالـ Bin الجديد الصحيح
+        // إعدادات التخزين السحابي الموحدة بالـ Bin الجديد
         const BIN_ID = '6aa17fcbfd5d16053f256cd';
         const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
@@ -253,14 +253,14 @@
                     <button class="btn-action btn-save" onclick="saveContract(true)">حفظ</button>
                     <button class="btn-action btn-delete" onclick="deleteContract()">حذف العقد</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
                 `;
             } else {
                 bar.innerHTML = `
                     <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
                     <button class="btn-action btn-save" onclick="saveContract(false)">حفظ</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
                 `;
             }
             
@@ -269,6 +269,11 @@
             } else {
                 toggleInputsLock(true);
             }
+        }
+
+        function goBackToCalendar() {
+            localStorage.removeItem('selectedContractIndex');
+            window.location.href = 'dash.html';
         }
 
         function toggleInputsLock(lock) {
@@ -298,6 +303,7 @@
             return parseFloat(cleanStr) || 0;
         }
 
+        // دالة جلب البيانات وتعبئتها بالكامل (بما فيها تفاصيل الخدمات)
         async function initContractPage() {
             if (selectedDate) {
                 const cleanSelectedDate = toEnglishDigits(selectedDate);
@@ -309,25 +315,12 @@
                         headers: { 'X-Master-Key': API_KEY }
                     });
                     const data = await res.json();
-                    cloudBookings = data.record.hallBookings || {};
+                    const fullRecord = data.record || {};
+                    cloudBookings = fullRecord.hallBookings || {};
 
                     if (actionType === 'new') {
                         localStorage.removeItem('selectedContractIndex');
-                        document.getElementById('groom_name').value = '';
-                        document.getElementById('hall_name').value = '';
-                        document.getElementById('phone1').value = '';
-                        document.getElementById('phone2').value = '';
-                        document.getElementById('event_type').value = '';
-                        document.getElementById('hall_price').value = '0';
-                        document.getElementById('discount').value = '0';
-                        document.getElementById('deposit').value = '0';
-                        document.getElementById('general_notes').value = '';
-                        document.getElementById('event_day').value = '';
-                        document.getElementById('rep_name').value = '';
-                        document.getElementById('duration').value = '';
-                        document.getElementById('exp_count').value = '';
-                        document.getElementById('guar_count').value = '';
-                        document.getElementById('booked_by').value = '';
+                        clearFormFields();
                     } else {
                         if (cloudBookings[selectedDate]) {
                             let bookingsList = cloudBookings[selectedDate];
@@ -336,17 +329,9 @@
                             let indexToLoad = (selectedIndex !== null && selectedIndex !== "") ? parseInt(selectedIndex) : 0;
                             
                             if (bookingsList[indexToLoad]) {
-                                const b = bookingsList[indexToLoad];
-                                document.getElementById('groom_name').value = b.groomName || '';
-                                document.getElementById('hall_name').value = b.hallName || '';
-                                document.getElementById('phone1').value = b.phone1 || '';
-                                document.getElementById('phone2').value = b.phone2 || '';
-                                document.getElementById('event_type').value = b.eventType || '';
-                                document.getElementById('hall_price').value = b.hallPrice || '0';
-                                document.getElementById('discount').value = b.discount || '0';
-                                document.getElementById('deposit').value = b.deposit || '0';
-                                document.getElementById('general_notes').value = b.generalNotes || '';
-                                if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+                                loadContractData(bookingsList[indexToLoad]);
+                            } else {
+                                clearFormFields();
                             }
                         }
                     }
@@ -363,6 +348,61 @@
             
             setupButtons();
             calculateServices();
+        }
+
+        function clearFormFields() {
+            document.getElementById('groom_name').value = '';
+            document.getElementById('hall_name').value = '';
+            document.getElementById('phone1').value = '';
+            document.getElementById('phone2').value = '';
+            document.getElementById('event_type').value = '';
+            document.getElementById('rep_name').value = '';
+            document.getElementById('duration').value = '';
+            document.getElementById('exp_count').value = '';
+            document.getElementById('guar_count').value = '';
+            document.getElementById('hall_price').value = '0';
+            document.getElementById('discount').value = '0';
+            document.getElementById('deposit').value = '0';
+            document.getElementById('general_notes').value = '';
+            document.getElementById('event_day').value = '';
+            document.getElementById('booked_by').value = '';
+            document.getElementById('organizer_sign').value = '';
+            document.getElementById('groom_sign').value = '';
+        }
+
+        function loadContractData(b) {
+            document.getElementById('groom_name').value = b.groomName || '';
+            document.getElementById('hall_name').value = b.hallName || '';
+            document.getElementById('phone1').value = b.phone1 || '';
+            document.getElementById('phone2').value = b.phone2 || '';
+            document.getElementById('event_type').value = b.eventType || '';
+            document.getElementById('rep_name').value = b.repName || '';
+            document.getElementById('duration').value = b.duration || '';
+            document.getElementById('exp_count').value = b.expCount || '';
+            document.getElementById('guar_count').value = b.guarCount || '';
+            document.getElementById('hall_price').value = b.hallPrice || '0';
+            document.getElementById('discount').value = b.discount || '0';
+            document.getElementById('deposit').value = b.deposit || '0';
+            document.getElementById('general_notes').value = b.generalNotes || '';
+            if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+            document.getElementById('booked_by').value = b.bookedBy || '';
+            document.getElementById('organizer_sign').value = b.organizerSign || '';
+            document.getElementById('groom_sign').value = b.groomSign || '';
+
+            // استعادة حالة الخدمات الإضافية والكميات والأسعار المخصصة
+            if (b.services && Array.isArray(b.services)) {
+                b.services.forEach(srv => {
+                    const check = document.querySelector(`.srv-check[data-index="${srv.index}"]`);
+                    const qtyInput = document.querySelector(`.srv-qty[data-index="${srv.index}"]`);
+                    const priceInput = document.querySelector(`.srv-price[data-index="${srv.index}"]`);
+                    const customInput = document.querySelector(`.srv-custom-name[data-index="${srv.index}"]`);
+
+                    if (check) check.checked = srv.checked;
+                    if (qtyInput) qtyInput.value = srv.qty || '1';
+                    if (priceInput) priceInput.value = srv.price || '0';
+                    if (customInput && srv.customName) customInput.value = srv.customName;
+                });
+            }
         }
 
         function calculateServices() {
@@ -418,23 +458,50 @@
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
+        // تجميع كافة تفاصيل العقد والخدمات لحفظها بدقة سحابياً
         function collectContractData(statusVal) {
+            const servicesData = [];
+            const checks = document.querySelectorAll('.srv-check');
+            
+            checks.forEach(check => {
+                const idx = check.getAttribute('data-index');
+                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
+                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
+                const customInput = document.querySelector(`.srv-custom-name[data-index="${idx}"]`);
+
+                servicesData.push({
+                    index: idx,
+                    checked: check.checked,
+                    qty: qtyInput ? qtyInput.value : '1',
+                    price: priceInput ? priceInput.value : '0',
+                    customName: customInput ? customInput.value : ''
+                });
+            });
+
             return {
                 groomName: document.getElementById('groom_name').value.trim(),
                 hallName: document.getElementById('hall_name').value,
                 phone1: document.getElementById('phone1').value,
                 phone2: document.getElementById('phone2').value,
                 eventType: document.getElementById('event_type').value,
+                repName: document.getElementById('rep_name').value,
+                duration: document.getElementById('duration').value,
+                expCount: document.getElementById('exp_count').value,
+                guarCount: document.getElementById('guar_count').value,
                 hallPrice: document.getElementById('hall_price').value,
                 discount: document.getElementById('discount').value,
                 deposit: document.getElementById('deposit').value,
                 generalNotes: document.getElementById('general_notes').value,
                 eventDay: document.getElementById('event_day').value,
+                bookedBy: document.getElementById('booked_by').value,
+                organizerSign: document.getElementById('organizer_sign').value,
+                groomSign: document.getElementById('groom_sign').value,
+                services: servicesData,
                 status: statusVal
             };
         }
 
-        // دالة الحفظ الآمنة: تسحب البيانات الكاملة من الـ Bin لتعديل الحجوزات مع الحفاظ التام على كلمات المرور
+        // دالة الحفظ الآمنة: تحافظ بالكامل على كلمات المرور وسجل الحجوزات سحابياً
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -515,7 +582,7 @@
             saveContract(true);
         }
 
-        // دالة الحذف الآمنة: تحذف العقد وتحدث السحابة دون المساس بكلمات المرور
+        // دالة الحذف الآمنة: تحذف العقد دون المساس بكلمات المرور
         async function deleteContract() {
             const eventDate = document.getElementById('event_date').value;
 
