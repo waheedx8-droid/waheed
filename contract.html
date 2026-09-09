@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شهباروز - عقد الحجز والتنظيم السحابي</title>
+    <title>شهباروز - عقد الحجز والتنظيم</title>
+    <!-- مكتبة Supabase JS الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f2f5; padding: 20px; color: #000; }
@@ -33,6 +35,7 @@
         .input-inline { border: none; border-bottom: 1px dotted #000; outline: none; width: 100%; background: transparent; font-size: 15px; }
         .readonly-field { background-color: #f9f9f9; font-weight: bold; color: #2c3e50; }
         
+        /* تنسيق شريط الأزرار في أعلى العقد */
         .actions-bar {
             position: sticky;
             top: 10px;
@@ -135,8 +138,8 @@
             </div>
 
             <div class="info-row"><label>حجز من قبل :</label><input type="text" id="booked_by" class="contract-input"></div>
-            <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input" id="organizer_sign"></div>
-            <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input" id="groom_sign"></div>
+            <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input"></div>
+            <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input"></div>
             <div class="info-row" style="margin-top: 20px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
         </div>
     </div>
@@ -232,17 +235,12 @@
     </div>
 
     <script>
-        const BIN_ID = '6aa17fcbfd5d16053f256cd';
-        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
+        // === إعدادات الاتصال بـ Supabase ===
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // ضع رابط مشروعك هنا
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // ضع مفتاحك هنا
+        const supabaseClient = (SUPABASE_URL !== 'YOUR_SUPABASE_URL') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         const userRole = localStorage.getItem('currentUserRole') || 'user';
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedDate = urlParams.get('date');
-        const actionType = urlParams.get('action');
-        const selectedIndex = localStorage.getItem('selectedContractIndex');
-
-        let cloudBookings = {};
-        let isEditModeEnabled = false;
 
         function setupButtons() {
             const bar = document.getElementById('actionBar');
@@ -253,29 +251,17 @@
                     <button class="btn-action btn-save" onclick="saveContract(true)">حفظ</button>
                     <button class="btn-action btn-delete" onclick="deleteContract()">حذف العقد</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             } else {
                 bar.innerHTML = `
                     <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
                     <button class="btn-action btn-save" onclick="saveContract(false)">حفظ</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
+                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             }
-            
-            if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
-                isEditModeEnabled = true;
-                toggleInputsLock(false);
-            } else {
-                isEditModeEnabled = false;
-                toggleInputsLock(true);
-            }
-        }
-
-        function goBackToCalendar() {
-            localStorage.removeItem('selectedContractIndex');
-            window.location.href = 'dash.html';
+            toggleInputsLock(true);
         }
 
         function toggleInputsLock(lock) {
@@ -286,7 +272,6 @@
         }
 
         function enableEditing() {
-            isEditModeEnabled = true;
             toggleInputsLock(false);
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
@@ -306,105 +291,79 @@
             return parseFloat(cleanStr) || 0;
         }
 
-        async function initContractPage() {
-            if (selectedDate) {
-                const cleanSelectedDate = toEnglishDigits(selectedDate);
-                document.getElementById('event_date').value = cleanSelectedDate;
-                document.getElementById('page2_date').value = cleanSelectedDate;
-
-                try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': API_KEY }
-                    });
-                    const data = await res.json();
-                    const fullRecord = data.record || {};
-                    cloudBookings = fullRecord.hallBookings || {};
-
-                    if (actionType === 'new') {
-                        localStorage.removeItem('selectedContractIndex');
-                        clearFormFields();
-                    } else {
-                        if (cloudBookings[selectedDate]) {
-                            let bookingsList = cloudBookings[selectedDate];
-                            if (!Array.isArray(bookingsList)) bookingsList = [bookingsList];
-
-                            let indexToLoad = (selectedIndex !== null && selectedIndex !== "") ? parseInt(selectedIndex) : 0;
-                            
-                            if (bookingsList[indexToLoad]) {
-                                loadContractData(bookingsList[indexToLoad]);
-                            } else {
-                                clearFormFields();
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('خطأ في جلب بيانات العقد السحابية:', e);
-                }
-            }
-
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('contract_date').value = `${year}-${month}-${day}`;
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedDate = urlParams.get('date');
+        const contractId = urlParams.get('id'); // معرف العقد السحابي أو المحلي
+        
+        if (selectedDate) {
+            const cleanSelectedDate = toEnglishDigits(selectedDate);
+            document.getElementById('event_date').value = cleanSelectedDate;
+            document.getElementById('page2_date').value = cleanSelectedDate;
             
-            setupButtons();
-            calculateServices();
+            // جلب البيانات من Supabase أو الذاكرة المحلية
+            loadContractData();
+        } else {
+            alert('لم يتم تحديد التاريخ!');
+            window.location.href = 'dash.html';
         }
 
-        function clearFormFields() {
-            document.getElementById('groom_name').value = '';
-            document.getElementById('hall_name').value = '';
-            document.getElementById('phone1').value = '';
-            document.getElementById('phone2').value = '';
-            document.getElementById('event_type').value = '';
-            document.getElementById('rep_name').value = '';
-            document.getElementById('duration').value = '';
-            document.getElementById('exp_count').value = '';
-            document.getElementById('guar_count').value = '';
-            document.getElementById('hall_price').value = '0';
-            document.getElementById('discount').value = '0';
-            document.getElementById('deposit').value = '0';
-            document.getElementById('general_notes').value = '';
-            document.getElementById('event_day').value = '';
-            document.getElementById('booked_by').value = '';
-            document.getElementById('organizer_sign').value = '';
-            document.getElementById('groom_sign').value = '';
-        }
+        async function loadContractData() {
+            try {
+                if (supabaseClient && contractId) {
+                    const { data, error } = await supabaseClient
+                        .from('bookings_table')
+                        .select('*')
+                        .eq('id', contractId)
+                        .single();
 
-        function loadContractData(b) {
-            document.getElementById('groom_name').value = b.groomName || '';
-            document.getElementById('hall_name').value = b.hallName || '';
-            document.getElementById('phone1').value = b.phone1 || '';
-            document.getElementById('phone2').value = b.phone2 || '';
-            document.getElementById('event_type').value = b.eventType || '';
-            document.getElementById('rep_name').value = b.repName || '';
-            document.getElementById('duration').value = b.duration || '';
-            document.getElementById('exp_count').value = b.expCount || '';
-            document.getElementById('guar_count').value = b.guarCount || '';
-            document.getElementById('hall_price').value = b.hallPrice || '0';
-            document.getElementById('discount').value = b.discount || '0';
-            document.getElementById('deposit').value = b.deposit || '0';
-            document.getElementById('general_notes').value = b.generalNotes || '';
-            if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
-            document.getElementById('booked_by').value = b.bookedBy || '';
-            document.getElementById('organizer_sign').value = b.organizerSign || '';
-            document.getElementById('groom_sign').value = b.groomSign || '';
+                    if (data && !error) {
+                        document.getElementById('groom_name').value = data.groom_name || '';
+                        document.getElementById('hall_name').value = data.hall_name || '';
+                        document.getElementById('phone1').value = data.phone1 || '';
+                        document.getElementById('phone2').value = data.phone2 || '';
+                        document.getElementById('event_type').value = data.event_type || '';
+                        document.getElementById('hall_price').value = data.hall_price || '0';
+                        document.getElementById('discount').value = data.discount || '0';
+                        document.getElementById('deposit').value = data.deposit || '0';
+                        document.getElementById('general_notes').value = data.general_notes || '';
+                        if(data.event_day) document.getElementById('event_day').value = data.event_day;
+                        return;
+                    }
+                }
 
-            if (b.services && Array.isArray(b.services)) {
-                b.services.forEach(srv => {
-                    const check = document.querySelector(`.srv-check[data-index="${srv.index}"]`);
-                    const qtyInput = document.querySelector(`.srv-qty[data-index="${srv.index}"]`);
-                    const priceInput = document.querySelector(`.srv-price[data-index="${srv.index}"]`);
-                    const customInput = document.querySelector(`.srv-custom-name[data-index="${srv.index}"]`);
-
-                    if (check) check.checked = srv.checked;
-                    if (qtyInput) qtyInput.value = srv.qty || '1';
-                    if (priceInput) priceInput.value = srv.price || '0';
-                    if (customInput && srv.customName) customInput.value = srv.customName;
-                });
+                // النظام الاحتياطي (LocalStorage)
+                const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                if (savedBookings[selectedDate]) {
+                    let list = Array.isArray(savedBookings[selectedDate]) ? savedBookings[selectedDate] : [savedBookings[selectedDate]];
+                    let b = contractId ? list.find(item => item.id == contractId) : null;
+                    
+                    if (!contractId) {
+                        enableEditing();
+                    } else if (b) {
+                        document.getElementById('groom_name').value = b.groomName || '';
+                        document.getElementById('hall_name').value = b.hallName || '';
+                        document.getElementById('phone1').value = b.phone1 || '';
+                        document.getElementById('phone2').value = b.phone2 || '';
+                        document.getElementById('event_type').value = b.eventType || '';
+                        document.getElementById('hall_price').value = b.hallPrice || '0';
+                        document.getElementById('discount').value = b.discount || '0';
+                        document.getElementById('deposit').value = b.deposit || '0';
+                        document.getElementById('general_notes').value = b.generalNotes || '';
+                        if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+                    }
+                } else if (!contractId) {
+                    enableEditing();
+                }
+            } catch (e) {
+                console.error('خطأ في جلب تفاصيل العقد:', e);
             }
         }
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('contract_date').value = `${year}-${month}-${day}`;
 
         function calculateServices() {
             let totalExtras = 0;
@@ -420,6 +379,7 @@
 
                 const qty = parseEnglishNumber(qtyInput.value);
                 const price = parseEnglishNumber(priceInput.value);
+
                 const totalCell = document.getElementById(`srv_total_${idx}`);
 
                 if (check.checked) {
@@ -459,54 +419,7 @@
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
-        function collectContractData(statusVal) {
-            const servicesData = [];
-            const checks = document.querySelectorAll('.srv-check');
-            
-            checks.forEach(check => {
-                const idx = check.getAttribute('data-index');
-                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
-                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
-                const customInput = document.querySelector(`.srv-custom-name[data-index="${idx}"]`);
-
-                servicesData.push({
-                    index: idx,
-                    checked: check.checked,
-                    qty: qtyInput ? qtyInput.value : '1',
-                    price: priceInput ? priceInput.value : '0',
-                    customName: customInput ? customInput.value : ''
-                });
-            });
-
-            return {
-                groomName: document.getElementById('groom_name').value.trim(),
-                hallName: document.getElementById('hall_name').value,
-                phone1: document.getElementById('phone1').value,
-                phone2: document.getElementById('phone2').value,
-                eventType: document.getElementById('event_type').value,
-                repName: document.getElementById('rep_name').value,
-                duration: document.getElementById('duration').value,
-                expCount: document.getElementById('exp_count').value,
-                guarCount: document.getElementById('guar_count').value,
-                hallPrice: document.getElementById('hall_price').value,
-                discount: document.getElementById('discount').value,
-                deposit: document.getElementById('deposit').value,
-                generalNotes: document.getElementById('general_notes').value,
-                eventDay: document.getElementById('event_day').value,
-                bookedBy: document.getElementById('booked_by').value,
-                organizerSign: document.getElementById('organizer_sign').value,
-                groomSign: document.getElementById('groom_sign').value,
-                services: servicesData,
-                status: statusVal
-            };
-        }
-
         async function saveContract(isAdmin = false) {
-            if (!isEditModeEnabled) {
-                alert('لا يمكن حفظ التعديلات! يرجى الضغط على زر "تعديل" أولاً.');
-                return;
-            }
-
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
 
@@ -520,129 +433,113 @@
                 return;
             }
 
+            const payload = {
+                booking_date: eventDate,
+                groom_name: groomName,
+                hall_name: document.getElementById('hall_name').value,
+                phone1: document.getElementById('phone1').value,
+                phone2: document.getElementById('phone2').value,
+                event_type: document.getElementById('event_type').value,
+                hall_price: document.getElementById('hall_price').value,
+                discount: document.getElementById('discount').value,
+                deposit: document.getElementById('deposit').value,
+                general_notes: document.getElementById('general_notes').value,
+                event_day: document.getElementById('event_day').value,
+                status: isAdmin ? 'approved' : 'pending'
+            };
+
             try {
-                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                const getData = await getRes.json();
-                const currentFullData = getData.record || {};
-                
-                if (!currentFullData.hallBookings) {
-                    currentFullData.hallBookings = {};
-                }
-                
-                let cloudB = currentFullData.hallBookings;
-
-                if (!Array.isArray(cloudB[eventDate])) {
-                    if (cloudB[eventDate]) {
-                        cloudB[eventDate] = [cloudB[eventDate]];
+                if (supabaseClient) {
+                    if (contractId) {
+                        // تحديث عقد موجود سحابياً
+                        const { error } = await supabaseClient
+                            .from('bookings_table')
+                            .update(payload)
+                            .eq('id', contractId);
+                        if (error) throw error;
                     } else {
-                        cloudB[eventDate] = [];
+                        // إضافة عقد جديد كلياً سحابياً لنفس اليوم
+                        const { error } = await supabaseClient
+                            .from('bookings_table')
+                            .insert([payload]);
+                        if (error) throw error;
                     }
-                }
-
-                let currentStatus = 'pending';
-                if (selectedIndex !== null && selectedIndex !== "" && cloudB[eventDate][selectedIndex]) {
-                    currentStatus = cloudB[eventDate][selectedIndex].status || 'pending';
-                }
-                if (isAdmin) {
-                    currentStatus = 'approved';
-                }
-
-                const contractData = collectContractData(currentStatus);
-
-                if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
-                    cloudB[eventDate].push(contractData);
                 } else {
-                    let idx = parseInt(selectedIndex);
-                    cloudB[eventDate][idx] = contractData;
+                    // التخزين المحلي الاحتياطي
+                    let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                    if (!bookings[eventDate]) bookings[eventDate] = [];
+                    else if (!Array.isArray(bookings[eventDate])) bookings[eventDate] = [bookings[eventDate]];
+
+                    let targetId = contractId || 'local_' + Date.now();
+                    const localPayload = {
+                        id: targetId,
+                        groomName: groomName,
+                        hallName: payload.hall_name,
+                        phone1: payload.phone1,
+                        phone2: payload.phone2,
+                        eventType: payload.event_type,
+                        hallPrice: payload.hall_price,
+                        discount: payload.discount,
+                        deposit: payload.deposit,
+                        generalNotes: payload.general_notes,
+                        eventDay: payload.event_day,
+                        status: payload.status
+                    };
+
+                    let index = bookings[eventDate].findIndex(b => b.id == targetId);
+                    if (index >= 0) bookings[eventDate][index] = localPayload;
+                    else bookings[eventDate].push(localPayload);
+
+                    localStorage.setItem('hallBookings', JSON.stringify(bookings));
                 }
 
-                currentFullData.hallBookings = cloudB;
+                toggleInputsLock(true);
+                alert(isAdmin ? 'تم حفظ التعديلات بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
+                window.location.href = 'dash.html';
 
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(currentFullData)
-                });
-
-                if (response.ok) {
-                    localStorage.removeItem('selectedContractIndex');
-                    alert('تم حفظ العقد سحابياً بنجاح!');
-                    window.location.href = 'dash.html';
-                } else {
-                    alert('حدث خطأ أثناء الحفظ السحابي.');
-                }
-            } catch (error) {
-                console.error('خطأ الاتصال:', error);
-                alert('فشل الاتصال بالإنترنت أثناء حفظ العقد.');
+            } catch (e) {
+                console.error('خطأ أثناء الحفظ:', e);
+                alert('حدث خطأ أثناء الحفظ بالسحابة.');
             }
         }
 
-        function approveContract() {
-            saveContract(true);
+        async function approveContract() {
+            await saveContract(true);
         }
 
         async function deleteContract() {
-            const eventDate = document.getElementById('event_date').value;
+            if (!confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً؟')) return;
 
-            if (!eventDate) {
-                alert('التاريخ غير محدد!');
-                return;
-            }
-
-            if (confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحاب؟')) {
-                try {
-                    const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': API_KEY }
-                    });
-                    const getData = await getRes.json();
-                    const currentFullData = getData.record || {};
-                    
-                    if (!currentFullData.hallBookings) {
-                        currentFullData.hallBookings = {};
-                    }
-                    
-                    let cloudB = currentFullData.hallBookings;
-
-                    if (cloudB[eventDate]) {
-                        if (Array.isArray(cloudB[eventDate]) && selectedIndex !== null && selectedIndex !== "") {
-                            cloudB[eventDate].splice(parseInt(selectedIndex), 1);
-                            if (cloudB[eventDate].length === 0) {
-                                delete cloudB[eventDate];
-                            }
+            try {
+                if (supabaseClient && contractId) {
+                    const { error } = await supabaseClient
+                        .from('bookings_table')
+                        .delete()
+                        .eq('id', contractId);
+                    if (error) throw error;
+                } else {
+                    let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                    if (bookings[selectedDate]) {
+                        if (contractId && Array.isArray(bookings[selectedDate])) {
+                            bookings[selectedDate] = bookings[selectedDate].filter(b => b.id != contractId);
+                            if (bookings[selectedDate].length === 0) delete bookings[selectedDate];
                         } else {
-                            delete cloudB[eventDate];
+                            delete bookings[selectedDate];
                         }
-
-                        currentFullData.hallBookings = cloudB;
-
-                        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': API_KEY
-                            },
-                            body: JSON.stringify(currentFullData)
-                        });
-
-                        if (response.ok) {
-                            localStorage.removeItem('selectedContractIndex');
-                            alert('تم حذف العقد سحابياً بنجاح.');
-                            window.location.href = 'dash.html';
-                        }
+                        localStorage.setItem('hallBookings', JSON.stringify(bookings));
                     }
-                } catch (error) {
-                    console.error('خطأ الحذف:', error);
-                    alert('حدث خطأ أثناء الاتصال.');
                 }
+
+                alert('تم حذف العقد بنجاح.');
+                window.location.href = 'dash.html';
+            } catch (e) {
+                console.error('خطأ أثناء الحذف:', e);
+                alert('حدث خطأ أثناء الحذف.');
             }
         }
 
-        initContractPage();
+        setupButtons();
+        calculateServices();
     </script>
 </body>
 </html>

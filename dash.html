@@ -1,46 +1,49 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم الحجوزات - شهباروز</title>
+    <title>تقويم الحجوزات وإدارة العقود - شهباروز</title>
+    <!-- مكتبة Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; padding: 20px; color: #333; }
+        body { background-color: #f0f2f5; padding: 20px; color: #333; direction: rtl; text-align: right; }
         
-        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .calendar-container { max-width: 1050px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .calendar-header h2 { font-size: 24px; color: #2c3e50; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .calendar-header h2 { font-size: 22px; color: #2c3e50; }
+        
+        .header-buttons { display: flex; align-items: center; gap: 10px; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold; }
         .btn-nav:hover { background: #2980b9; }
-        .btn-logout { background: #e74c3c; margin-right: 10px; }
+        .btn-logout { background: #e74c3c; }
+        .btn-logout:hover { background: #c0392b; }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
+        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; font-size: 14px; }
         
-        .day-cell { min-height: 105px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
-        .day-cell.empty { background: #fafafa; cursor: default; border: none; }
+        .day-cell { min-height: 140px; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; background: #fff; display: flex; flex-direction: column; text-align: right; position: relative; }
+        .day-cell.empty { background: #fafafa; border: none; }
         
-        .day-number { font-weight: bold; font-size: 15px; text-align: left; padding: 2px 5px; color: #2c3e50; }
-        .hall-badge { background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px 4px; border-radius: 4px; margin-top: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .day-number { font-weight: bold; font-size: 15px; text-align: left; padding: 2px 5px; color: #2c3e50; border-bottom: 1px solid #eee; margin-bottom: 4px; direction: ltr; }
 
-        /* نافذة اختيار العقود المنبثقة (Modal) */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-card { background: #fff; width: 90%; max-width: 450px; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: right; }
-        .modal-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; }
-        .contract-item-btn { display: block; width: 100%; background: #f8f9fa; border: 1px solid #ccc; padding: 10px; margin-bottom: 8px; border-radius: 5px; text-align: right; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .contract-item-btn:hover { background: #e2e8f0; border-color: #3498db; }
-        .btn-add-new { background: #27ae60; color: white; width: 100%; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-add-new:hover { background: #219150; }
-        .btn-close-modal { background: #7f8c8d; color: white; width: 100%; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-        .btn-close-modal:hover { background: #6c7a89; }
+        /* بطاقة العقد المضافة (للانتقال للتفاصيل) */
+        .booking-badge { font-size: 11px; padding: 5px 7px; border-radius: 4px; margin-bottom: 4px; color: #fff; display: block; text-align: right; border-right: 3px solid #111; cursor: pointer; transition: 0.15s; text-decoration: none; }
+        .booking-badge:hover { opacity: 0.85; transform: scale(1.02); }
+        .badge-approved { background-color: #27ae60; }
+        .badge-pending { background-color: #e74c3c; }
+        
+        .badge-groom { font-weight: bold; font-size: 12px; display: block; }
+        .badge-hall { font-size: 10px; opacity: 0.95; display: block; margin-top: 1px; }
 
-        input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
-        .en-num { direction: ltr !important; unicode-bidi: isolate; }
-        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
+        /* زر إضافة عقد صغير داخل خانة اليوم */
+        .btn-add-mini { background: #2980b9; color: white; border: none; border-radius: 3px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; margin-top: auto; text-align: center; display: block; width: 100%; text-decoration: none; }
+        .btn-add-mini:hover { background: #1f6391; }
+
+        .en-num { direction: ltr !important; unicode-bidi: isolate; display: inline-block; }
+        .user-tag { background: #2c3e50; color: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -48,8 +51,8 @@
     <div class="calendar-container">
         <div class="calendar-header">
             <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
-            <h2 id="monthYearDisplay"></h2>
-            <div>
+            <h2 id="monthYearDisplay">جاري التحميل...</h2>
+            <div class="header-buttons">
                 <span id="roleDisplay" class="user-tag"></span>
                 <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
                 <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
@@ -58,7 +61,7 @@
 
         <div class="calendar-grid">
             <div class="day-header">الأحد</div>
-            <div class="day-header">الأثنين</div>
+            <div class="day-header">الإثنين</div>
             <div class="day-header">الثلاثاء</div>
             <div class="day-header">الأربعاء</div>
             <div class="day-header">الخميس</div>
@@ -69,56 +72,73 @@
         <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
-    <!-- نافذة اختيار العقد عند النقر على يوم يحتوي عقود أو لإضافة عقد -->
-    <div id="contractsModal" class="modal-overlay">
-        <div class="modal-card">
-            <div class="modal-title" id="modalDateTitle">حجوزات التاريخ</div>
-            <div id="modalContractsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
-            <button class="btn-add-new" onclick="createNewContractForDate()">+ إضافة عقد جديد في هذا التاريخ</button>
-            <button class="btn-close-modal" onclick="closeModal()">إغلاق</button>
-        </div>
-    </div>
-
     <script>
-        // إعدادات اتصال Supabase الخاصة بك
-        const SUPABASE_URL = 'ضع_رابط_الـ_Project_هنا'; 
-        const SUPABASE_ANON_KEY = 'ضع_مفتاح_الـ_Anon_Public_هنا';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // === إعدادات الاتصال بـ Supabase ===
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; 
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; 
+        const supabaseClient = (SUPABASE_URL !== 'YOUR_SUPABASE_URL') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
 
-        let currentDate = new Date(2026, 6, 1);
+        let currentDate = new Date(2026, 6, 1); // يوليو 2026
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
 
-        let cloudBookings = {};
-        let activeSelectedDate = '';
+        let allBookingsMap = {};
 
-        // دالة جلب الحجوزات من Supabase (نفس جدول إعدادات النظام أو جدول مخصص للحجوزات)
-        async function fetchBookings() {
+        async function initCalendarSystem() {
             try {
-                const { data, error } = await _supabase
-                    .from('system_settings')
-                    .select('hall_bookings_data')
-                    .eq('id', 'bookings')
-                    .maybeSingle();
-
-                if (error) throw error;
-
-                if (data && data.hall_bookings_data) {
-                    cloudBookings = data.hall_bookings_data;
-                    localStorage.setItem('hallBookings', JSON.stringify(cloudBookings));
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient.from('bookings_table').select('*');
+                    if (!error && data) {
+                        allBookingsMap = {};
+                        data.forEach(item => {
+                            const dateKey = item.booking_date; 
+                            if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
+                            allBookingsMap[dateKey].push({
+                                id: item.id, 
+                                groomName: item.groom_name,
+                                hallName: item.hall_name || 'صالة رئيسية',
+                                status: item.status 
+                            });
+                        });
+                    }
                 } else {
-                    cloudBookings = {};
+                    const localData = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                    formatBookingsData(localData);
                 }
-                renderCalendar();
             } catch (e) {
-                console.warn('تعذر جلب الحجوزات سحابياً، جاري الاعتماد على النسخة المحلية:', e);
-                cloudBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
-                renderCalendar();
+                console.log('العمل عبر الذاكرة المحلية مؤقتاً');
+                const localData = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                formatBookingsData(localData);
+            }
+            renderCalendar();
+        }
+
+        function formatBookingsData(rawObj) {
+            allBookingsMap = {};
+            for (let dateKey in rawObj) {
+                const val = rawObj[dateKey];
+                if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
+                
+                if (!Array.isArray(val)) {
+                    allBookingsMap[dateKey].push({
+                        id: val.id || 'local_' + Math.random(),
+                        groomName: val.groomName || val.groom_name || 'حجز',
+                        hallName: val.hallName || val.hall_name || 'صالة رئيسية',
+                        status: val.status || 'pending'
+                    });
+                } else {
+                    allBookingsMap[dateKey] = val.map(b => ({
+                        id: b.id || 'local_' + Math.random(),
+                        groomName: b.groomName || b.groom_name || 'حجز',
+                        hallName: b.hallName || b.hall_name || 'صالة رئيسية',
+                        status: b.status || 'pending'
+                    }));
+                }
             }
         }
 
@@ -127,7 +147,7 @@
             const monthIndex = currentDate.getMonth();
             const monthNumber = monthIndex + 1;
 
-            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> <span class="en-num">${year}</span>`;
+            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> - <span class="en-num">${year}</span>`;
             document.getElementById('monthYearDisplay').innerHTML = headerText;
 
             const daysContainer = document.getElementById('calendarDays');
@@ -152,99 +172,42 @@
 
                 let cellContent = `<div class="day-number en-num">${day}</div>`;
 
-                if (cloudBookings[fullDateStr]) {
-                    let bookingsList = cloudBookings[fullDateStr];
-                    if (!Array.isArray(bookingsList)) {
-                        bookingsList = [bookingsList]; 
-                    }
-
-                    if (bookingsList.length > 0) {
-                        const hasApproved = bookingsList.some(b => b.status === 'approved');
-                        if (hasApproved) {
-                            dayCell.style.backgroundColor = '#27ae60';
-                            dayCell.style.borderColor = '#1e8449';
-                        } else {
-                            dayCell.style.backgroundColor = '#e74c3c';
-                            dayCell.style.borderColor = '#c0392b';
-                        }
-
-                        cellContent = `<div class="day-number en-num" style="color: #fff;">${day}</div>`;
+                // عرض العقود والحجوزات الحالية داخل الخلية
+                if (allBookingsMap[fullDateStr] && allBookingsMap[fullDateStr].length > 0) {
+                    const bookingsList = allBookingsMap[fullDateStr];
+                    
+                    bookingsList.forEach(booking => {
+                        const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
+                        const statusText = booking.status === 'pending' ? ' (مسودة)' : '';
                         
-                        bookingsList.forEach((booking) => {
-                            const hallTitle = booking.hallName ? booking.hallName : 'صالة بدون اسم';
-                            const statusText = booking.status === 'approved' ? '✓' : '⏳';
-                            cellContent += `<div class="hall-badge">${hallTitle} ${statusText}</div>`;
-                        });
-                    }
+                        cellContent += `
+                            <a href="contract.html?id=${booking.id}&date=${fullDateStr}" class="booking-badge ${statusClass}">
+                                <span class="badge-groom">👤 ${booking.groomName}${statusText}</span>
+                                <span class="badge-hall">📍 ${booking.hallName}</span>
+                            </a>
+                        `;
+                    });
                 }
 
+                // زر إضافة عقد جديد في أسفل الخلية
+                cellContent += `<a href="contract.html?date=${fullDateStr}" class="btn-add-mini">+ إضافة عقد</a>`;
+
                 dayCell.innerHTML = cellContent;
-
-                dayCell.onclick = function() {
-                    openDateModal(fullDateStr);
-                };
-
                 daysContainer.appendChild(dayCell);
             }
         }
 
-        function openDateModal(dateStr) {
-            activeSelectedDate = dateStr;
-            document.getElementById('modalDateTitle').innerText = `حجوزات تاريخ: ${dateStr}`;
-            
-            const listContainer = document.getElementById('modalContractsList');
-            listContainer.innerHTML = '';
-
-            let bookingsList = cloudBookings[dateStr] || [];
-            if (!Array.isArray(bookingsList)) {
-                bookingsList = [bookingsList];
-            }
-
-            if (bookingsList.length === 0) {
-                listContainer.innerHTML = `<p style="text-align: center; color: #7f8c8d; padding: 10px;">لا توجد عقود مسجلة في هذا التاريخ.</p>`;
-            } else {
-                bookingsList.forEach((booking, index) => {
-                    const groom = booking.groomName || 'زبون بدون اسم';
-                    const hall = booking.hallName || 'صالة غير محددة';
-                    const status = booking.status === 'approved' ? 'مقبول' : 'مسودة';
-                    
-                    const btn = document.createElement('button');
-                    btn.className = 'contract-item-btn';
-                    btn.innerHTML = `<b>الزبون:</b> ${groom} | <b>الصالة:</b> ${hall} <span style="float: left; font-size: 12px; color: #555;">(${status})</span>`;
-                    
-                    btn.onclick = function() {
-                        localStorage.setItem('selectedContractIndex', index);
-                        window.location.replace(`contract.html?date=${dateStr}&action=edit`);
-                    };
-                    listContainer.appendChild(btn);
-                });
-            }
-
-            document.getElementById('contractsModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('contractsModal').style.display = 'none';
-        }
-
-        function createNewContractForDate() {
-            localStorage.removeItem('selectedContractIndex');
-            window.location.replace(`contract.html?date=${activeSelectedDate}&action=new`);
-        }
-
         function changeMonth(offset) {
             currentDate.setMonth(currentDate.getMonth() + offset);
-            fetchBookings();
+            renderCalendar();
         }
 
         function logout() {
             localStorage.removeItem('currentUserRole');
-            localStorage.removeItem('isLoggedIn');
-            window.location.replace('login.html');
+            window.location.href = 'login.html';
         }
 
-        // جلب البيانات وبدء عرض التقويم عند تحميل الصفحة
-        fetchBookings();
+        initCalendarSystem();
     </script>
 </body>
 </html>
