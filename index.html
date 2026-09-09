@@ -72,8 +72,8 @@
 
     <script>
         // === إعدادات الاتصال بـ Supabase ===
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // استبدل بـ URL مشروعك
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // استبدل بـ Anon Key الخاص بك
+        const SUPABASE_URL = 'https://xxxx.supabase.co'; // استبدل برابط مشروعك الحقيقي
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsIn...'; // استبدل بمفتاح الـ Anon الخاص بك
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // تهيئة الحسابات الافتراضية في Supabase وفي LocalStorage كاحتياط عند أول تشغيل
@@ -112,6 +112,7 @@
                 document.getElementById('adminDashboard').style.display = 'block';
                 document.getElementById('topCalendarBtn').style.display = 'block';
             } else if (role === 'user') {
+                // إذا كان المستخدم العادي مسجلاً الدخول، انقله فوراً للتقويم أو أظهر له الزر
                 document.getElementById('topCalendarBtn').style.display = 'block';
             }
         };
@@ -176,6 +177,7 @@
 
         async function changeAdminPassword() {
             const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
+            if (currentPass === null) return;
             
             let currentAdminPass = localStorage.getItem('adminPass');
             try {
@@ -193,17 +195,22 @@
                 localStorage.setItem('adminPass', newPass);
                 
                 // التحديث في سحابية Supabase
-                await supabaseClient
+                const { error } = await supabaseClient
                     .from('settings_table')
                     .update({ val: newPass })
                     .eq('key_name', 'adminPass');
 
-                alert('تم تغيير كلمة سر المسؤول بنجاح سحابياً!');
+                if (error) {
+                    alert('حدث خطأ أثناء التحديث السحابي: ' + error.message);
+                } else {
+                    alert('تم تغيير كلمة سر المسؤول بنجاح سحابياً!');
+                }
             }
         }
 
         async function changeUserPassword() {
             const adminCheck = prompt('هذا الإجراء يتطلب صلاحية المسؤول. أدخل كلمة سر المسؤول للتأكيد:');
+            if (adminCheck === null) return;
             
             let currentAdminPass = localStorage.getItem('adminPass');
             try {
@@ -217,18 +224,26 @@
             }
 
             const newUser = prompt('أدخل اسم المستخدم الجديد للمستخدم:', localStorage.getItem('userUser') || 'user');
+            if (newUser === null) return;
+
             const newPass = prompt('أدخل كلمة المرور الجديدة للمستخدم:');
+            if (newPass === null) return;
             
-            if (newUser) {
-                localStorage.setItem('userUser', newUser);
-                await supabaseClient.from('settings_table').update({ val: newUser }).eq('key_name', 'userUser');
+            try {
+                if (newUser && newUser.trim() !== '') {
+                    localStorage.setItem('userUser', newUser);
+                    await supabaseClient.from('settings_table').update({ val: newUser }).eq('key_name', 'userUser');
+                }
+                if (newPass && newPass.trim() !== '') {
+                    localStorage.setItem('userPass', newPass);
+                    await supabaseClient.from('settings_table').update({ val: newPass }).eq('key_name', 'userPass');
+                }
+                
+                alert('تم تحديث بيانات المستخدم العادي بنجاح سحابياً!');
+            } catch (e) {
+                console.error('خطأ في التحديث:', e);
+                alert('حدث خطأ أثناء تحديث بيانات المستخدم.');
             }
-            if (newPass && newPass.trim() !== '') {
-                localStorage.setItem('userPass', newPass);
-                await supabaseClient.from('settings_table').update({ val: newPass }).eq('key_name', 'userPass');
-            }
-            
-            alert('تم تحديث بيانات المستخدم العادي بنجاح سحابياً!');
         }
     </script>
 </body>
