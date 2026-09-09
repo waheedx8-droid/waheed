@@ -154,19 +154,33 @@
       userPass: "123456"
     };
 
-    // جلب كلمات المرور من السحاب
+    // جلب كلمات المرور من السحاب أو إنشاؤها تلقائياً إذا كان الـ Bin فارغاً
     async function fetchCloudPasswords() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { 'X-Master-Key': API_KEY }
         });
         const data = await res.json();
+        
         if (data.record && data.record.passwords) {
           cloudPasswords.adminPass = data.record.passwords.adminPass || "admin";
           cloudPasswords.userPass = data.record.passwords.userPass || "123456";
+        } else {
+          // إذا كان الـ Bin فارغاً تماماً، نقوم بتهئته بكلمات المرور الافتراضية
+          const currentData = data.record || {};
+          currentData.passwords = cloudPasswords;
+          
+          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify(currentData)
+          });
         }
       } catch (e) {
-        console.error('تعذر جلب بيانات الحماية سحابياً:', e);
+        console.error('تعذر جلب بيانات الحماية سحابياً، سيتم استخدام القيمة الافتراضية:', e);
       }
     }
 
