@@ -8,80 +8,67 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f2f5; padding: 20px; color: #333; }
         
-        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow-x: hidden; }
         
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .calendar-header h2 { font-size: 24px; color: #2c3e50; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .calendar-header h2 { font-size: 20px; color: #2c3e50; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-nav:hover { background: #2980b9; }
-        .btn-logout { background: #e74c3c; margin-right: 10px; }
+        .btn-logout { background: #e74c3c; margin-right: 5px; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; width: 100%; }
+        .day-header { font-weight: bold; background: #f8f9fa; padding: 8px 2px; border-radius: 4px; color: #555; font-size: 13px; }
         
-        .day-cell { min-height: 95px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; }
-        .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
+        .day-cell { 
+            min-height: 80px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 6px; 
+            padding: 4px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            background: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: stretch;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .day-cell:hover { border-color: #3498db; transform: translateY(-1px); }
         .day-cell.empty { background: #fafafa; cursor: default; border: none; }
         
-        .day-number { font-weight: bold; font-size: 16px; text-align: left; padding: 2px 5px; color: #2c3e50; }
+        .day-number { font-weight: bold; font-size: 14px; text-align: left; padding: 2px; color: #2c3e50; }
+
+        /* تنسيق أسماء العقود المتعددة داخل مربع اليوم */
+        .event-item {
+            font-size: 9px !important;
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 2px 3px;
+            margin-top: 2px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            text-align: right;
+            font-weight: bold;
+        }
 
         input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
         .en-num { direction: ltr !important; unicode-bidi: isolate; }
-        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
-        /* حل مشكلة قياسات التقويم وعدم خروج العناصر عن الإطار */
-.card, .calendar-container {
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
-}
-
-#daysContainer, .days-grid, .weekdays-grid {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  margin: 0 auto;
-}
-
-.day-cell {
-  width: 100% !important;
-  min-height: 45px;
-  box-sizing: border-box !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding: 4px;
-  overflow-y: auto;
-  max-height: 80px;
-}
-
-/* شكل أسماء العقود داخل مربع اليوم في التقويم */
-.event-item {
-  font-size: 10px;
-  background-color: #e3f2fd;
-  color: #0d47a1;
-  padding: 2px 3px;
-  margin-bottom: 2px;
-  border-radius: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  box-sizing: border-box;
-}
+        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div class="calendar-container">
         <div class="calendar-header">
-            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
+            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; السابق</button>
             <h2 id="monthYearDisplay"></h2>
             <div>
                 <span id="roleDisplay" class="user-tag"></span>
-                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
+                <button class="btn-nav" onclick="changeMonth(1)">التالي &#10094;</button>
                 <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
             </div>
         </div>
@@ -99,6 +86,17 @@
         <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
+    <!-- النافذة المنبثقة لاختيار العقد عند الضغط على التاريخ -->
+    <div id="eventModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; box-sizing:border-box;">
+            <h3 id="modalDateTitle" style="margin-top:0; color:#333; font-size:16px; margin-bottom: 15px;">عقود اليوم</h3>
+            <div id="modalEventsList" style="max-height:220px; overflow-y:auto; margin-bottom:15px;">
+                <!-- ستضاف القائمة هنا ديناميكياً -->
+            </div>
+            <button type="button" onclick="closeEventModal()" style="width:100%; padding:10px; background:#e74c3c; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">إغلاق</button>
+        </div>
+    </div>
+
     <script>
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -107,7 +105,7 @@
 
         let currentDate = new Date(2026, 6, 1);
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
+        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير' : 'مستخدم';
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -123,6 +121,7 @@
             const firstDayIndex = new Date(year, monthIndex, 1).getDay();
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
+            // جلب البيانات (ندعم أن تكون البيانات مصفوفة لكل يوم لتعدد العقود)
             const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
             for (let i = 0; i < firstDayIndex; i++) {
@@ -141,37 +140,45 @@
 
                 let cellContent = `<div class="day-number en-num">${day}</div>`;
 
-                if (savedBookings[fullDateStr]) {
-                    const booking = savedBookings[fullDateStr];
+                let dayEvents = savedBookings[fullDateStr];
 
-                    // العقد المعلق (مسودة) يظهر باللون الأحمر
-                    if (booking.status === 'pending') {
-                        dayCell.style.backgroundColor = '#e74c3c';
-                        dayCell.style.borderColor = '#c0392b';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 2px;">
-                                ${booking.groomName}<br>(مسودة)
-                            </div>
-                        `;
-                    } 
-                    // العقد المقبول يظهر باللون الأخضر
-                    else if (booking.status === 'approved') {
-                        dayCell.style.backgroundColor = '#27ae60';
-                        dayCell.style.borderColor = '#1e8449';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 13px; font-weight: bold; padding: 5px; border-radius: 4px; margin-top: 4px;">
-                                ${booking.groomName}
-                            </div>
-                        `;
+                if (dayEvents) {
+                    // إذا كان الحجز مخزناً كنظام قديم (كائن مفرد)، نقوم بتحويله تلقائياً إلى مصفوفة ليدعم النظام الجديد
+                    if (!Array.isArray(dayEvents)) {
+                        dayEvents = [dayEvents];
+                    }
+
+                    if (dayEvents.length > 0) {
+                        cellContent += `<div style="display:flex; flex-direction:column; gap:2px; width:100%; overflow:hidden;">`;
+                        dayEvents.forEach(ev => {
+                            let displayName = ev.groomName || ev.name || 'بدون اسم';
+                            let displayHall = ev.hall || '';
+                            cellContent += `<div class="event-item">📌 ${displayName} ${displayHall ? '('+displayHall+')' : ''}</div>`;
+                        });
+                        cellContent += `</div>`;
+                    }
+
+                    // تلوين خلفية الخلية حسب حالة أول عقد أو بشكل عام
+                    if (dayEvents.length === 1) {
+                        if (dayEvents[0].status === 'pending') {
+                            dayCell.style.borderLeft = '4px solid #e74c3c';
+                        } else if (dayEvents[0].status === 'approved') {
+                            dayCell.style.borderLeft = '4px solid #27ae60';
+                        }
+                    } else if (dayEvents.length > 1) {
+                        dayCell.style.borderLeft = '4px solid #3498db';
                     }
                 }
 
                 dayCell.innerHTML = cellContent;
 
+                // عند الضغط على التاريخ، نعرض النافذة المنبثقة بالعقود الموجودة أو نسمح بإضافة عقد جديد
                 dayCell.onclick = function() {
-                    window.location.href = `contract.html?date=${fullDateStr}`;
+                    let eventsArray = savedBookings[fullDateStr];
+                    if (eventsArray && !Array.isArray(eventsArray)) {
+                        eventsArray = [eventsArray];
+                    }
+                    openDayEventsModal(fullDateStr, eventsArray || []);
                 };
 
                 daysContainer.appendChild(dayCell);
@@ -188,43 +195,54 @@
             window.location.href = 'index.html';
         }
 
-        renderCalendar();
         // دالة تعرض العقود الخاصة باليوم داخل النافذة المنبثقة
-function openDayEventsModal(dateString, eventsArray) {
-  document.getElementById('modalDateTitle').innerText = "عقود تاريخ: " + dateString;
-  let listContainer = document.getElementById('modalEventsList');
-  listContainer.innerHTML = "";
+        function openDayEventsModal(dateString, eventsArray) {
+            document.getElementById('modalDateTitle').innerText = "عقود تاريخ: " + dateString;
+            let listContainer = document.getElementById('modalEventsList');
+            listContainer.innerHTML = "";
 
-  if (eventsArray && eventsArray.length > 0) {
-    eventsArray.forEach((event, index) => {
-      let item = document.createElement('div');
-      item.innerHTML = `📌 ${event.name} (${event.hall})`;
-      item.style.cssText = "padding: 10px; margin-bottom: 5px; background: #e3f2fd; color: #0d47a1; border-radius: 5px; cursor: pointer; font-weight: bold;";
-      
-      // عند الضغط على الخيار، ينقلنا إلى صفحة العقد المطلوب
-      item.onclick = function() {
-        // نقوم بتخزين العقد الحالي المراد عرضه أو تمريره عبر الـ URL
-        localStorage.setItem("selectedContractDate", dateString);
-        localStorage.setItem("selectedContractIndex", index);
-        
-        // الانتقال لصفحة العقد
-        window.location.href = "contract.html";
-      };
-      
-      listContainer.appendChild(item);
-    });
-  } else {
-    listContainer.innerHTML = "<p>لا توجد عقود في هذا اليوم.</p>";
-  }
+            if (eventsArray && eventsArray.length > 0) {
+                eventsArray.forEach((event, index) => {
+                    let item = document.createElement('div');
+                    let name = event.groomName || event.name || 'عقد جديد';
+                    let hall = event.hall ? ` - ${event.hall}` : '';
+                    item.innerHTML = `📌 ${name}${hall}`;
+                    item.style.cssText = "padding: 10px; margin-bottom: 6px; background: #e3f2fd; color: #0d47a1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;";
+                    
+                    // عند الضغط على الخيار، ينقلنا إلى صفحة العقد المطلوب مع الـ Index الصحيح
+                    item.onclick = function() {
+                        localStorage.setItem("selectedContractDate", dateString);
+                        localStorage.setItem("selectedContractIndex", index);
+                        window.location.href = `contract.html?date=${dateString}`;
+                    };
+                    
+                    listContainer.appendChild(item);
+                });
+            } else {
+                listContainer.innerHTML = "<p style='color:#666; text-align:center; font-size:13px;'>لا توجد عقود مسجلة في هذا اليوم.</p>";
+            }
 
-  // إظهار النافذة
-  document.getElementById('eventModal').style.display = "flex";
-}
+            // زر لإضافة عقد جديد في نفس اليوم مباشرة
+            let addBtn = document.createElement('button');
+            addBtn.innerText = "+ إضافة عقد جديد لهذا التاريخ";
+            addBtn.style.cssText = "width:100%; padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; font-size:13px;";
+            addBtn.onclick = function() {
+                localStorage.setItem("selectedContractDate", dateString);
+                // إذا أردت توجيه صفحة العقد لإضافة عقد جديد في هذا التاريخ
+                window.location.href = `contract.html?date=${dateString}&action=new`;
+            };
+            listContainer.appendChild(addBtn);
 
-// دالة إغلاق النافذة
-function closeEventModal() {
-  document.getElementById('eventModal').style.display = "none";
-}
+            // إظهار النافذة
+            document.getElementById('eventModal').style.display = "flex";
+        }
+
+        // دالة إغلاق النافذة
+        function closeEventModal() {
+            document.getElementById('eventModal').style.display = "none";
+        }
+
+        renderCalendar();
     </script>
 </body>
 </html>
