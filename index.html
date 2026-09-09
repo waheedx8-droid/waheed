@@ -33,26 +33,6 @@
       text-align: center;
     }
 
-    .top-calendar-btn {
-      position: absolute;
-      top: -50px;
-      left: 0;
-      background: #27ae60;
-      color: #fff;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      display: inline-block;
-      text-decoration: none;
-    }
-
-    .top-calendar-btn:hover {
-      background: #219150;
-    }
-
     h2 {
       margin-bottom: 20px;
       color: #2c3e50;
@@ -197,27 +177,23 @@
 
   <div class="login-card">
 
-    <a href="calendar.html" id="topCalendarBtn" class="top-calendar-btn">الدخول للتقويم</a>
-
     <div id="loginSection">
       <h2>تسجيل الدخول</h2>
-      <form onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label>اسم المستخدم</label>
-          <input type="text" id="username" required placeholder="أدخل اسم المستخدم...">
-        </div>
-        <div class="form-group">
-          <label>كلمة المرور</label>
-          <input type="password" id="password" required placeholder="أدخل كلمة المرور...">
-        </div>
-        <button type="submit" class="btn-submit">تسجيل الدخول</button>
-      </form>
+      <div class="form-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور...">
+      </div>
+      <button type="button" class="btn-submit" onclick="handleLogin()">تسجيل الدخول</button>
     </div>
 
     <div id="adminDashboard" class="admin-dashboard">
       <div class="welcome-msg" id="welcomeMsg">لوحة التحكم</div>
 
-      <a href="calendar.html" class="btn-dashboard">التقويم</a>
+      <button type="button" class="btn-dashboard" onclick="goToCalendar()">التقويم</button>
 
       <button type="button" class="btn-pass-admin" id="adminPassBtn" onclick="togglePassSection('admin')">تغيير كلمة مرور الأدمن</button>
       <button type="button" class="btn-pass-user" id="userPassBtn" onclick="togglePassSection('user')">تغيير كلمة مرور المستخدم</button>
@@ -238,6 +214,7 @@
   <script>
     let targetAccountToChange = '';
 
+    // التحقق من الجلسة عند فتح التطبيق
     document.addEventListener("DOMContentLoaded", function () {
       const isLoggedIn = localStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
@@ -247,9 +224,13 @@
       }
     });
 
-    function handleLogin(e) {
-      if (e) e.preventDefault();
+    // دالة التحويل المباشر لصفحة التقويم (تمنع إعادة التحميل نهائياً)
+    function goToCalendar() {
+      window.location.href = "calendar.html";
+    }
 
+    // دالة تسجيل الدخول
+    function handleLogin() {
       const userVal = document.getElementById("username").value.trim().toLowerCase();
       const passVal = document.getElementById("password").value.trim();
 
@@ -269,15 +250,15 @@
       }
     }
 
+    // إظهار لوحة التحكم وتخصيص الأزرار حسب الحساب
     function showDashboard() {
       const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
       document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
 
       document.getElementById("loginSection").style.display = "none";
-      document.getElementById("topCalendarBtn").style.display = "none";
       document.getElementById("adminDashboard").style.display = "block";
 
-      // التحقق من الحساب بغض النظر عن حالة الأحرف (كبيرة أو صغيرة)
+      // إذا كان الحساب أدمين تظهر أزرار كلمة المرور، وإذا كان يوزر تخفي تماماً
       if (currentUser === "admin") {
         document.getElementById("adminPassBtn").style.display = "block";
         document.getElementById("userPassBtn").style.display = "block";
@@ -322,7 +303,6 @@
     function showLogin() {
       document.getElementById("adminDashboard").style.display = "none";
       document.getElementById("loginSection").style.display = "block";
-      document.getElementById("topCalendarBtn").style.display = "inline-block";
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
     }
