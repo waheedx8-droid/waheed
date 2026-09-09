@@ -1,334 +1,335 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="manifest" href="./manifest.json">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام تنظيم الأعراس - تسجيل الدخول السحابي</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  <link rel="manifest" href="./manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام تنظيم الأعراس - تسجيل الدخول السحابي</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    body {
-      background-color: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
+    body {
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-    .card {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
+    .card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
 
-    h2 {
-      margin-bottom: 20px;
-      color: #2c3e50;
-      font-size: 22px;
-    }
+    h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 22px;
+    }
 
-    .form-group {
-      margin-bottom: 15px;
-      text-align: right;
-    }
+    .form-group {
+      margin-bottom: 15px;
+      text-align: right;
+    }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: bold;
-      font-size: 14px;
-      color: #333;
-    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
+    }
 
-    .form-group input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      outline: none;
-    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
 
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
-      text-align: center;
-    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+      text-align: center;
+    }
 
-    .btn-login { background: #2980b9; color: #fff; }
-    .btn-login:hover { background: #2471a3; }
+    .btn-login { background: #2980b9; color: #fff; }
+    .btn-login:hover { background: #2471a3; }
 
-    .btn-calendar { background: #27ae60; color: #fff; }
-    .btn-calendar:hover { background: #219150; }
+    .btn-calendar { background: #27ae60; color: #fff; }
+    .btn-calendar:hover { background: #219150; }
 
-    .btn-pass-admin { background: #8e44ad; color: #fff; }
-    .btn-pass-admin:hover { background: #732d91; }
+    .btn-pass-admin { background: #8e44ad; color: #fff; }
+    .btn-pass-admin:hover { background: #732d91; }
 
-    .btn-pass-user { background: #d35400; color: #fff; }
-    .btn-pass-user:hover { background: #b04100; }
+    .btn-pass-user { background: #d35400; color: #fff; }
+    .btn-pass-user:hover { background: #b04100; }
 
-    .btn-logout { background: #e74c3c; color: #fff; margin-top: 10px; }
-    .btn-logout:hover { background: #c0392b; }
+    .btn-logout { background: #e74c3c; color: #fff; margin-top: 10px; }
+    .btn-logout:hover { background: #c0392b; }
 
-    .pass-box {
-      display: none;
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-      margin-bottom: 15px;
-      text-align: right;
-    }
-  </style>
+    .pass-box {
+      display: none;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      margin-bottom: 15px;
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="card">
+  <div class="card">
 
-    <!-- 1. شاشة تسجيل الدخول -->
-    <div id="loginSection">
-      <h2>تسجيل الدخول</h2>
-      <div class="form-group">
-        <label>اسم المستخدم</label>
-        <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور</label>
-        <input type="password" id="password" placeholder="أدخل كلمة المرور...">
-      </div>
-      <button type="button" class="btn btn-login" onclick="handleLogin()">تسجيل الدخول</button>
-    </div>
+    <!-- 1. شاشة تسجيل الدخول -->
+    <div id="loginSection">
+      <h2>تسجيل الدخول</h2>
+      <div class="form-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور...">
+      </div>
+      <button type="button" class="btn btn-login" onclick="handleLogin()">تسجيل الدخول</button>
+    </div>
 
-    <!-- 2. شاشة الداشبورد المصغرة -->
-    <div id="dashboardSection" style="display: none;">
-      <h2 id="welcomeMsg">أهلاً بك</h2>
+    <!-- 2. شاشة الداشبورد المصغرة -->
+    <div id="dashboardSection" style="display: none;">
+      <h2 id="welcomeMsg">أهلاً بك</h2>
 
-      <button type="button" class="btn btn-calendar" onclick="openCalendar()">الدخول إلى التقويم</button>
+      <button type="button" class="btn btn-calendar" onclick="openCalendar()">الدخول إلى التقويم</button>
 
-      <!-- أزرار تغيير كلمة المرور (للأدمن فقط وتُحفظ سحابياً ومحلياً لتتغير عند الجميع) -->
-      <div id="adminControls" style="display: none;">
-        <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
-        <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
-      </div>
+      <!-- أزرار تغيير كلمة المرور (للأدمن فقط وتُحفظ سحابياً ومحلياً لتتغير عند الجميع) -->
+      <div id="adminControls" style="display: none;">
+        <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
+        <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
+      </div>
 
-      <!-- مربع إدخال كلمة المرور الجديدة -->
-      <div id="passBox" class="pass-box">
-        <h4 id="passBoxTitle" style="margin-bottom: 10px; font-size: 14px;">تغيير كلمة المرور</h4>
-        <div class="form-group">
-          <input type="password" id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة...">
-        </div>
-        <button type="button" class="btn btn-login" style="padding: 8px;" onclick="savePassword()">حفظ الكلمة الجديدة</button>
-      </div>
+      <!-- مربع إدخال كلمة المرور الجديدة -->
+      <div id="passBox" class="pass-box">
+        <h4 id="passBoxTitle" style="margin-bottom: 10px; font-size: 14px;">تغيير كلمة المرور</h4>
+        <div class="form-group">
+          <input type="password" id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة...">
+        </div>
+        <button type="button" class="btn btn-login" style="padding: 8px;" onclick="savePassword()">حفظ الكلمة الجديدة</button>
+      </div>
 
-      <button type="button" class="btn btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
-    </div>
+      <button type="button" class="btn btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+    </div>
 
-  </div>
+  </div>
 
-  <script>
-    const BIN_ID = '6aa17fcbfd5d16053f256cd';
-    // تصحيح مفتاح الماستر السحابي الصحيح الذي أرسلته
-    const API_KEY = '$2a$10$cQzqgt61IaRpgBlG81qNSerd.2gm094w/Xf8BzOcV3BY/m7NuTOyy';
+  <script>
+    const BIN_ID = '6aa17fcbfd5d16053f256cd';
+    // تصحيح مفتاح الماستر السحابي الصحيح الذي أرسلته
+    const API_KEY = '$2a$10$cQzqgt61IaRpgBlG81qNSerd.2gm094w/Xf8BzOcV3BY/m7NuTOyy';
 
-    let activePassType = '';
-    let cloudPasswords = {
-      adminPass: "admin",
-      userPass: "123456"
-    };
+    let activePassType = '';
+    let cloudPasswords = {
+      adminPass: "admin",
+      userPass: "123456"
+    };
 
-    async function fetchCloudPasswords() {
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { 'X-Master-Key': API_KEY }
-        });
-        
-        if (!res.ok) throw new Error('فشل جلب البيانات من الخادم السحابي');
+    async function fetchCloudPasswords() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': API_KEY }
+        });
+        
+        if (!res.ok) throw new Error('فشل جلب البيانات من الخادم السحابي');
 
-        const data = await res.json();
-        const record = data.record || {};
-        
-        if (record.passwords) {
-          cloudPasswords.adminPass = record.passwords.adminPass || "admin";
-          cloudPasswords.userPass = record.passwords.userPass || "123456";
-          // تحديث النسخة الاحتياطية المحلية
-          localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
-        } else {
-          // إذا لم تكن موجودة بالسحاب، ننشئها ونحفظها دون التأثير على باقي السجل
-          record.passwords = cloudPasswords;
-          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Master-Key': API_KEY
-            },
-            body: JSON.stringify(record)
-          });
-        }
-      } catch (e) {
-        console.warn('تعذر الاتصال بالسحاب، جاري الاعتماد على النسخة المحلية:', e);
-        // استرجاع الكلمات محلياً في حال انقطاع النت لتجنب قفل المستخدم
-        const savedLocal = localStorage.getItem('localPasswords');
-        if (savedLocal) {
-          cloudPasswords = JSON.parse(savedLocal);
-        }
-      }
-    }
+        const data = await res.json();
+        const record = data.record || {};
+        
+        if (record.passwords) {
+          cloudPasswords.adminPass = record.passwords.adminPass || "admin";
+          cloudPasswords.userPass = record.passwords.userPass || "123456";
+          // تحديث النسخة الاحتياطية المحلية
+          localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
+        } else {
+          // إذا لم تكن موجودة بالسحاب، ننشئها ونحفظها دون التأثير على باقي السجل
+          record.passwords = cloudPasswords;
+          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify(record)
+          });
+        }
+      } catch (e) {
+        console.warn('تعذر الاتصال بالسحاب، جاري الاعتماد على النسخة المحلية:', e);
+        // استرجاع الكلمات محلياً في حال انقطاع النت لتجنب قفل المستخدم
+        const savedLocal = localStorage.getItem('localPasswords');
+        if (savedLocal) {
+          cloudPasswords = JSON.parse(savedLocal);
+        }
+      }
+    }
 
-    document.addEventListener("DOMContentLoaded", async function () {
-      await fetchCloudPasswords();
-      
-      const isLoggedIn = localStorage.getItem("isLoggedIn");
-      if (isLoggedIn === "true") {
-        renderDashboard();
-      } else {
-        renderLogin();
-      }
-    });
+    document.addEventListener("DOMContentLoaded", async function () {
+      await fetchCloudPasswords();
+      
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      if (isLoggedIn === "true") {
+        renderDashboard();
+      } else {
+        renderLogin();
+      }
+    });
 
-    function openCalendar() {
-      localStorage.removeItem('selectedContractIndex');
-      window.location.assign("dash.html");
-    }
+    function openCalendar() {
+      localStorage.removeItem('selectedContractIndex');
+      window.location.assign("dash.html");
+    }
 
-    async function handleLogin() {
-      const user = document.getElementById("username").value.trim().toLowerCase();
-      const pass = document.getElementById("password").value.trim();
+    async function handleLogin() {
+      const user = document.getElementById("username").value.trim().toLowerCase();
+      const pass = document.getElementById("password").value.trim();
 
-      await fetchCloudPasswords();
+      await fetchCloudPasswords();
 
-      const validAdminPass = cloudPasswords.adminPass || "admin";
-      const validUserPass = cloudPasswords.userPass || "123456";
+      const validAdminPass = cloudPasswords.adminPass || "admin";
+      const validUserPass = cloudPasswords.userPass || "123456";
 
-      if (user === "admin" && pass === validAdminPass) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("currentUser", "admin");
-        localStorage.setItem("currentUserRole", "admin");
-        renderDashboard();
-      } else if (user === "user" && pass === validUserPass) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("currentUser", "user");
-        localStorage.setItem("currentUserRole", "user");
-        renderDashboard();
-      } else {
-        alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
-      }
-    }
+      if (user === "admin" && pass === validAdminPass) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("currentUser", "admin");
+        localStorage.setItem("currentUserRole", "admin");
+        renderDashboard();
+      } else if (user === "user" && pass === validUserPass) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("currentUser", "user");
+        localStorage.setItem("currentUserRole", "user");
+        renderDashboard();
+      } else {
+        alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
+      }
+    }
 
-    function renderDashboard() {
-      const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
-      
-      document.getElementById("loginSection").style.display = "none";
-      document.getElementById("dashboardSection").style.display = "block";
-      document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
+    function renderDashboard() {
+      const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
+      
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("dashboardSection").style.display = "block";
+      document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
 
-      if (currentUser === "admin") {
-        document.getElementById("adminControls").style.display = "block";
-      } else {
-        document.getElementById("adminControls").style.display = "none";
-      }
-      
-      document.getElementById("passBox").style.display = "none";
-    }
+      if (currentUser === "admin") {
+        document.getElementById("adminControls").style.display = "block";
+      } else {
+        document.getElementById("adminControls").style.display = "none";
+      }
+      
+      document.getElementById("passBox").style.display = "none";
+    }
 
-    function showPassBox(type) {
-      activePassType = type;
-      const box = document.getElementById("passBox");
-      const title = document.getElementById("passBoxTitle");
-      
-      box.style.display = "block";
-      document.getElementById("newPasswordInput").value = "";
+    function showPassBox(type) {
+      activePassType = type;
+      const box = document.getElementById("passBox");
+      const title = document.getElementById("passBoxTitle");
+      
+      box.style.display = "block";
+      document.getElementById("newPasswordInput").value = "";
 
-      if (type === 'admin') {
-        title.innerText = "تغيير كلمة سر الأدمن (سحابياً للجميع)";
-      } else {
-        title.innerText = "تغيير كلمة سر اليوزر (سحابياً للجميع)";
-      }
-    }
+      if (type === 'admin') {
+        title.innerText = "تغيير كلمة سر الأدمن (سحابياً للجميع)";
+      } else {
+        title.innerText = "تغيير كلمة سر اليوزر (سحابياً للجميع)";
+      }
+    }
 
-    async function savePassword() {
-      const newPass = document.getElementById("newPasswordInput").value.trim();
-      if (!newPass) {
-        alert("يرجى إدخال كلمة المرور الجديدة!");
-        return;
-      }
+    async function savePassword() {
+      const newPass = document.getElementById("newPasswordInput").value.trim();
+      if (!newPass) {
+        alert("يرجى إدخال كلمة المرور الجديدة!");
+        return;
+      }
 
-      // 1. تحديث القيم مؤقتاً في الكائن المحلي والذاكرة
-      if (activePassType === 'admin') {
-        cloudPasswords.adminPass = newPass;
-      } else if (activePassType === 'user') {
-        cloudPasswords.userPass = newPass;
-      }
+      // 1. تحديث القيم مؤقتاً في الكائن المحلي والذاكرة
+      if (activePassType === 'admin') {
+        cloudPasswords.adminPass = newPass;
+      } else if (activePassType === 'user') {
+        cloudPasswords.userPass = newPass;
+      }
 
-      // حفظ فوري محلياً لضمان الأمان
-      localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
+      // حفظ فوري محلياً لضمان الأمان
+      localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
 
-      try {
-        // 2. جلب أحدث نسخة كاملة من السحاب لدمج التعديل وعدم حذف الحجوزات
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { 'X-Master-Key': API_KEY }
-        });
-        const getData = await getRes.json();
-        const currentData = getData.record || {};
+      try {
+        // 2. جلب أحدث نسخة كاملة من السحاب لدمج التعديل وعدم حذف الحجوزات
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': API_KEY }
+        });
+        const getData = await getRes.json();
+        const currentData = getData.record || {};
 
-        // 3. تحديث قسم كلمات المرور فقط
-        currentData.passwords = cloudPasswords;
+        // 3. تحديث قسم كلمات المرور فقط
+        currentData.passwords = cloudPasswords;
 
-        // 4. إرسال البيانات المحدثة للسحاب عبر PUT باستخدام المفتاح الصحيح
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-          },
-          body: JSON.stringify(currentData)
-        });
+        // 4. إرسال البيانات المحدثة للسحاب عبر PUT باستخدام المفتاح الصحيح
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY
+          },
+          body: JSON.stringify(currentData)
+        });
 
-        if (response.ok) {
-          alert("تم تحديث وحفظ كلمة المرور سحابياً ومحلياً بنجاح لتتغير عند جميع المستخدمين!");
-          document.getElementById("passBox").style.display = "none";
-        } else {
-          alert("تم حفظ الكلمة محلياً، ولكن تعذر التحديث السحابي الفوري. يرجى التحقق من الشبكة.");
-          document.getElementById("passBox").style.display = "none";
-        }
-      } catch (error) {
-        console.error('خطأ الاتصال:', error);
-        alert("تم حفظ كلمة المرور في جهازك محلياً نظراً لعدم توفر الاتصال السحابي.");
-        document.getElementById("passBox").style.display = "none";
-      }
-    }
+        if (response.ok) {
+          alert("تم تحديث وحفظ كلمة المرور سحابياً ومحلياً بنجاح لتتغير عند جميع المستخدمين!");
+          document.getElementById("passBox").style.display = "none";
+        } else {
+          alert("تم حفظ الكلمة محلياً، ولكن تعذر التحديث السحابي الفوري. يرجى التحقق من الشبكة.");
+          document.getElementById("passBox").style.display = "none";
+        }
+      } catch (error) {
+        console.error('خطأ الاتصال:', error);
+        alert("تم حفظ كلمة المرور في جهازك محلياً نظراً لعدم توفر الاتصال السحابي.");
+        document.getElementById("passBox").style.display = "none";
+      }
+    }
 
-    function renderLogin() {
-      document.getElementById("loginSection").style.display = "block";
-      document.getElementById("dashboardSection").style.display = "none";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    }
+    function renderLogin() {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("dashboardSection").style.display = "none";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
 
-    function handleLogout() {
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("currentUserRole");
-      renderLogin();
-    }
-  </script>
+    function handleLogout() {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("currentUserRole");
+      renderLogin();
+    }
+  </script>
 
 </body>
 </html>
+هذا الكود الاول ركز على ان لاتلغي الميزات 
