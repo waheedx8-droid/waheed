@@ -24,9 +24,9 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; width: 100%; }
         .day-header { font-weight: bold; background: #f8f9fa; padding: 8px 2px; border-radius: 4px; color: #555; font-size: 12px; }
         
-        /* زيادة الارتفاع والمساحة الداخلية للمربعات لتتسع للأسماء الطويلة بالكامل */
+        /* زيادة الارتفاع والمساحة الداخلية للمربعات لتسع لأسماء الصالات متعددة الحجوزات */
         .day-cell { 
-            min-height: 110px; 
+            min-height: 120px; 
             border: 1px solid #dcdcdc; 
             border-radius: 6px; 
             padding: 5px 3px; 
@@ -45,13 +45,13 @@
         
         .day-number { font-weight: bold; font-size: 13px; text-align: left; padding: 2px; color: #2c3e50; }
 
-        /* ضبط حجم الخط والتفاف النص لمنع أي قص لاسم الصالة */
+        /* تنسيق يتيح ظهور أكثر من صالة بنفس اليوم بشكل واضح ومرتب */
         .event-item {
             font-size: 9.5px !important;
             background-color: #e3f2fd;
             color: #0d47a1;
-            padding: 4px 2px;
-            margin-top: 3px;
+            padding: 3px 2px;
+            margin-top: 2px;
             border-radius: 3px;
             white-space: normal !important;
             word-break: break-word;
@@ -98,12 +98,12 @@
         <div class="calendar-grid" id="calendarDays" style="margin-top: 6px;"></div>
     </div>
 
-    <!-- النافذة المنبثقة لاختيار العقد عند الضغط على التاريخ -->
+    <!-- النافذة المنبثقة لاختيار العقد عند الضغط على التاريخ (تציهر كل العقود المحجوزة بهذا اليوم) -->
     <div id="eventModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; box-sizing:border-box;">
             <h3 id="modalDateTitle" style="margin-top:0; color:#333; font-size:16px; margin-bottom: 15px;">عقود اليوم</h3>
             <div id="modalEventsList" style="max-height:220px; overflow-y:auto; margin-bottom:15px;">
-                <!-- ستضاف القائمة هنا ديناميكياً -->
+                <!-- ستضاف القائمة هنا ديناميكياً لكل العقود -->
             </div>
             <button type="button" onclick="closeEventModal()" style="width:100%; padding:10px; background:#e74c3c; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">إغلاق</button>
         </div>
@@ -160,6 +160,7 @@
 
                     if (dayEvents.length > 0) {
                         cellContent += `<div style="display:flex; flex-direction:column; gap:2px; width:100%;">`;
+                        // عرض كافة الصالات المحجوزة في هذا اليوم تباعاً (صالة الشرق، البانوراما، إلخ)
                         dayEvents.forEach(ev => {
                             let displayHall = ev.hall || ev.hallName || 'صالة محجوزة';
                             cellContent += `<div class="event-item">🏛️ ${displayHall}</div>`;
@@ -205,6 +206,7 @@
                     item.innerHTML = `📌 ${name}${hall}`;
                     item.style.cssText = "padding: 10px; margin-bottom: 6px; background: #e3f2fd; color: #0d47a1; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;";
                     
+                    // عند الضغط على عقد معين لتعديله أو عرضه
                     item.onclick = function() {
                         localStorage.setItem("selectedContractDate", dateString);
                         localStorage.setItem("selectedContractIndex", index);
@@ -221,9 +223,10 @@
             addBtn.innerText = "+ إضافة عقد جديد لهذا التاريخ";
             addBtn.style.cssText = "width:100%; padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; font-size:13px;";
             
+            // عند النقر هنا، يتم تصفير مؤشر العقد تماماً وإرسال إشارة بإنشاء ملف جديد فارغ
             addBtn.onclick = function() {
                 localStorage.setItem("selectedContractDate", dateString);
-                localStorage.removeItem("selectedContractIndex"); 
+                localStorage.removeItem("selectedContractIndex"); // تصفير المؤشر لكي لا يقرأ العقد القديم
                 window.location.href = `contract.html?date=${dateString}&action=new`;
             };
             listContainer.appendChild(addBtn);
