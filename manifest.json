@@ -8,5 +8,17 @@
   "description": "نظام تنظيم الأعراس وصالات الأفراح",
   "orientation": "any",
   "scope": "/",
-  "id": "shahbarose-app"
+  "id": "shahbarose-app",
+  "icons": [
+    {
+      "src": "https://www.pwabuilder.com/assets/icons/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
