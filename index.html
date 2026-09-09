@@ -123,7 +123,7 @@
 
       <button type="button" class="btn btn-calendar" onclick="openCalendar()">الدخول إلى التقويم</button>
 
-      <!-- أزرار تغيير كلمة المرور (للأدمن فقط وتُحفظ سحابياً لتتغير عند الجميع) -->
+      <!-- أزرار تغيير كلمة المرور (للأدمن فقط وتُحفظ سحابياً ومحلياً لتتغير عند الجميع) -->
       <div id="adminControls" style="display: none;">
         <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
         <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
@@ -145,7 +145,8 @@
 
   <script>
     const BIN_ID = '6aa17fcbfd5d16053f256cd';
-    const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
+    // تصحيح مفتاح الماستر السحابي الصحيح الذي أرسلته
+    const API_KEY = '$2a$10$cQzqgt61IaRpgBlG81qNSerd.2gm094w/Xf8BzOcV3BY/m7NuTOyy';
 
     let activePassType = '';
     let cloudPasswords = {
@@ -158,14 +159,19 @@
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { 'X-Master-Key': API_KEY }
         });
+        
+        if (!res.ok) throw new Error('فشل جلب البيانات من الخادم السحابي');
+
         const data = await res.json();
         const record = data.record || {};
         
         if (record.passwords) {
           cloudPasswords.adminPass = record.passwords.adminPass || "admin";
           cloudPasswords.userPass = record.passwords.userPass || "123456";
+          // تحديث النسخة الاحتياطية المحلية
+          localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
         } else {
-          // إذا لم تكن موجودة، ننشئها ونحفظها سحابياً دون مسح باقي البيانات
+          // إذا لم تكن موجودة بالسحاب، ننشئها ونحفظها دون التأثير على باقي السجل
           record.passwords = cloudPasswords;
           await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: 'PUT',
@@ -177,7 +183,12 @@
           });
         }
       } catch (e) {
-        console.error('تعذر جلب بيانات الحماية سحابياً:', e);
+        console.warn('تعذر الاتصال بالسحاب، جاري الاعتماد على النسخة المحلية:', e);
+        // استرجاع الكلمات محلياً في حال انقطاع النت لتجنب قفل المستخدم
+        const savedLocal = localStorage.getItem('localPasswords');
+        if (savedLocal) {
+          cloudPasswords = JSON.parse(savedLocal);
+        }
       }
     }
 
@@ -259,25 +270,28 @@
         return;
       }
 
-      // تحديث القيمة محلياً مؤقتاً
+      // 1. تحديث القيم مؤقتاً في الكائن المحلي والذاكرة
       if (activePassType === 'admin') {
         cloudPasswords.adminPass = newPass;
       } else if (activePassType === 'user') {
         cloudPasswords.userPass = newPass;
       }
 
+      // حفظ فوري محلياً لضمان الأمان
+      localStorage.setItem('localPasswords', JSON.stringify(cloudPasswords));
+
       try {
-        // 1. جلب أحدث نسخة كاملة من السحاب لضمان الحفاظ على الحجوزات وباقي البيانات
+        // 2. جلب أحدث نسخة كاملة من السحاب لدمج التعديل وعدم حذف الحجوزات
         const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { 'X-Master-Key': API_KEY }
         });
         const getData = await getRes.json();
         const currentData = getData.record || {};
 
-        // 2. تحديث قسم كلمات المرور فقط داخل الكائن الكامل
+        // 3. تحديث قسم كلمات المرور فقط
         currentData.passwords = cloudPasswords;
 
-        // 3. إرسال الكائن كاملاً للسحاب باستخدام PUT
+        // 4. إرسال البيانات المحدثة للسحاب عبر PUT باستخدام المفتاح الصحيح
         const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
           method: 'PUT',
           headers: {
@@ -288,14 +302,16 @@
         });
 
         if (response.ok) {
-          alert("تم تحديث وحفظ كلمة المرور سحابياً بنجاح لتتغير عند جميع المستخدمين!");
+          alert("تم تحديث وحفظ كلمة المرور سحابياً ومحلياً بنجاح لتتغير عند جميع المستخدمين!");
           document.getElementById("passBox").style.display = "none";
         } else {
-          alert("حدث خطأ أثناء الحفظ السحابي في الخادم.");
+          alert("تم حفظ الكلمة محلياً، ولكن تعذر التحديث السحابي الفوري. يرجى التحقق من الشبكة.");
+          document.getElementById("passBox").style.display = "none";
         }
       } catch (error) {
         console.error('خطأ الاتصال:', error);
-        alert("فشل الاتصال بالإنترنت لتحديث كلمة المرور.");
+        alert("تم حفظ كلمة المرور في جهازك محلياً نظراً لعدم توفر الاتصال السحابي.");
+        document.getElementById("passBox").style.display = "none";
       }
     }
 
