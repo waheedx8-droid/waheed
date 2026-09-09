@@ -314,7 +314,6 @@
 
                     if (actionType === 'new') {
                         localStorage.removeItem('selectedContractIndex');
-                        // تفريغ الحقول لعقد جديد ونظيف
                         document.getElementById('groom_name').value = '';
                         document.getElementById('hall_name').value = '';
                         document.getElementById('phone1').value = '';
@@ -436,7 +435,7 @@
             };
         }
 
-        // دالة الحفظ وإرسال التحديثات للسحاب (JSONBin)
+        // دالة الحفظ الآمنة: تسحب السجل كاملاً، تحدث الحجوزات، وتحافظ على كلمات السر تماماً دون مسحها
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -451,39 +450,57 @@
                 return;
             }
 
-            if (!Array.isArray(cloudBookings[eventDate])) {
-                if (cloudBookings[eventDate]) {
-                    cloudBookings[eventDate] = [cloudBookings[eventDate]];
-                } else {
-                    cloudBookings[eventDate] = [];
-                }
-            }
-
-            let currentStatus = 'pending';
-            if (selectedIndex !== null && selectedIndex !== "" && cloudBookings[eventDate][selectedIndex]) {
-                currentStatus = cloudBookings[eventDate][selectedIndex].status || 'pending';
-            }
-            if (isAdmin) {
-                currentStatus = 'approved';
-            }
-
-            const contractData = collectContractData(currentStatus);
-
-            if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
-                cloudBookings[eventDate].push(contractData);
-            } else {
-                let idx = parseInt(selectedIndex);
-                cloudBookings[eventDate][idx] = contractData;
-            }
-
             try {
+                // 1. سحب البيانات الكاملة الحالية من السحاب (للحفاظ على كلمات المرور وباقي الحجوزات)
+                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                const getData = await getRes.json();
+                const currentFullData = getData.record || {};
+                
+                // التأكد من وجود كائن الحجوزات
+                if (!currentFullData.hallBookings) {
+                    currentFullData.hallBookings = {};
+                }
+                
+                let cloudB = currentFullData.hallBookings;
+
+                if (!Array.isArray(cloudB[eventDate])) {
+                    if (cloudB[eventDate]) {
+                        cloudB[eventDate] = [cloudB[eventDate]];
+                    } else {
+                        cloudB[eventDate] = [];
+                    }
+                }
+
+                let currentStatus = 'pending';
+                if (selectedIndex !== null && selectedIndex !== "" && cloudB[eventDate][selectedIndex]) {
+                    currentStatus = cloudB[eventDate][selectedIndex].status || 'pending';
+                }
+                if (isAdmin) {
+                    currentStatus = 'approved';
+                }
+
+                const contractData = collectContractData(currentStatus);
+
+                if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
+                    cloudB[eventDate].push(contractData);
+                } else {
+                    let idx = parseInt(selectedIndex);
+                    cloudB[eventDate][idx] = contractData;
+                }
+
+                // تحديث الحجوزات ضمن البيانات الكاملة
+                currentFullData.hallBookings = cloudB;
+
+                // 2. إرسال البيانات كاملة مع الحفاظ على الكلمات السرية
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': API_KEY
                     },
-                    body: JSON.stringify({ hallBookings: cloudBookings })
+                    body: JSON.stringify(currentFullData)
                 });
 
                 if (response.ok) {
@@ -503,6 +520,7 @@
             saveContract(true);
         }
 
+        // دالة الحذف الآمنة: تحذف العقد دون أن تمس كلمات المرور
         async function deleteContract() {
             const eventDate = document.getElementById('event_date').value;
 
@@ -512,24 +530,40 @@
             }
 
             if (confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحاب؟')) {
-                if (cloudBookings[eventDate]) {
-                    if (Array.isArray(cloudBookings[eventDate]) && selectedIndex !== null && selectedIndex !== "") {
-                        cloudBookings[eventDate].splice(parseInt(selectedIndex), 1);
-                        if (cloudBookings[eventDate].length === 0) {
-                            delete cloudBookings[eventDate];
-                        }
-                    } else {
-                        delete cloudBookings[eventDate];
+                try {
+                    // 1. سحب البيانات الكاملة أولاً
+                    const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                        headers: { 'X-Master-Key': API_KEY }
+                    });
+                    const getData = await getRes.json();
+                    const currentFullData = getData.record || {};
+                    
+                    if (!currentFullData.hallBookings) {
+                        currentFullData.hallBookings = {};
                     }
+                    
+                    let cloudB = currentFullData.hallBookings;
 
-                    try {
+                    if (cloudB[eventDate]) {
+                        if (Array.isArray(cloudB[eventDate]) && selectedIndex !== null && selectedIndex !== "") {
+                            cloudB[eventDate].splice(parseInt(selectedIndex), 1);
+                            if (cloudB[eventDate].length === 0) {
+                                delete cloudB[eventDate];
+                            }
+                        } else {
+                            delete cloudB[eventDate];
+                        }
+
+                        currentFullData.hallBookings = cloudB;
+
+                        // 2. إعادة إرسال الملف محدثاً مع الحفاظ على كلمات السر
                         const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-Master-Key': API_KEY
                             },
-                            body: JSON.stringify({ hallBookings: cloudBookings })
+                            body: JSON.stringify(currentFullData)
                         });
 
                         if (response.ok) {
@@ -537,10 +571,10 @@
                             alert('تم حذف العقد سحابياً بنجاح.');
                             window.location.href = 'dash.html';
                         }
-                    } catch (error) {
-                        console.error('خطأ الحذف:', error);
-                        alert('حدث خطأ أثناء الاتصال.');
                     }
+                } catch (error) {
+                    console.error('خطأ الحذف:', error);
+                    alert('حدث خطأ أثناء الاتصال.');
                 }
             }
         }
