@@ -80,7 +80,8 @@
 
     <script>
         const BIN_ID = '6aa17fcbfd5d16053f256cd';
-        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
+        // تم تحديث مفتاح الماستر السحابي الصحيح
+        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG81qNSerd.2gm094w/Xf8BzOcV3BY/m7NuTOyy';
 
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -99,13 +100,19 @@
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': API_KEY }
                 });
+                
+                if (!res.ok) throw new Error('فشل جلب الحجوزات من السحاب');
+
                 const data = await res.json();
                 const record = data.record || {};
                 cloudBookings = record.hallBookings || {};
+                
+                // حفظ نسخة احتياطية محلياً
+                localStorage.setItem('hallBookings', JSON.stringify(cloudBookings));
                 renderCalendar();
             } catch (e) {
-                console.error('خطأ في جلب الحجوزات سحابياً:', e);
-                // استخدام التخزين المحلي كبديل مؤقت في حال انقطاع النت
+                console.warn('تعذر جلب الحجوزات سحابياً، جاري الاعتماد على النسخة المحلية:', e);
+                // استخدام التخزين المحلي كبديل فوري في حال انقطاع النت
                 cloudBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
                 renderCalendar();
             }
@@ -148,7 +155,6 @@
                     }
 
                     if (bookingsList.length > 0) {
-                        // تحديد لون الخلية (إذا كان أحد العقود مقبولاً يصبح أخضر، وإلا أحمر للمعلق)
                         const hasApproved = bookingsList.some(b => b.status === 'approved');
                         if (hasApproved) {
                             dayCell.style.backgroundColor = '#27ae60';
@@ -160,7 +166,6 @@
 
                         cellContent = `<div class="day-number en-num" style="color: #fff;">${day}</div>`;
                         
-                        // عرض أسماء الصالات فوق التاريخ
                         bookingsList.forEach((booking) => {
                             const hallTitle = booking.hallName ? booking.hallName : 'صالة بدون اسم';
                             const statusText = booking.status === 'approved' ? '✓' : '⏳';
@@ -171,7 +176,6 @@
 
                 dayCell.innerHTML = cellContent;
 
-                // عند النقر على اليوم، تفتح القائمة المنسدلة لعرض العقود أو إضافة عقد جديد
                 dayCell.onclick = function() {
                     openDateModal(fullDateStr);
                 };
