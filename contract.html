@@ -183,7 +183,6 @@
                         [{ text: "مـمـر ورد", empty: false }, { text: "لـوح أسـمـاء", empty: false }],
                         [{ text: "سـتـانـد ذهـب", empty: false }, { text: "بـالـون عـروس", empty: false }],
                         [{ text: "ألـعـاب نـاريـة", empty: false }, null],
-                        // الأربع صفوف الأخيرة مخصصة لإضافات أخرى
                         [{ text: "", customInput: true }, null],
                         [{ text: "", customInput: true }, null],
                         [{ text: "", customInput: true }, null],
@@ -235,6 +234,10 @@
 
     <script>
         const userRole = localStorage.getItem('currentUserRole') || 'user';
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedDate = urlParams.get('date');
+        const actionType = urlParams.get('action');
+        const selectedIndex = localStorage.getItem('selectedContractIndex');
 
         function setupButtons() {
             const bar = document.getElementById('actionBar');
@@ -255,7 +258,13 @@
                     <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             }
-            toggleInputsLock(true);
+            
+            // إذا كانت الصفحة جديدة تماماً لإضافة عقد، افتحها بوضع التعديل المباشر
+            if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
+                toggleInputsLock(false);
+            } else {
+                toggleInputsLock(true);
+            }
         }
 
         function toggleInputsLock(lock) {
@@ -285,32 +294,41 @@
             return parseFloat(cleanStr) || 0;
         }
 
-        // جلب التاريخ المختار من الرابط مع الحفاظ على الفواصل وعدم تلاصقه
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedDate = urlParams.get('date');
-        
+        // تعبئة البيانات بناءً على التاريخ والمؤشر (Index)
         if (selectedDate) {
             const cleanSelectedDate = toEnglishDigits(selectedDate);
             document.getElementById('event_date').value = cleanSelectedDate;
             document.getElementById('page2_date').value = cleanSelectedDate;
             
             const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
-            if (savedBookings[selectedDate]) {
-                const b = savedBookings[selectedDate];
-                document.getElementById('groom_name').value = b.groomName || '';
-                document.getElementById('hall_name').value = b.hallName || '';
-                document.getElementById('phone1').value = b.phone1 || '';
-                document.getElementById('phone2').value = b.phone2 || '';
-                document.getElementById('event_type').value = b.eventType || '';
-                document.getElementById('hall_price').value = b.hallPrice || '0';
-                document.getElementById('discount').value = b.discount || '0';
-                document.getElementById('deposit').value = b.deposit || '0';
-                document.getElementById('general_notes').value = b.generalNotes || '';
-                if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+            
+            // التحقق مما إذا كان اليوم يحتوي على عقود (مصفوفة)
+            if (savedBookings[selectedDate] && actionType !== 'new') {
+                let bookingsList = savedBookings[selectedDate];
+                
+                // إذا كانت البيانات القديمة مخزنة ككائن فردي وليست مصفوفة، نحولها مؤقتاً لتجنب الأخطاء
+                if (!Array.isArray(bookingsList)) {
+                    bookingsList = [bookingsList];
+                }
+
+                let indexToLoad = (selectedIndex !== null && selectedIndex !== "") ? parseInt(selectedIndex) : 0;
+                
+                if (bookingsList[indexToLoad]) {
+                    const b = bookingsList[indexToLoad];
+                    document.getElementById('groom_name').value = b.groomName || '';
+                    document.getElementById('hall_name').value = b.hallName || '';
+                    document.getElementById('phone1').value = b.phone1 || '';
+                    document.getElementById('phone2').value = b.phone2 || '';
+                    document.getElementById('event_type').value = b.eventType || '';
+                    document.getElementById('hall_price').value = b.hallPrice || '0';
+                    document.getElementById('discount').value = b.discount || '0';
+                    document.getElementById('deposit').value = b.deposit || '0';
+                    document.getElementById('general_notes').value = b.generalNotes || '';
+                    if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+                }
             }
         }
 
-        // تاريخ اليوم الحالي متطابق مع الجهاز وبدون تلاصق
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -371,6 +389,22 @@
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
+        function collectContractData(statusVal) {
+            return {
+                groomName: document.getElementById('groom_name').value.trim(),
+                hallName: document.getElementById('hall_name').value,
+                phone1: document.getElementById('phone1').value,
+                phone2: document.getElementById('phone2').value,
+                eventType: document.getElementById('event_type').value,
+                hallPrice: document.getElementById('hall_price').value,
+                discount: document.getElementById('discount').value,
+                deposit: document.getElementById('deposit').value,
+                generalNotes: document.getElementById('general_notes').value,
+                eventDay: document.getElementById('event_day').value,
+                status: statusVal
+            };
+        }
+
         function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -386,65 +420,43 @@
             }
 
             let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
-
-            let newStatus = 'pending';
-            if (isAdmin && bookings[eventDate]) {
-                newStatus = bookings[eventDate].status || 'pending';
+            
+            if (!Array.isArray(bookings[eventDate])) {
+                if (bookings[eventDate]) {
+                    bookings[eventDate] = [bookings[eventDate]]; // تحويل القديم لمصفوفة
+                } else {
+                    bookings[eventDate] = [];
+                }
             }
 
-            bookings[eventDate] = {
-                groomName: groomName,
-                hallName: document.getElementById('hall_name').value,
-                phone1: document.getElementById('phone1').value,
-                phone2: document.getElementById('phone2').value,
-                eventType: document.getElementById('event_type').value,
-                hallPrice: document.getElementById('hall_price').value,
-                discount: document.getElementById('discount').value,
-                deposit: document.getElementById('deposit').value,
-                generalNotes: document.getElementById('general_notes').value,
-                eventDay: document.getElementById('event_day').value,
-                status: newStatus
-            };
+            let currentStatus = 'pending';
+            if (selectedIndex !== null && selectedIndex !== "" && bookings[eventDate][selectedIndex]) {
+                currentStatus = bookings[eventDate][selectedIndex].status || 'pending';
+            }
+            if (isAdmin) {
+                currentStatus = 'approved';
+            }
+
+            const contractData = collectContractData(currentStatus);
+
+            // الشرط الأساسي: هل هو عقد جديد أم تعديل على عقد موجود؟
+            if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
+                bookings[eventDate].push(contractData); // إضافة كملف جديد كلياً بجانب العقود السابقة
+            } else {
+                let idx = parseInt(selectedIndex);
+                bookings[eventDate][idx] = contractData; // تعديل العقد المحدد فقط
+            }
 
             localStorage.setItem('hallBookings', JSON.stringify(bookings));
+            localStorage.removeItem('selectedContractIndex');
             toggleInputsLock(true);
 
-            if (!isAdmin) {
-                alert('تم حفظ العقد بنجاح وأصبح كمسودة معلقة (باللون الأحمر) بانتظار موافقة الأدمن.');
-            } else {
-                alert('تم حفظ التعديلات بنجاح وقفل الحقول.');
-            }
-            window.location.href = 'index.html';
+            alert('تم حفظ العقد بنجاح!');
+            window.location.href = 'dash.html';
         }
 
         function approveContract() {
-            const groomName = document.getElementById('groom_name').value.trim();
-            const eventDate = document.getElementById('event_date').value;
-
-            if (!groomName || !eventDate) {
-                alert('البيانات غير مكتملة!');
-                return;
-            }
-
-            let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
-
-            bookings[eventDate] = {
-                groomName: groomName,
-                hallName: document.getElementById('hall_name').value,
-                phone1: document.getElementById('phone1').value,
-                phone2: document.getElementById('phone2').value,
-                eventType: document.getElementById('event_type').value,
-                hallPrice: document.getElementById('hall_price').value,
-                discount: document.getElementById('discount').value,
-                deposit: document.getElementById('deposit').value,
-                generalNotes: document.getElementById('general_notes').value,
-                eventDay: document.getElementById('event_day').value,
-                status: 'approved'
-            };
-
-            localStorage.setItem('hallBookings', JSON.stringify(bookings));
-            alert('تم قبول العقد بنجاح! أصبح باللون الأخضر الآن.');
-            window.location.href = 'index.html';
+            saveContract(true);
         }
 
         function deleteContract() {
@@ -459,11 +471,19 @@
                 let bookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
                 
                 if (bookings[eventDate]) {
-                    delete bookings[eventDate];
+                    if (Array.isArray(bookings[eventDate]) && selectedIndex !== null && selectedIndex !== "") {
+                        bookings[eventDate].splice(parseInt(selectedIndex), 1); // حذف العقد المحدد فقط من المصفوفة
+                        if (bookings[eventDate].length === 0) {
+                            delete bookings[eventDate]; // إذا لم يتبق عقود، احذف اليوم بالكامل
+                        }
+                    } else {
+                        delete bookings[eventDate];
+                    }
                     localStorage.setItem('hallBookings', JSON.stringify(bookings));
-                    alert('تم حذف العقد وإخلاء هذا اليوم في التقويم.');
+                    localStorage.removeItem('selectedContractIndex');
+                    alert('تم حذف العقد بنجاح.');
                 }
-                window.location.href = 'index.html';
+                window.location.href = 'dash.html';
             }
         }
 
