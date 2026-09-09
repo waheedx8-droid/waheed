@@ -19,11 +19,23 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
         .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
         
-        .day-cell { min-height: 95px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+        .day-cell { min-height: 105px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
         .day-cell.empty { background: #fafafa; cursor: default; border: none; }
         
-        .day-number { font-weight: bold; font-size: 16px; text-align: left; padding: 2px 5px; color: #2c3e50; }
+        .day-number { font-weight: bold; font-size: 15px; text-align: left; padding: 2px 5px; color: #2c3e50; }
+        .hall-badge { background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px 4px; border-radius: 4px; margin-top: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* نافذة اختيار العقود المنبثقة (Modal) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-card { background: #fff; width: 90%; max-width: 450px; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: right; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; }
+        .contract-item-btn { display: block; width: 100%; background: #f8f9fa; border: 1px solid #ccc; padding: 10px; margin-bottom: 8px; border-radius: 5px; text-align: right; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .contract-item-btn:hover { background: #e2e8f0; border-color: #3498db; }
+        .btn-add-new { background: #27ae60; color: white; width: 100%; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-add-new:hover { background: #219150; }
+        .btn-close-modal { background: #7f8c8d; color: white; width: 100%; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .btn-close-modal:hover { background: #6c7a89; }
 
         input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
         .en-num { direction: ltr !important; unicode-bidi: isolate; }
@@ -56,7 +68,20 @@
         <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
+    <!-- نافذة اختيار العقد عند النقر على يوم يحتوي عقود أو لإضافة عقد -->
+    <div id="contractsModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title" id="modalDateTitle">حجوزات التاريخ</div>
+            <div id="modalContractsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+            <button class="btn-add-new" onclick="createNewContractForDate()">+ إضافة عقد جديد في هذا التاريخ</button>
+            <button class="btn-close-modal" onclick="closeModal()">إغلاق</button>
+        </div>
+    </div>
+
     <script>
+        const BIN_ID = '6aa17fcbfd5d16053f256cd';
+        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
+
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
@@ -65,6 +90,26 @@
         let currentDate = new Date(2026, 6, 1);
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
+
+        let cloudBookings = {};
+        let activeSelectedDate = '';
+
+        async function fetchBookings() {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                const data = await res.json();
+                const record = data.record || {};
+                cloudBookings = record.hallBookings || {};
+                renderCalendar();
+            } catch (e) {
+                console.error('خطأ في جلب الحجوزات سحابياً:', e);
+                // استخدام التخزين المحلي كبديل مؤقت في حال انقطاع النت
+                cloudBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
+                renderCalendar();
+            }
+        }
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -79,8 +124,6 @@
 
             const firstDayIndex = new Date(year, monthIndex, 1).getDay();
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
-
-            const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
@@ -98,54 +141,102 @@
 
                 let cellContent = `<div class="day-number en-num">${day}</div>`;
 
-                if (savedBookings[fullDateStr]) {
-                    const booking = savedBookings[fullDateStr];
+                if (cloudBookings[fullDateStr]) {
+                    let bookingsList = cloudBookings[fullDateStr];
+                    if (!Array.isArray(bookingsList)) {
+                        bookingsList = [bookingsList]; // دعم البيانات القديمة
+                    }
 
-                    // العقد المعلق (مسودة) يظهر باللون الأحمر
-                    if (booking.status === 'pending') {
-                        dayCell.style.backgroundColor = '#e74c3c';
-                        dayCell.style.borderColor = '#c0392b';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 2px;">
-                                ${booking.groomName}<br>(مسودة)
-                            </div>
-                        `;
-                    } 
-                    // العقد المقبول يظهر باللون الأخضر
-                    else if (booking.status === 'approved') {
-                        dayCell.style.backgroundColor = '#27ae60';
-                        dayCell.style.borderColor = '#1e8449';
-                        cellContent = `
-                            <div class="day-number en-num" style="color: #fff;">${day}</div>
-                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 13px; font-weight: bold; padding: 5px; border-radius: 4px; margin-top: 4px;">
-                                ${booking.groomName}
-                            </div>
-                        `;
+                    if (bookingsList.length > 0) {
+                        // تحديد لون الخلية (إذا كان أحد العقود مقبولاً يصبح أخضر، وإلا أحمر للمعلق)
+                        const hasApproved = bookingsList.some(b => b.status === 'approved');
+                        if (hasApproved) {
+                            dayCell.style.backgroundColor = '#27ae60';
+                            dayCell.style.borderColor = '#1e8449';
+                        } else {
+                            dayCell.style.backgroundColor = '#e74c3c';
+                            dayCell.style.borderColor = '#c0392b';
+                        }
+
+                        cellContent = `<div class="day-number en-num" style="color: #fff;">${day}</div>`;
+                        
+                        // عرض أسماء الصالات فوق التاريخ
+                        bookingsList.forEach((booking) => {
+                            const hallTitle = booking.hallName ? booking.hallName : 'صالة بدون اسم';
+                            const statusText = booking.status === 'approved' ? '✓' : '⏳';
+                            cellContent += `<div class="hall-badge">${hallTitle} ${statusText}</div>`;
+                        });
                     }
                 }
 
                 dayCell.innerHTML = cellContent;
 
+                // عند النقر على اليوم، تفتح القائمة المنسدلة لعرض العقود أو إضافة عقد جديد
                 dayCell.onclick = function() {
-                    window.location.href = `contract.html?date=${fullDateStr}`;
+                    openDateModal(fullDateStr);
                 };
 
                 daysContainer.appendChild(dayCell);
             }
         }
 
+        function openDateModal(dateStr) {
+            activeSelectedDate = dateStr;
+            document.getElementById('modalDateTitle').innerText = `حجوزات تاريخ: ${dateStr}`;
+            
+            const listContainer = document.getElementById('modalContractsList');
+            listContainer.innerHTML = '';
+
+            let bookingsList = cloudBookings[dateStr] || [];
+            if (!Array.isArray(bookingsList)) {
+                bookingsList = [bookingsList];
+            }
+
+            if (bookingsList.length === 0) {
+                listContainer.innerHTML = `<p style="text-align: center; color: #7f8c8d; padding: 10px;">لا توجد عقود مسجلة في هذا التاريخ.</p>`;
+            } else {
+                bookingsList.forEach((booking, index) => {
+                    const groom = booking.groomName || 'زبون بدون اسم';
+                    const hall = booking.hallName || 'صالة غير محددة';
+                    const status = booking.status === 'approved' ? 'مقوبول' : 'مسودة';
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'contract-item-btn';
+                    btn.innerHTML = `<b>الزبون:</b> ${groom} | <b>الصالة:</b> ${hall} <span style="float: left; font-size: 12px; color: #555;">(${status})</span>`;
+                    
+                    btn.onclick = function() {
+                        localStorage.setItem('selectedContractIndex', index);
+                        window.location.replace(`contract.html?date=${dateStr}&action=edit`);
+                    };
+                    listContainer.appendChild(btn);
+                });
+            }
+
+            document.getElementById('contractsModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('contractsModal').style.display = 'none';
+        }
+
+        function createNewContractForDate() {
+            localStorage.removeItem('selectedContractIndex');
+            window.location.replace(`contract.html?date=${activeSelectedDate}&action=new`);
+        }
+
         function changeMonth(offset) {
             currentDate.setMonth(currentDate.getMonth() + offset);
-            renderCalendar();
+            fetchBookings();
         }
 
         function logout() {
             localStorage.removeItem('currentUserRole');
-            window.location.href = 'login.html';
+            localStorage.removeItem('isLoggedIn');
+            window.location.replace('login.html');
         }
 
-        renderCalendar();
+        // جلب البيانات وبدء عرض التقويم عند تحميل الصفحة
+        fetchBookings();
     </script>
 </body>
 </html>
