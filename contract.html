@@ -242,6 +242,7 @@
         const selectedIndex = localStorage.getItem('selectedContractIndex');
 
         let cloudBookings = {};
+        let isEditModeEnabled = false;
 
         function setupButtons() {
             const bar = document.getElementById('actionBar');
@@ -264,8 +265,10 @@
             }
             
             if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
+                isEditModeEnabled = true;
                 toggleInputsLock(false);
             } else {
+                isEditModeEnabled = false;
                 toggleInputsLock(true);
             }
         }
@@ -283,6 +286,7 @@
         }
 
         function enableEditing() {
+            isEditModeEnabled = true;
             toggleInputsLock(false);
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
@@ -498,6 +502,11 @@
         }
 
         async function saveContract(isAdmin = false) {
+            if (!isEditModeEnabled) {
+                alert('لا يمكن حفظ التعديلات! يرجى الضغط على زر "تعديل" أولاً.');
+                return;
+            }
+
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
 
