@@ -232,7 +232,6 @@
     </div>
 
     <script>
-        // إعدادات التخزين السحابي المحدثة بالـ Bin الجديد الموحد
         const BIN_ID = '6aa17fcbfd5d16053f256cd';
         const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
@@ -289,13 +288,13 @@
         }
 
         function toEnglishDigits(str) {
-            return String(str).replace(/[٠١٢٣٤٥٦٧٨٩]/g, function (d) {
+            return String(str || '').replace(/[٠١٢٣٤٥٦٧٨٩]/g, function (d) {
                 return d.charCodeAt(0) - 1632;
             });
         }
 
         function convertInputToEnglish(input) {
-            input.value = toEnglishDigits(input.value);
+            if(input) input.value = toEnglishDigits(input.value);
         }
 
         function parseEnglishNumber(val) {
@@ -303,7 +302,7 @@
             return parseFloat(cleanStr) || 0;
         }
 
-        // جلب البيانات من السحاب وتعبئة الحقول بالشكل السليم
+        // جلب البيانات من السحاب وتعبئة كافة حقول العقد والخدمات بدقة
         async function initContractPage() {
             if (selectedDate) {
                 const cleanSelectedDate = toEnglishDigits(selectedDate);
@@ -320,21 +319,6 @@
 
                     if (actionType === 'new') {
                         localStorage.removeItem('selectedContractIndex');
-                        document.getElementById('groom_name').value = '';
-                        document.getElementById('hall_name').value = '';
-                        document.getElementById('phone1').value = '';
-                        document.getElementById('phone2').value = '';
-                        document.getElementById('event_type').value = '';
-                        document.getElementById('hall_price').value = '0';
-                        document.getElementById('discount').value = '0';
-                        document.getElementById('deposit').value = '0';
-                        document.getElementById('general_notes').value = '';
-                        document.getElementById('event_day').value = '';
-                        document.getElementById('rep_name').value = '';
-                        document.getElementById('duration').value = '';
-                        document.getElementById('exp_count').value = '';
-                        document.getElementById('guar_count').value = '';
-                        document.getElementById('booked_by').value = '';
                     } else {
                         if (cloudBookings[selectedDate]) {
                             let bookingsList = cloudBookings[selectedDate];
@@ -354,6 +338,26 @@
                                 document.getElementById('deposit').value = b.deposit || '0';
                                 document.getElementById('general_notes').value = b.generalNotes || '';
                                 if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
+                                document.getElementById('rep_name').value = b.repName || '';
+                                document.getElementById('duration').value = b.duration || '';
+                                document.getElementById('exp_count').value = b.expCount || '';
+                                document.getElementById('guar_count').value = b.guarCount || '';
+                                document.getElementById('booked_by').value = b.bookedBy || '';
+
+                                // استرجاع وتعبئة تفاصيل الخدمات الإضافية بدقة
+                                if (b.services && Array.isArray(b.services)) {
+                                    b.services.forEach(s => {
+                                        const chk = document.querySelector(`.srv-check[data-index="${s.index}"]`);
+                                        const qtyInp = document.querySelector(`.srv-qty[data-index="${s.index}"]`);
+                                        const prcInp = document.querySelector(`.srv-price[data-index="${s.index}"]`);
+                                        const customInp = document.querySelector(`.srv-custom-name[data-index="${s.index}"]`);
+
+                                        if (chk) chk.checked = s.checked;
+                                        if (qtyInp) qtyInp.value = s.qty || '1';
+                                        if (prcInp) prcInp.value = s.price || '0';
+                                        if (customInp && s.customName) customInp.value = s.customName;
+                                    });
+                                }
                             }
                         }
                     }
@@ -366,7 +370,9 @@
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('contract_date').value = `${year}-${month}-${day}`;
+            if(!document.getElementById('contract_date').value) {
+                document.getElementById('contract_date').value = `${year}-${month}-${day}`;
+            }
             
             setupButtons();
             calculateServices();
@@ -384,16 +390,16 @@
                 convertInputToEnglish(qtyInput);
                 convertInputToEnglish(priceInput);
 
-                const qty = parseEnglishNumber(qtyInput.value);
-                const price = parseEnglishNumber(priceInput.value);
+                const qty = parseEnglishNumber(qtyInput ? qtyInput.value : 1);
+                const price = parseEnglishNumber(priceInput ? priceInput.value : 0);
                 const totalCell = document.getElementById(`srv_total_${idx}`);
 
                 if (check.checked) {
                     const lineTotal = qty * price;
-                    totalCell.value = toEnglishDigits(lineTotal);
+                    if(totalCell) totalCell.value = toEnglishDigits(lineTotal);
                     totalExtras += lineTotal;
                 } else {
-                    totalCell.value = "0";
+                    if(totalCell) totalCell.value = "0";
                 }
             });
 
@@ -425,7 +431,26 @@
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
+        // جمع كافة بيانات العقد بما فيها الخدمات الإضافية لحفظها سحابياً
         function collectContractData(statusVal) {
+            let servicesData = [];
+            const checks = document.querySelectorAll('.srv-check');
+            
+            checks.forEach(check => {
+                const idx = check.getAttribute('data-index');
+                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
+                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
+                const customInput = document.querySelector(`.srv-custom-name[data-index="${idx}"]`);
+
+                servicesData.push({
+                    index: idx,
+                    checked: check.checked,
+                    qty: qtyInput ? qtyInput.value : "1",
+                    price: priceInput ? priceInput.value : "0",
+                    customName: customInput ? customInput.value : ""
+                });
+            });
+
             return {
                 groomName: document.getElementById('groom_name').value.trim(),
                 hallName: document.getElementById('hall_name').value,
@@ -437,11 +462,16 @@
                 deposit: document.getElementById('deposit').value,
                 generalNotes: document.getElementById('general_notes').value,
                 eventDay: document.getElementById('event_day').value,
+                repName: document.getElementById('rep_name').value,
+                duration: document.getElementById('duration').value,
+                expCount: document.getElementById('exp_count').value,
+                guarCount: document.getElementById('guar_count').value,
+                bookedBy: document.getElementById('booked_by').value,
+                services: servicesData,
                 status: statusVal
             };
         }
 
-        // دالة الحفظ الآمنة: تحافظ بالكامل على بيانات كلمات المرور وسجل الحجوزات سحابياً
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -522,7 +552,6 @@
             saveContract(true);
         }
 
-        // دالة الحذف الآمنة: تحذف العقد وتحدث السحابة دون المساس بكلمات المرور
         async function deleteContract() {
             const eventDate = document.getElementById('event_date').value;
 
