@@ -144,7 +144,6 @@
   </div>
 
   <script>
-    // بيانات الاتصال السحابي الموحدة بالـ Bin الجديد
     const BIN_ID = '6aa17fcbfd5d16053f256cd';
     const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
@@ -154,7 +153,6 @@
       userPass: "123456"
     };
 
-    // جلب كلمات المرور من السحاب أو إنشاؤها تلقائياً مع الحفاظ على البيانات الأخرى
     async function fetchCloudPasswords() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -167,9 +165,7 @@
           cloudPasswords.adminPass = record.passwords.adminPass || "admin";
           cloudPasswords.userPass = record.passwords.userPass || "123456";
         } else {
-          // إذا لم تكن كلمات المرور موجودة، نقوم بدمجها مع الحفاظ على البيانات الموجودة مسبقاً
           record.passwords = cloudPasswords;
-          
           await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
             method: 'PUT',
             headers: {
@@ -184,10 +180,16 @@
       }
     }
 
-    // بدء التطبيق دائماً من شاشة تسجيل الدخول النظيفة
+    // التحقق من حالة الجلسة عند تحميل الصفحة بدلاً من تسجيل الخروج الإجباري
     document.addEventListener("DOMContentLoaded", async function () {
       await fetchCloudPasswords();
-      handleLogout(); 
+      
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      if (isLoggedIn === "true") {
+        renderDashboard();
+      } else {
+        renderLogin();
+      }
     });
 
     function openCalendar() {
@@ -250,7 +252,6 @@
       }
     }
 
-    // دالة حفظ وتحديث كلمة المرور سحابياً بشكل آمن ودون مسح باقي بيانات السجل
     async function savePassword() {
       const newPass = document.getElementById("newPasswordInput").value.trim();
       if (!newPass) {
@@ -265,17 +266,14 @@
       }
 
       try {
-        // سحب أحدث نسخة من السجل كاملاً لضمان عدم ضياع أي بيانات (مثل الحجوزات)
         const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { 'X-Master-Key': API_KEY }
         });
         const getData = await getRes.json();
         const currentData = getData.record || {};
 
-        // تحديث قسم كلمات المرور فقط داخل السجل
         currentData.passwords = cloudPasswords;
 
-        // إرسال السجل المحدث كاملاً للسحابة
         const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
           method: 'PUT',
           headers: {
