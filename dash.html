@@ -3,612 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شهباروز - عقد الحجز والتنظيم السحابي</title>
+    <title>تقويم الحجوزات - شهباروز</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; padding: 20px; color: #000; }
-        .page { background: #fff; width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto 30px auto; border-radius: 4px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); position: relative; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 30px; margin-bottom: 25px; font-size: 15px; }
-        .info-row { display: flex; align-items: center; }
-        .info-row label { min-width: 100px; font-weight: bold; }
-        .info-row input { flex: 1; border: none; border-bottom: 1px dotted #000; outline: none; padding: 2px 5px; font-size: 15px; }
+        body { background-color: #f0f2f5; padding: 20px; color: #333; }
         
-        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .main-table th, .main-table td { border: 1px solid #000; padding: 8px 10px; font-size: 14px; vertical-align: top; }
-        .main-table th { background-color: #f8f9fa; text-align: center; }
-        .signatures { margin-top: 30px; }
-        .signatures .info-row { margin-bottom: 15px; }
+        .calendar-container { max-width: 950px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .deposit-row { display: flex; gap: 20px; margin-bottom: 15px; }
-        .deposit-row .info-row { flex: 1; margin-bottom: 0; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-header h2 { font-size: 24px; color: #2c3e50; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-nav:hover { background: #2980b9; }
+        .btn-logout { background: #e74c3c; margin-right: 10px; }
 
-        .services-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .services-table th, .services-table td { border: 1px solid #000; padding: 5px 8px; text-align: center; }
-        .services-table th { background-color: #f8f9fa; }
-        .checkbox-cell { text-align: right !important; display: flex; align-items: center; gap: 8px; }
-        .checkbox-cell input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; }
         
-        input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
-        .en-num { direction: ltr !important; text-align: center; }
-        .input-inline { border: none; border-bottom: 1px dotted #000; outline: none; width: 100%; background: transparent; font-size: 15px; }
-        .readonly-field { background-color: #f9f9f9; font-weight: bold; color: #2c3e50; }
+        .day-cell { min-height: 95px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+        .day-cell:hover { border-color: #3498db; transform: translateY(-2px); }
+        .day-cell.empty { background: #fafafa; cursor: default; border: none; }
         
-        .actions-bar {
-            position: sticky;
-            top: 10px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            text-align: center;
-            margin: 0 auto 20px auto;
-            max-width: 210mm;
-            backdrop-filter: blur(5px);
-        }
-        .btn-action {
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 0 4px;
-            transition: background 0.2s;
-        }
-        .btn-approve { background: #27ae60; }
-        .btn-approve:hover { background: #219150; }
-        .btn-save { background: #2980b9; }
-        .btn-save:hover { background: #2471a3; }
-        .btn-edit { background: #e67e22; }
-        .btn-edit:hover { background: #d35400; }
-        .btn-delete { background: #e74c3c; }
-        .btn-delete:hover { background: #c0392b; }
-        .btn-print { background: #8e44ad; }
-        .btn-print:hover { background: #732d91; }
-        .btn-back { background: #7f8c8d; }
-        .btn-back:hover { background: #6c7a89; }
+        .day-number { font-weight: bold; font-size: 16px; text-align: left; padding: 2px 5px; color: #2c3e50; }
 
-        @media print {
-            body { background: none; padding: 0; }
-            .page { box-shadow: none; margin: 0; page-break-after: always; }
-            .no-print { display: none !important; }
-        }
+        input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
+        .en-num { direction: ltr !important; unicode-bidi: isolate; }
+        .user-tag { background: #2c3e50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- شريط الأزرار العلوي -->
-    <div class="actions-bar no-print" id="actionBar"></div>
-
-    <!-- الصفحة الأولى من العقد -->
-    <div class="page">
-        <div class="info-grid" style="margin-top: 10px;">
-            <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
-            <div class="info-row"><label>الصـالـة :</label><input type="text" id="hall_name" class="contract-input"></div>
-            <div class="info-row"><label>المـوبـايـل :</label><input type="text" id="phone1" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
-            <div class="info-row"><label>المـنـاسـبـة :</label><input type="text" id="event_type" class="contract-input"></div>
-            <div class="info-row"><label>الهـاتـف :</label><input type="text" id="phone2" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
-            <div class="info-row"><label>التـاريخ :</label><input type="text" id="event_date" class="readonly-field en-num" readonly></div>
-            <div class="info-row"><label>ممثـل الزبون :</label><input type="text" id="rep_name" class="contract-input"></div>
-            <div class="info-row"><label>مـدة الحفـل :</label><input type="text" id="duration" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
-            <div class="info-row"><label>العدد المتوقع :</label><input type="text" id="exp_count" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
-            <div class="info-row"><label>العدد المضمون :</label><input type="text" id="guar_count" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
-        </div>
-
-        <table class="main-table">
-            <thead>
-                <tr>
-                    <th style="width: 50%;">البيــــان</th>
-                    <th style="width: 50%;">ملاحظات هامة</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><div class="info-row"><label>حجز الصالة :</label><input type="text" id="hall_price" class="input-inline en-num contract-input" value="0" oninput="calculateMainTable()"></div></td>
-                    <td><b>الرصيد قبل 5 أيام</b></td>
-                </tr>
-                <tr>
-                    <td><div class="info-row"><label>حسم إداري :</label><input type="text" id="discount" class="input-inline en-num contract-input" value="0" oninput="calculateMainTable()"></div></td>
-                    <td>في حال الإلغاء من قبل الزبون يفقد حقه في إسترداد العربون</td>
-                </tr>
-                <tr>
-                    <td><div class="info-row"><label>السعر النهائي :</label><input type="text" id="final_price" class="input-inline readonly-field en-num" readonly value="0"></div></td>
-                    <td>في حال حدوث وفاة لا قدر الله يتم دفع كامل قيمة العقد لغرض التأجيل قبل 15 يوماً</td>
-                </tr>
-                <tr>
-                    <td><div class="info-row"><label>ملحقات :</label><input type="text" id="extras_price" class="input-inline readonly-field en-num" readonly value="0"></div></td>
-                    <td>في حال عدم دفع رصيد العقد يفقد الزبون حقه في إسترداد العربون</td>
-                </tr>
-                <tr>
-                    <td><div class="info-row"><label>عــام :</label><input type="text" id="total_general" class="input-inline readonly-field en-num" readonly value="0"></div></td>
-                    <td><input type="text" id="general_notes" class="contract-input" style="width: 100%; border: none; outline: none; background: transparent; font-size: 14px;" placeholder="اكتب الملاحظات هنا..."></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="signatures">
-            <div class="deposit-row">
-                <div class="info-row"><label>الـعـربـون :</label><input type="text" id="deposit" class="input-inline en-num contract-input" value="0" oninput="calculateMainTable()"></div>
-                <div class="info-row"><label>البـاقـي :</label><input type="text" id="remaining_balance" class="input-inline readonly-field en-num" readonly value="0"></div>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
+            <h2 id="monthYearDisplay"></h2>
+            <div>
+                <span id="roleDisplay" class="user-tag"></span>
+                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
+                <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
             </div>
-
-            <div class="info-row"><label>حجز من قبل :</label><input type="text" id="booked_by" class="contract-input"></div>
-            <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input"></div>
-            <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input"></div>
-            <div class="info-row" style="margin-top: 20px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
-        </div>
-    </div>
-
-    <!-- الصفحة الثانية من العقد -->
-    <div class="page">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold;">
-            <div>يوم : <input type="text" id="event_day" class="contract-input" style="border: none; border-bottom: 1px dotted #000; outline: none; width: 120px; text-align: center;"></div>
-            <div>التاريخ : <input type="text" id="page2_date" class="readonly-field en-num" readonly style="border: none; border-bottom: 1px dotted #000; text-align: center; width: 120px;"></div>
         </div>
 
-        <table class="services-table">
-            <thead>
-                <tr>
-                    <th style="width: 45%;">البيــــــــان</th>
-                    <th style="width: 15%;">العدد</th>
-                    <th style="width: 20%;">السعر</th>
-                    <th style="width: 20%;">المجموع</th>
-                </tr>
-            </thead>
-            <tbody id="servicesContainer">
-                <script>
-                    const servicesGrid = [
-                        [{ text: "كوشـة", empty: false }, null],
-                        [{ text: "أرجـمـانـات", empty: false }, { text: "زيـنـة مدخـل", empty: false }],
-                        [{ text: "خـدمـة بـنـات", empty: false }, { text: "خـدمـة شـبـاب", empty: false }],
-                        [{ text: "درج مـلـكـي", empty: false }, { text: "مـصـعـد كـاتـو", empty: false }],
-                        [{ text: "جـسـر إنـارة", empty: false }, { text: "ربـاعـي", empty: false }],
-                        [{ text: "بـيـمـات", empty: false }, { text: "بـارات", empty: false }, { text: "بـقـعـة ضـوء", empty: false }],
-                        [{ text: "دانـس فـلـور", empty: false }, { text: "مـمـر دانـس", empty: false }],
-                        [{ text: "طـبـالـة", empty: false }, { text: "DG + وصـل نـقـابـة", empty: false }],
-                        [{ text: "تـصـويـر فـيـديـو + فـوتـو 40 كـرت مـطـبـوع", empty: false }, null],
-                        [{ text: "شـاشـة LED", empty: false }, { text: "لـيـمـوزيـن", empty: false }],
-                        [{ text: "دخـان", empty: false }, { text: "كـفـرات مـوبـايـل", empty: false }],
-                        [{ text: "فـرقـة ررقـص", empty: false }, { text: "فـرقـة نـحـاسـيـة أو عـراضـة", empty: false }],
-                        [{ text: "كـاتـو", empty: false }, { text: "خـدمـة كـاتـو", empty: false }],
-                        [{ text: "كـولا", empty: false }, { text: "خـدمـة كـولا", empty: false }],
-                        [{ text: "عـصـيـر", empty: false }, { text: "خـدمـة عـصـيـر", empty: false }],
-                        [{ text: "قـهـوة", empty: false }, { text: "خـدمـة قـهـوة", empty: false }],
-                        [{ text: "شـراب الـلـوز", empty: false }, { text: "خـدمـة شـراب الـلـوز", empty: false }],
-                        [{ text: "خـدمـة عـشـاء", empty: false }, { text: "قـهـوة مـرة", empty: false }],
-                        [{ text: "خـدمـة فـواكـة", empty: false }, { text: "خـدمـة مـوالـح", empty: false }],
-                        [{ text: "مـمـر ورد", empty: false }, { text: "لـوح أسـمـاء", empty: false }],
-                        [{ text: "سـتـانـد ذهـب", empty: false }, { text: "بـالـون عـروس", empty: false }],
-                        [{ text: "ألـعـاب نـاريـة", empty: false }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null]
-                    ];
+        <div class="calendar-grid">
+            <div class="day-header">الأحد</div>
+            <div class="day-header">الأثنين</div>
+            <div class="day-header">الثلاثاء</div>
+            <div class="day-header">الأربعاء</div>
+            <div class="day-header">الخميس</div>
+            <div class="day-header">الجمعة</div>
+            <div class="day-header">السبت</div>
+        </div>
 
-                    let serviceIndex = 0;
-                    let htmlBuilder = '';
-
-                    servicesGrid.forEach((row) => {
-                        htmlBuilder += `<tr><td style="padding: 3px 5px;"><div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">`;
-
-                        row.forEach((item) => {
-                            if (item) {
-                                const currentIndex = serviceIndex++;
-                                if (item.customInput) {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <input type="text" class="input-inline srv-custom-name contract-input" data-index="${currentIndex}" placeholder="إضافة خدمة أخرى..." style="border-bottom: 1px dotted #999;">
-                                        </div>
-                                    `;
-                                } else {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <span>${item.text}</span>
-                                        </div>
-                                    `;
-                                }
-                            } else {
-                                htmlBuilder += `<div class="checkbox-cell" style="flex: 1;"><input type="checkbox" disabled style="opacity: 0.3;"> <span></span></div>`;
-                            }
-                        });
-
-                        const rowId = serviceIndex - 1;
-                        htmlBuilder += `</div></td>
-                            <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${rowId}" value="1" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${rowId}" value="0" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${rowId}" readonly value="0"></td>
-                        </tr>`;
-                    });
-
-                    document.write(htmlBuilder);
-                </script>
-            </tbody>
-        </table>
+        <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
     <script>
-        const BIN_ID = '6aa17fcbfd5d16053f256cd';
-        const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
+        const monthNames = [
+            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
 
-        const userRole = localStorage.getItem('currentUserRole') || 'user';
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedDate = urlParams.get('date');
-        const actionType = urlParams.get('action');
-        const selectedIndex = localStorage.getItem('selectedContractIndex');
+        let currentDate = new Date(2026, 6, 1);
+        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
+        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
 
-        let cloudBookings = {};
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const monthIndex = currentDate.getMonth();
+            const monthNumber = monthIndex + 1;
 
-        function setupButtons() {
-            const bar = document.getElementById('actionBar');
-            if (userRole === 'admin') {
-                bar.innerHTML = `
-                    <button class="btn-action btn-approve" onclick="approveContract()">قبول العقد</button>
-                    <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
-                    <button class="btn-action btn-save" onclick="saveContract(true)">حفظ</button>
-                    <button class="btn-action btn-delete" onclick="deleteContract()">حذف العقد</button>
-                    <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
-                `;
-            } else {
-                bar.innerHTML = `
-                    <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
-                    <button class="btn-action btn-save" onclick="saveContract(false)">حفظ</button>
-                    <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="goBackToCalendar()">العودة للتقويم</button>
-                `;
-            }
-            
-            if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
-                toggleInputsLock(false);
-            } else {
-                toggleInputsLock(true);
-            }
-        }
+            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> <span class="en-num">${year}</span>`;
+            document.getElementById('monthYearDisplay').innerHTML = headerText;
 
-        function goBackToCalendar() {
-            localStorage.removeItem('selectedContractIndex');
-            window.location.href = 'dash.html';
-        }
+            const daysContainer = document.getElementById('calendarDays');
+            daysContainer.innerHTML = '';
 
-        function toggleInputsLock(lock) {
-            const inputs = document.querySelectorAll('.contract-input');
-            inputs.forEach(input => {
-                input.disabled = lock;
-            });
-        }
+            const firstDayIndex = new Date(year, monthIndex, 1).getDay();
+            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
-        function enableEditing() {
-            toggleInputsLock(false);
-            alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
-        }
+            const savedBookings = JSON.parse(localStorage.getItem('hallBookings')) || {};
 
-        function toEnglishDigits(str) {
-            return String(str || '').replace(/[٠١٢٣٤٥٦٧٨٩]/g, function (d) {
-                return d.charCodeAt(0) - 1632;
-            });
-        }
-
-        function convertInputToEnglish(input) {
-            if(input) input.value = toEnglishDigits(input.value);
-        }
-
-        function parseEnglishNumber(val) {
-            const cleanStr = toEnglishDigits(val).replace(/[^0-9.]/g, '');
-            return parseFloat(cleanStr) || 0;
-        }
-
-        // جلب البيانات من السحاب وتعبئة كافة حقول العقد والخدمات بدقة
-        async function initContractPage() {
-            if (selectedDate) {
-                const cleanSelectedDate = toEnglishDigits(selectedDate);
-                document.getElementById('event_date').value = cleanSelectedDate;
-                document.getElementById('page2_date').value = cleanSelectedDate;
-
-                try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': API_KEY }
-                    });
-                    const data = await res.json();
-                    const fullRecord = data.record || {};
-                    cloudBookings = fullRecord.hallBookings || {};
-
-                    if (actionType === 'new') {
-                        localStorage.removeItem('selectedContractIndex');
-                    } else {
-                        if (cloudBookings[selectedDate]) {
-                            let bookingsList = cloudBookings[selectedDate];
-                            if (!Array.isArray(bookingsList)) bookingsList = [bookingsList];
-
-                            let indexToLoad = (selectedIndex !== null && selectedIndex !== "") ? parseInt(selectedIndex) : 0;
-                            
-                            if (bookingsList[indexToLoad]) {
-                                const b = bookingsList[indexToLoad];
-                                document.getElementById('groom_name').value = b.groomName || '';
-                                document.getElementById('hall_name').value = b.hallName || '';
-                                document.getElementById('phone1').value = b.phone1 || '';
-                                document.getElementById('phone2').value = b.phone2 || '';
-                                document.getElementById('event_type').value = b.eventType || '';
-                                document.getElementById('hall_price').value = b.hallPrice || '0';
-                                document.getElementById('discount').value = b.discount || '0';
-                                document.getElementById('deposit').value = b.deposit || '0';
-                                document.getElementById('general_notes').value = b.generalNotes || '';
-                                if(b.eventDay) document.getElementById('event_day').value = b.eventDay;
-                                document.getElementById('rep_name').value = b.repName || '';
-                                document.getElementById('duration').value = b.duration || '';
-                                document.getElementById('exp_count').value = b.expCount || '';
-                                document.getElementById('guar_count').value = b.guarCount || '';
-                                document.getElementById('booked_by').value = b.bookedBy || '';
-
-                                // استرجاع وتعبئة تفاصيل الخدمات الإضافية بدقة
-                                if (b.services && Array.isArray(b.services)) {
-                                    b.services.forEach(s => {
-                                        const chk = document.querySelector(`.srv-check[data-index="${s.index}"]`);
-                                        const qtyInp = document.querySelector(`.srv-qty[data-index="${s.index}"]`);
-                                        const prcInp = document.querySelector(`.srv-price[data-index="${s.index}"]`);
-                                        const customInp = document.querySelector(`.srv-custom-name[data-index="${s.index}"]`);
-
-                                        if (chk) chk.checked = s.checked;
-                                        if (qtyInp) qtyInp.value = s.qty || '1';
-                                        if (prcInp) prcInp.value = s.price || '0';
-                                        if (customInp && s.customName) customInp.value = s.customName;
-                                    });
-                                }
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('خطأ في جلب بيانات العقد السحابية:', e);
-                }
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysContainer.appendChild(emptyCell);
             }
 
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            if(!document.getElementById('contract_date').value) {
-                document.getElementById('contract_date').value = `${year}-${month}-${day}`;
-            }
-            
-            setupButtons();
-            calculateServices();
-        }
+            for (let day = 1; day <= totalDays; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
 
-        function calculateServices() {
-            let totalExtras = 0;
-            const checks = document.querySelectorAll('.srv-check');
-            
-            checks.forEach(check => {
-                const idx = check.getAttribute('data-index');
-                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
-                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
-                
-                convertInputToEnglish(qtyInput);
-                convertInputToEnglish(priceInput);
+                const formattedMonth = String(monthNumber).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const fullDateStr = `${year}-${formattedMonth}-${formattedDay}`;
 
-                const qty = parseEnglishNumber(qtyInput ? qtyInput.value : 1);
-                const price = parseEnglishNumber(priceInput ? priceInput.value : 0);
-                const totalCell = document.getElementById(`srv_total_${idx}`);
+                let cellContent = `<div class="day-number en-num">${day}</div>`;
 
-                if (check.checked) {
-                    const lineTotal = qty * price;
-                    if(totalCell) totalCell.value = toEnglishDigits(lineTotal);
-                    totalExtras += lineTotal;
-                } else {
-                    if(totalCell) totalCell.value = "0";
-                }
-            });
+                if (savedBookings[fullDateStr]) {
+                    const booking = savedBookings[fullDateStr];
 
-            document.getElementById('extras_price').value = toEnglishDigits(totalExtras);
-            calculateMainTable();
-        }
-
-        function calculateMainTable() {
-            const hallInput = document.getElementById('hall_price');
-            const discountInput = document.getElementById('discount');
-            const depositInput = document.getElementById('deposit');
-
-            convertInputToEnglish(hallInput);
-            convertInputToEnglish(discountInput);
-            convertInputToEnglish(depositInput);
-
-            const hallPrice = parseEnglishNumber(hallInput.value);
-            const discount = parseEnglishNumber(discountInput.value);
-            const extrasPrice = parseEnglishNumber(document.getElementById('extras_price').value);
-            const deposit = parseEnglishNumber(depositInput.value);
-
-            const finalPrice = Math.max(0, hallPrice - discount);
-            document.getElementById('final_price').value = toEnglishDigits(finalPrice);
-
-            const totalGeneral = finalPrice + extrasPrice;
-            document.getElementById('total_general').value = toEnglishDigits(totalGeneral);
-
-            const remaining = Math.max(0, totalGeneral - deposit);
-            document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
-        }
-
-        // جمع كافة بيانات العقد بما فيها الخدمات الإضافية لحفظها سحابياً
-        function collectContractData(statusVal) {
-            let servicesData = [];
-            const checks = document.querySelectorAll('.srv-check');
-            
-            checks.forEach(check => {
-                const idx = check.getAttribute('data-index');
-                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
-                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
-                const customInput = document.querySelector(`.srv-custom-name[data-index="${idx}"]`);
-
-                servicesData.push({
-                    index: idx,
-                    checked: check.checked,
-                    qty: qtyInput ? qtyInput.value : "1",
-                    price: priceInput ? priceInput.value : "0",
-                    customName: customInput ? customInput.value : ""
-                });
-            });
-
-            return {
-                groomName: document.getElementById('groom_name').value.trim(),
-                hallName: document.getElementById('hall_name').value,
-                phone1: document.getElementById('phone1').value,
-                phone2: document.getElementById('phone2').value,
-                eventType: document.getElementById('event_type').value,
-                hallPrice: document.getElementById('hall_price').value,
-                discount: document.getElementById('discount').value,
-                deposit: document.getElementById('deposit').value,
-                generalNotes: document.getElementById('general_notes').value,
-                eventDay: document.getElementById('event_day').value,
-                repName: document.getElementById('rep_name').value,
-                duration: document.getElementById('duration').value,
-                expCount: document.getElementById('exp_count').value,
-                guarCount: document.getElementById('guar_count').value,
-                bookedBy: document.getElementById('booked_by').value,
-                services: servicesData,
-                status: statusVal
-            };
-        }
-
-        async function saveContract(isAdmin = false) {
-            const groomName = document.getElementById('groom_name').value.trim();
-            const eventDate = document.getElementById('event_date').value;
-
-            if (!groomName) {
-                alert('يرجى إدخال اسم الزبون أولاً!');
-                return;
-            }
-
-            if (!eventDate) {
-                alert('التاريخ غير محدد!');
-                return;
-            }
-
-            try {
-                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                const getData = await getRes.json();
-                const currentFullData = getData.record || {};
-                
-                if (!currentFullData.hallBookings) {
-                    currentFullData.hallBookings = {};
-                }
-                
-                let cloudB = currentFullData.hallBookings;
-
-                if (!Array.isArray(cloudB[eventDate])) {
-                    if (cloudB[eventDate]) {
-                        cloudB[eventDate] = [cloudB[eventDate]];
-                    } else {
-                        cloudB[eventDate] = [];
+                    // العقد المعلق (مسودة) يظهر باللون الأحمر
+                    if (booking.status === 'pending') {
+                        dayCell.style.backgroundColor = '#e74c3c';
+                        dayCell.style.borderColor = '#c0392b';
+                        cellContent = `
+                            <div class="day-number en-num" style="color: #fff;">${day}</div>
+                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 2px;">
+                                ${booking.groomName}<br>(مسودة)
+                            </div>
+                        `;
+                    } 
+                    // العقد المقبول يظهر باللون الأخضر
+                    else if (booking.status === 'approved') {
+                        dayCell.style.backgroundColor = '#27ae60';
+                        dayCell.style.borderColor = '#1e8449';
+                        cellContent = `
+                            <div class="day-number en-num" style="color: #fff;">${day}</div>
+                            <div style="background: rgba(0,0,0,0.25); color: #fff; font-size: 13px; font-weight: bold; padding: 5px; border-radius: 4px; margin-top: 4px;">
+                                ${booking.groomName}
+                            </div>
+                        `;
                     }
                 }
 
-                let currentStatus = 'pending';
-                if (selectedIndex !== null && selectedIndex !== "" && cloudB[eventDate][selectedIndex]) {
-                    currentStatus = cloudB[eventDate][selectedIndex].status || 'pending';
-                }
-                if (isAdmin) {
-                    currentStatus = 'approved';
-                }
+                dayCell.innerHTML = cellContent;
 
-                const contractData = collectContractData(currentStatus);
+                dayCell.onclick = function() {
+                    window.location.href = `contract.html?date=${fullDateStr}`;
+                };
 
-                if (actionType === 'new' || selectedIndex === null || selectedIndex === "") {
-                    cloudB[eventDate].push(contractData);
-                } else {
-                    let idx = parseInt(selectedIndex);
-                    cloudB[eventDate][idx] = contractData;
-                }
-
-                currentFullData.hallBookings = cloudB;
-
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(currentFullData)
-                });
-
-                if (response.ok) {
-                    localStorage.removeItem('selectedContractIndex');
-                    alert('تم حفظ العقد سحابياً بنجاح!');
-                    window.location.href = 'dash.html';
-                } else {
-                    alert('حدث خطأ أثناء الحفظ السحابي.');
-                }
-            } catch (error) {
-                console.error('خطأ الاتصال:', error);
-                alert('فشل الاتصال بالإنترنت أثناء حفظ العقد.');
+                daysContainer.appendChild(dayCell);
             }
         }
 
-        function approveContract() {
-            saveContract(true);
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            renderCalendar();
         }
 
-        async function deleteContract() {
-            const eventDate = document.getElementById('event_date').value;
-
-            if (!eventDate) {
-                alert('التاريخ غير محدد!');
-                return;
-            }
-
-            if (confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحاب؟')) {
-                try {
-                    const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': API_KEY }
-                    });
-                    const getData = await getRes.json();
-                    const currentFullData = getData.record || {};
-                    
-                    if (!currentFullData.hallBookings) {
-                        currentFullData.hallBookings = {};
-                    }
-                    
-                    let cloudB = currentFullData.hallBookings;
-
-                    if (cloudB[eventDate]) {
-                        if (Array.isArray(cloudB[eventDate]) && selectedIndex !== null && selectedIndex !== "") {
-                            cloudB[eventDate].splice(parseInt(selectedIndex), 1);
-                            if (cloudB[eventDate].length === 0) {
-                                delete cloudB[eventDate];
-                            }
-                        } else {
-                            delete cloudB[eventDate];
-                        }
-
-                        currentFullData.hallBookings = cloudB;
-
-                        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': API_KEY
-                            },
-                            body: JSON.stringify(currentFullData)
-                        });
-
-                        if (response.ok) {
-                            localStorage.removeItem('selectedContractIndex');
-                            alert('تم حذف العقد سحابياً بنجاح.');
-                            window.location.href = 'dash.html';
-                        }
-                    }
-                } catch (error) {
-                    console.error('خطأ الحذف:', error);
-                    alert('حدث خطأ أثناء الاتصال.');
-                }
-            }
+        function logout() {
+            localStorage.removeItem('currentUserRole');
+            window.location.href = 'login.html';
         }
 
-        initContractPage();
+        renderCalendar();
     </script>
 </body>
 </html>
