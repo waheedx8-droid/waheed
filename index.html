@@ -4,7 +4,7 @@
   <link rel="manifest" href="./manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول - نظام تنظيم الأعراس</title>
+  <title>نظام تنظيم الأعراس - تسجيل الدخول</title>
   <style>
     * {
       box-sizing: border-box;
@@ -18,24 +18,24 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       padding: 20px;
     }
 
-    .login-card {
+    .card {
       background: #fff;
       padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 420px;
-      position: relative;
+      max-width: 400px;
       text-align: center;
     }
 
     h2 {
       margin-bottom: 20px;
       color: #2c3e50;
+      font-size: 22px;
     }
 
     .form-group {
@@ -45,138 +45,67 @@
 
     .form-group label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       font-weight: bold;
       font-size: 14px;
+      color: #333;
     }
 
     .form-group input {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 6px;
       font-size: 14px;
       outline: none;
     }
 
-    .btn-submit {
-      width: 100%;
-      background: #2980b9;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .btn-submit:hover {
-      background: #2471a3;
-    }
-
-    .admin-dashboard {
-      display: none;
-    }
-
-    .welcome-msg {
-      font-size: 18px;
-      font-weight: bold;
-      color: #2c3e50;
-      margin-bottom: 20px;
-    }
-
-    .btn-dashboard {
+    .btn {
       display: block;
       width: 100%;
-      background: #27ae60;
-      color: #fff;
-      border: none;
       padding: 12px;
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 12px;
-      text-decoration: none;
-      text-align: center;
-    }
-
-    .btn-dashboard:hover {
-      background: #219150;
-    }
-
-    .btn-pass-admin {
-      display: block;
-      width: 100%;
-      background: #8e44ad;
-      color: #fff;
       border: none;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
       margin-bottom: 10px;
       text-decoration: none;
+      box-sizing: border-box;
       text-align: center;
     }
 
-    .btn-pass-admin:hover {
-      background: #732d91;
-    }
+    .btn-login { background: #2980b9; color: #fff; }
+    .btn-login:hover { background: #2471a3; }
 
-    .btn-pass-user {
-      display: block;
-      width: 100%;
-      background: #d35400;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
-      text-decoration: none;
-      text-align: center;
-    }
+    .btn-calendar { background: #27ae60; color: #fff; }
+    .btn-calendar:hover { background: #219150; }
 
-    .btn-pass-user:hover {
-      background: #b04100;
-    }
+    .btn-pass-admin { background: #8e44ad; color: #fff; }
+    .btn-pass-admin:hover { background: #732d91; }
 
-    .btn-logout {
-      width: 100%;
-      background: #e74c3c;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 15px;
-    }
+    .btn-pass-user { background: #d35400; color: #fff; }
+    .btn-pass-user:hover { background: #b04100; }
 
-    .btn-logout:hover {
-      background: #c0392b;
-    }
+    .btn-logout { background: #e74c3c; color: #fff; margin-top: 10px; }
+    .btn-logout:hover { background: #c0392b; }
 
-    .pass-change-section {
+    .pass-box {
       display: none;
-      margin-top: 15px;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      margin-bottom: 15px;
       text-align: right;
-      border-top: 1px solid #eee;
-      padding-top: 15px;
     }
   </style>
 </head>
 <body>
 
-  <div class="login-card">
+  <div class="card">
 
+    <!-- 1. شاشة تسجيل الدخول -->
     <div id="loginSection">
       <h2>تسجيل الدخول</h2>
       <div class="form-group">
@@ -187,130 +116,136 @@
         <label>كلمة المرور</label>
         <input type="password" id="password" placeholder="أدخل كلمة المرور...">
       </div>
-      <button type="button" class="btn-submit" onclick="handleLogin()">تسجيل الدخول</button>
+      <button type="button" class="btn btn-login" onclick="handleLogin()">تسجيل الدخول</button>
     </div>
 
-    <div id="adminDashboard" class="admin-dashboard">
-      <div class="welcome-msg" id="welcomeMsg">لوحة التحكم</div>
+    <!-- 2. شاشة الداشبورد (تظهر بعد الدخول) -->
+    <div id="dashboardSection" style="display: none;">
+      <h2 id="welcomeMsg">أهلاً بك</h2>
 
-      <button type="button" class="btn-dashboard" onclick="goToCalendar()">التقويم</button>
+      <!-- رابط مباشر لصفحة التقويم (dash.html) -->
+      <a href="dash.html" class="btn btn-calendar">الدخول إلى التقويم</a>
 
-      <button type="button" class="btn-pass-admin" id="adminPassBtn" onclick="togglePassSection('admin')">تغيير كلمة مرور الأدمن</button>
-      <button type="button" class="btn-pass-user" id="userPassBtn" onclick="togglePassSection('user')">تغيير كلمة مرور المستخدم</button>
-
-      <div id="passChangeSection" class="pass-change-section">
-        <h3 id="passSectionTitle" style="font-size:15px; margin-bottom:10px; color:#333;">تغيير كلمة المرور</h3>
-        <div class="form-group">
-          <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة...">
-        </div>
-        <button type="button" class="btn-submit" onclick="saveNewPassword()">حفظ كلمة المرور</button>
+      <!-- أزرار خاّصة بالأدمن فقط -->
+      <div id="adminControls" style="display: none;">
+        <button type="button" class="btn btn-pass-admin" onclick="showPassBox('admin')">تغيير كلمة سر الأدمن</button>
+        <button type="button" class="btn btn-pass-user" onclick="showPassBox('user')">تغيير كلمة سر اليوزر</button>
       </div>
 
-      <button type="button" class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+      <!-- مربع تغيير كلمة المرور -->
+      <div id="passBox" class="pass-box">
+        <h4 id="passBoxTitle" style="margin-bottom: 10px; font-size: 14px;">تغيير كلمة المرور</h4>
+        <div class="form-group">
+          <input type="password" id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة...">
+        </div>
+        <button type="button" class="btn btn-login" style="padding: 8px;" onclick="savePassword()">حفظ الكلمة الجديدة</button>
+      </div>
+
+      <!-- زر تسجيل الخروج -->
+      <button type="button" class="btn btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
     </div>
 
   </div>
 
   <script>
-    let targetAccountToChange = '';
+    let activePassType = '';
 
-    // التحقق من الجلسة عند فتح التطبيق
+    // عند فتح الصفحة نتحقق إذا كان المستخدم مسجلاً لدخوله سابقاً
     document.addEventListener("DOMContentLoaded", function () {
       const isLoggedIn = localStorage.getItem("isLoggedIn");
       if (isLoggedIn === "true") {
-        showDashboard();
+        renderDashboard();
       } else {
-        showLogin();
+        renderLogin();
       }
     });
 
-    // دالة التحويل المباشر لصفحة التقويم (تمنع إعادة التحميل نهائياً)
-    function goToCalendar() {
-      window.location.href = "calendar.html";
-    }
-
     // دالة تسجيل الدخول
     function handleLogin() {
-      const userVal = document.getElementById("username").value.trim().toLowerCase();
-      const passVal = document.getElementById("password").value.trim();
+      const user = document.getElementById("username").value.trim().toLowerCase();
+      const pass = document.getElementById("password").value.trim();
 
-      const savedAdminPass = localStorage.getItem("adminPass") || "admin";
-      const savedUserPass = localStorage.getItem("userPass") || "123456";
+      const adminPass = localStorage.getItem("adminPass") || "admin";
+      const userPass = localStorage.getItem("userPass") || "123456";
 
-      if (userVal === "admin" && passVal === savedAdminPass) {
+      if (user === "admin" && pass === adminPass) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("currentUser", "admin");
-        showDashboard();
-      } else if (userVal === "user" && passVal === savedUserPass) {
+        renderDashboard();
+      } else if (user === "user" && pass === userPass) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("currentUser", "user");
-        showDashboard();
+        renderDashboard();
       } else {
         alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
       }
     }
 
-    // إظهار لوحة التحكم وتخصيص الأزرار حسب الحساب
-    function showDashboard() {
+    // إظهار لوحة التحكم وتحديد صلاحيات الحساب
+    function renderDashboard() {
       const currentUser = (localStorage.getItem("currentUser") || "").toLowerCase();
+      
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("dashboardSection").style.display = "block";
       document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + currentUser.toUpperCase();
 
-      document.getElementById("loginSection").style.display = "none";
-      document.getElementById("adminDashboard").style.display = "block";
-
-      // إذا كان الحساب أدمين تظهر أزرار كلمة المرور، وإذا كان يوزر تخفي تماماً
       if (currentUser === "admin") {
-        document.getElementById("adminPassBtn").style.display = "block";
-        document.getElementById("userPassBtn").style.display = "block";
+        document.getElementById("adminControls").style.display = "block";
       } else {
-        document.getElementById("adminPassBtn").style.display = "none";
-        document.getElementById("userPassBtn").style.display = "none";
+        document.getElementById("adminControls").style.display = "none";
       }
+      
+      document.getElementById("passBox").style.display = "none";
     }
 
-    function togglePassSection(type) {
-      targetAccountToChange = type;
-      const section = document.getElementById("passChangeSection");
-      const title = document.getElementById("passSectionTitle");
+    // إظهار مربع إدخال كلمة المرور الجديدة
+    function showPassBox(type) {
+      activePassType = type;
+      const box = document.getElementById("passBox");
+      const title = document.getElementById("passBoxTitle");
+      
+      box.style.display = "block";
+      document.getElementById("newPasswordInput").value = "";
 
-      section.style.display = "block";
       if (type === 'admin') {
-        title.innerText = "تغيير كلمة مرور الأدمن";
+        title.innerText = "تغيير كلمة سر الأدمن";
       } else {
-        title.innerText = "تغيير كلمة مرور المستخدم";
+        title.innerText = "تغيير كلمة سر اليوزر";
       }
     }
 
-    function saveNewPassword() {
-      const newPass = document.getElementById("newPassword").value.trim();
+    // حفظ كلمة المرور الجديدة في LocalStorage
+    function savePassword() {
+      const newPass = document.getElementById("newPasswordInput").value.trim();
       if (!newPass) {
-        alert("يرجى إدخال كلمة المرور الجديدة");
+        alert("يرجى إدخال كلمة المرور الجديدة!");
         return;
       }
 
-      if (targetAccountToChange === 'admin') {
+      if (activePassType === 'admin') {
         localStorage.setItem("adminPass", newPass);
-        alert("تم تغيير كلمة مرور الأدمن بنجاح!");
-      } else {
+        alert("تم تغيير كلمة سر الأدمن بنجاح إلى: " + newPass);
+      } else if (activePassType === 'user') {
         localStorage.setItem("userPass", newPass);
-        alert("تم تغيير كلمة مرور المستخدم بنجاح!");
+        alert("تم تغيير كلمة سر اليوزر بنجاح إلى: " + newPass);
       }
 
-      document.getElementById("newPassword").value = "";
-      document.getElementById("passChangeSection").style.display = "none";
+      document.getElementById("passBox").style.display = "none";
     }
 
-    function showLogin() {
-      document.getElementById("adminDashboard").style.display = "none";
+    // العودة لشاشة تسجيل الدخول
+    function renderLogin() {
       document.getElementById("loginSection").style.display = "block";
+      document.getElementById("dashboardSection").style.display = "none";
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
     }
 
+    // تسجيل الخروج
     function handleLogout() {
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("currentUser");
-      showLogin();
+      renderLogin();
     }
   </script>
 
