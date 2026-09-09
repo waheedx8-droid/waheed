@@ -3,10 +3,22 @@
   "dir": "ltr",
   "display": "standalone",
   "name": "SHAHBA ROSE",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "ROSE",
   "start_url": "/index.html",
+  "scope": "/",
   "theme_color": "#e6e6e6",
-  "id": "shahbarose-app"
+  "description": "نظام تنظيم الأعراس وصالات الأفراح",
+  "id": "shahbarose-app",
+  "icons": [
+    {
+      "src": "https://www.pwabuilder.com/assets/images/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.pwabuilder.com/assets/images/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
