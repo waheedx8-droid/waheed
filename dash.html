@@ -146,6 +146,42 @@
         }
 
         renderCalendar();
+        // دالة تعرض العقود الخاصة باليوم داخل النافذة المنبثقة
+function openDayEventsModal(dateString, eventsArray) {
+  document.getElementById('modalDateTitle').innerText = "عقود تاريخ: " + dateString;
+  let listContainer = document.getElementById('modalEventsList');
+  listContainer.innerHTML = "";
+
+  if (eventsArray && eventsArray.length > 0) {
+    eventsArray.forEach((event, index) => {
+      let item = document.createElement('div');
+      item.innerHTML = `📌 ${event.name} (${event.hall})`;
+      item.style.cssText = "padding: 10px; margin-bottom: 5px; background: #e3f2fd; color: #0d47a1; border-radius: 5px; cursor: pointer; font-weight: bold;";
+      
+      // عند الضغط على الخيار، ينقلنا إلى صفحة العقد المطلوب
+      item.onclick = function() {
+        // نقوم بتخزين العقد الحالي المراد عرضه أو تمريره عبر الـ URL
+        localStorage.setItem("selectedContractDate", dateString);
+        localStorage.setItem("selectedContractIndex", index);
+        
+        // الانتقال لصفحة العقد
+        window.location.href = "contract.html";
+      };
+      
+      listContainer.appendChild(item);
+    });
+  } else {
+    listContainer.innerHTML = "<p>لا توجد عقود في هذا اليوم.</p>";
+  }
+
+  // إظهار النافذة
+  document.getElementById('eventModal').style.display = "flex";
+}
+
+// دالة إغلاق النافذة
+function closeEventModal() {
+  document.getElementById('eventModal').style.display = "none";
+}
     </script>
 </body>
 </html>
