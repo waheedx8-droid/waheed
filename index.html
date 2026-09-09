@@ -1,156 +1,115 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-   <link rel="manifest" href="./manifest.json">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - نظام تنظيم الأعراس</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        .login-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; position: relative; text-align: center; }
-        
-        /* زر الدخول للتقويم (مخفي افتراضياً ولا يظهر إلا بعد تسجيل الدخول) */
-        .top-calendar-btn { position: absolute; top: -50px; left: 0; background: #27ae60; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; display: none; }
-        .top-calendar-btn:hover { background: #219150; }
-        
-        h2 { margin-bottom: 20px; color: #2c3e50; }
-        .form-group { margin-bottom: 15px; text-align: right; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
-        .btn-submit { width: 100%; background: #2980b9; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-submit:hover { background: #2471a3; }
-        
-        /* لوحة تحكم الأدمن بعد الدخول */
-        .admin-dashboard { display: none; }
-        .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
-        .btn-dashboard { width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
-        .btn-dashboard:hover { background: #219150; }
-        .btn-pass-admin { background: #8e44ad; }
-        .btn-pass-admin:hover { background: #732d91; }
-        .btn-pass-user { background: #e67e22; }
-        .btn-pass-user:hover { background: #d35400; }
-        .btn-logout { background: #e74c3c; margin-top: 10px; }
-        .btn-logout:hover { background: #c0392b; }
-    </style>
+  <link rel="manifest" href="./manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - نظام تنظيم الأعراس</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+    .login-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; position: relative; text-align: center; }
+    
+    h2 { margin-bottom: 20px; color: #2c3e50; }
+    .form-group { margin-bottom: 15px; text-align: right; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
+    .btn-submit { width: 100%; background: #2980b9; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-submit:hover { background: #2471a3; }
+
+    /* لوحة التحكم والأزرار الداخلية */
+    .admin-dashboard { display: none; }
+    .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+    
+    .btn-dashboard { display: block; width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; text-decoration: none; text-align: center; }
+    .btn-dashboard:hover { background: #219150; }
+    
+    .btn-logout { width: 100%; background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-logout:hover { background: #c0392b; }
+  </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <!-- زر الدخول للتقويم في الأعلى (مخفي ولا يظهر إلا للمسجلين) -->
-        <button id="topCalendarBtn" class="top-calendar-btn" onclick="goToCalendar()">الدخول للتقويم</button>
-
-        <!-- قسم نموذج تسجيل الدخول (الافتراضي) -->
-        <div id="loginSection">
-            <h2>تسجيل الدخول</h2>
-            
-            <div class="form-group">
-                <label>اسم المستخدم:</label>
-                <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
-            </div>
-            
-            <div class="form-group">
-                <label>كلمة المرور:</label>
-                <input type="password" id="password" placeholder="أدخل كلمة المرور...">
-            </div>
-
-            <button class="btn-submit" onclick="login()">دخول</button>
-        </div>
-
-        <!-- لوحة تحكم المسؤول (تظهر فقط عند تسجيل الدخول كأدمن) -->
-        <div id="adminDashboard" class="admin-dashboard">
-            <div class="welcome-msg">أهلاً بك في نظام تنظيم الأعراس</div>
-            
-            <button class="btn-dashboard" onclick="goToCalendar()">انتقل إلى التقويم</button>
-            <button class="btn-dashboard btn-pass-admin" onclick="changeAdminPassword()">تغيير كلمة سر المسؤول</button>
-            <button class="btn-dashboard btn-pass-user" onclick="changeUserPassword()">تغيير كلمة سر المستخدم</button>
-            <button class="btn-dashboard btn-logout" onclick="logout()">تسجيل الخروج</button>
-        </div>
+  <div class="login-card">
+    
+    <div id="loginSection">
+      <h2>تسجيل الدخول</h2>
+      <div class="form-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="username" placeholder="أدخل اسم المستخدم...">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور...">
+      </div>
+      <button type="button" class="btn-submit" onclick="handleLogin()">تسجيل الدخول</button>
     </div>
 
-    <script>
-        // قيم افتراضية أول مرة
-        if (!localStorage.getItem('adminUser')) localStorage.setItem('adminUser', 'admin');
-        if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '123456');
-        if (!localStorage.getItem('userUser')) localStorage.setItem('userUser', 'user');
-        if (!localStorage.getItem('userPass')) localStorage.setItem('userPass', '123456');
+    <div id="adminDashboard" class="admin-dashboard">
+      <div class="welcome-msg" id="welcomeMsg">أهلاً بك في اللوحة</div>
+      
+      <a href="calendar.html" class="btn-dashboard">التقويم</a>
+      
+      <button type="button" class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+    </div>
 
-        // التحقق عند تحميل الصفحة إذا كان مسجلاً دخول مسبقاً
-        window.onload = function() {
-            const role = localStorage.getItem('currentUserRole');
-            if (role === 'admin') {
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                document.getElementById('topCalendarBtn').style.display = 'block';
-            } else if (role === 'user') {
-                document.getElementById('topCalendarBtn').style.display = 'block';
-            }
-        };
+  </div>
 
-        function goToCalendar() {
-            window.location.href = 'index.html';
-        }
+  <script>
+    // عند فتح التطبيق: التحقق من الجلسة الحالية أو عرض شاشة الدخول تلقائياً
+    document.addEventListener("DOMContentLoaded", function () {
+      const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+      if (isLoggedIn === "true") {
+        showDashboard();
+      } else {
+        showLogin();
+      }
+    });
 
-        function login() {
-            const inputUser = document.getElementById('username').value.trim();
-            const inputPass = document.getElementById('password').value.trim();
+    // دالة تسجيل الدخول
+    function handleLogin() {
+      const userVal = document.getElementById("username").value.trim().toLowerCase();
+      const passVal = document.getElementById("password").value.trim();
 
-            const adminUser = localStorage.getItem('adminUser');
-            const adminPass = localStorage.getItem('adminPass');
-            const userUser = localStorage.getItem('userUser');
-            const userPass = localStorage.getItem('userPass');
+      // القبول بحساب admin أو user
+      if (userVal === "admin" || userVal === "user") {
+        // حفظ الجلسة مؤقتاً في sessionStorage لكي تنتهي فور إغلاق التطبيق
+        sessionStorage.setItem("isLoggedIn", "true");
+        sessionStorage.setItem("currentUser", userVal);
 
-            if (inputUser === adminUser && inputPass === adminPass) {
-                localStorage.setItem('currentUserRole', 'admin');
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                document.getElementById('topCalendarBtn').style.display = 'block';
-            } else if (inputUser === userUser && inputPass === userPass) {
-                localStorage.setItem('currentUserRole', 'user');
-                window.location.href = 'index.html';
-            } else {
-                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
-            }
-        }
+        showDashboard();
+      } else {
+        alert("اسم المستخدم أو كلمة المرور غير صحيحة");
+      }
+    }
 
-        function logout() {
-            localStorage.removeItem('currentUserRole');
-            document.getElementById('adminDashboard').style.display = 'none';
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('topCalendarBtn').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
+    // إظهار لوحة التحكم
+    function showDashboard() {
+      const user = sessionStorage.getItem("currentUser") || "";
+      document.getElementById("welcomeMsg").innerText = "أهلاً بك: " + user.toUpperCase();
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("adminDashboard").style.display = "block";
+    }
 
-        function changeAdminPassword() {
-            const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
-            if (currentPass !== localStorage.getItem('adminPass')) {
-                alert('كلمة المرور غير صحيحة!');
-                return;
-            }
+    // إظهار شاشة الدخول
+    function showLogin() {
+      document.getElementById("adminDashboard").style.display = "none";
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
 
-            const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
-            if (newPass && newPass.trim() !== '') {
-                localStorage.setItem('adminPass', newPass);
-                alert('تم تغيير كلمة سر المسؤول بنجاح!');
-            }
-        }
+    // دالة تسجيل الخروج اليمني
+    function handleLogout() {
+      sessionStorage.clear();
+      showLogin();
+    }
 
-        function changeUserPassword() {
-            const adminCheck = prompt('هذا الإجراء يتطلب صلاحية المسؤول. أدخل كلمة سر المسؤول للتأكيد:');
-            if (adminCheck !== localStorage.getItem('adminPass')) {
-                alert('كلمة سر المسؤول غير صحيحة!');
-                return;
-            }
+    // إنهاء الجلسة فور إغلاق التطبيق/النافذة
+    window.addEventListener("beforeunload", function () {
+      sessionStorage.clear();
+    });
+  </script>
 
-            const newUser = prompt('أدخل اسم المستخدم الجديد للمستخدم:', localStorage.getItem('userUser'));
-            const newPass = prompt('أدخل كلمة المرور الجديدة للمستخدم:');
-            
-            if (newUser) localStorage.setItem('userUser', newUser);
-            if (newPass) localStorage.setItem('userPass', newPass);
-            
-            alert('تم تحديث بيانات المستخدم العادي بنجاح!');
-        }
-    </script>
 </body>
 </html>
