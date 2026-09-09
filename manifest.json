@@ -1,23 +1,21 @@
 {
   "name": "SHAHBA ROSE",
   "short_name": "ROSE",
-  "start_url": "/index.html",
+  "start_url": "/waheed/",
+  "scope": "/waheed/",
   "display": "standalone",
-  "background_color": "#ebe2e2",
-  "theme_color": "#e6e6e6",
-  "description": "نظام تنظيم الأعراس وصالات الأفراح",
-  "orientation": "any",
-  "scope": "/",
-  "id": "shahbarose-app",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://www.pwabuilder.com/assets/icons/icon_192.png",
+      "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
