@@ -232,7 +232,6 @@
     </div>
 
     <script>
-        // إعدادات التخزين السحابي الموحدة بالـ Bin الجديد
         const BIN_ID = '6aa17fcbfd5d16053f256cd';
         const API_KEY = '$2a$10$cQzqgt61IaRpgBlG1qNSerd.2gm094w/Xf8BZOcV3BY/m7NuTOyy';
 
@@ -303,7 +302,6 @@
             return parseFloat(cleanStr) || 0;
         }
 
-        // دالة جلب البيانات وتعبئتها بالكامل (بما فيها تفاصيل الخدمات)
         async function initContractPage() {
             if (selectedDate) {
                 const cleanSelectedDate = toEnglishDigits(selectedDate);
@@ -389,7 +387,6 @@
             document.getElementById('organizer_sign').value = b.organizerSign || '';
             document.getElementById('groom_sign').value = b.groomSign || '';
 
-            // استعادة حالة الخدمات الإضافية والكميات والأسعار المخصصة
             if (b.services && Array.isArray(b.services)) {
                 b.services.forEach(srv => {
                     const check = document.querySelector(`.srv-check[data-index="${srv.index}"]`);
@@ -458,7 +455,6 @@
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
-        // تجميع كافة تفاصيل العقد والخدمات لحفظها بدقة سحابياً
         function collectContractData(statusVal) {
             const servicesData = [];
             const checks = document.querySelectorAll('.srv-check');
@@ -501,7 +497,6 @@
             };
         }
 
-        // دالة الحفظ الآمنة: تحافظ بالكامل على كلمات المرور وسجل الحجوزات سحابياً
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -582,7 +577,6 @@
             saveContract(true);
         }
 
-        // دالة الحذف الآمنة: تحذف العقد دون المساس بكلمات المرور
         async function deleteContract() {
             const eventDate = document.getElementById('event_date').value;
 
