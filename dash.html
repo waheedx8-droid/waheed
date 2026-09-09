@@ -8,27 +8,28 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f2f5; padding: 10px; color: #333; }
         
-        .calendar-container { max-width: 950px; margin: 10px auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow-x: hidden; }
+        .calendar-container { max-width: 980px; margin: 10px auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow-x: hidden; }
         
-        /* ترويسة العلوي للمستخدم وخروج */
+        /* شريط معلومات المستخدم وخروج */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .btn-logout { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
 
-        /* ترويسة التقويم (الشهر والسنة وأزرار السابق والتالي المباشرة) */
+        /* ترويسة التقويم (الشهر والسنة وأزرار التنقل فوق التقويم تماماً) */
         .calendar-nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .calendar-nav-bar h2 { font-size: 18px; color: #2c3e50; text-align: center; flex-grow: 1; }
         
         .btn-nav { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
         .btn-nav:hover { background: #2980b9; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; width: 100%; }
-        .day-header { font-weight: bold; background: #f8f9fa; padding: 6px 2px; border-radius: 4px; color: #555; font-size: 12px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; width: 100%; }
+        .day-header { font-weight: bold; background: #f8f9fa; padding: 8px 2px; border-radius: 4px; color: #555; font-size: 12px; }
         
+        /* زيادة الارتفاع والمساحة الداخلية للمربعات لتتسع للأسماء الطويلة بالكامل */
         .day-cell { 
-            min-height: 80px; 
-            border: 1px solid #e0e0e0; 
+            min-height: 110px; 
+            border: 1px solid #dcdcdc; 
             border-radius: 6px; 
-            padding: 3px; 
+            padding: 5px 3px; 
             cursor: pointer; 
             transition: 0.2s; 
             background: #fff; 
@@ -39,25 +40,26 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-        .day-cell:hover { border-color: #3498db; }
+        .day-cell:hover { border-color: #3498db; background-color: #fbfbfb; }
         .day-cell.empty { background: #fafafa; cursor: default; border: none; }
         
         .day-number { font-weight: bold; font-size: 13px; text-align: left; padding: 2px; color: #2c3e50; }
 
-        /* تنسيق اسم الصالة الظاهر على التقويم من الخارج */
+        /* ضبط حجم الخط والتفاف النص لمنع أي قص لاسم الصالة */
         .event-item {
-            font-size: 9px !important;
+            font-size: 9.5px !important;
             background-color: #e3f2fd;
             color: #0d47a1;
-            padding: 3px 2px;
-            margin-top: 2px;
+            padding: 4px 2px;
+            margin-top: 3px;
             border-radius: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal !important;
+            word-break: break-word;
+            overflow: visible;
             width: 100%;
             text-align: center;
             font-weight: bold;
+            line-height: 1.2;
         }
 
         input, span, td, div, button, h2 { font-family: Arial, 'Segoe UI', sans-serif !important; }
@@ -74,7 +76,7 @@
             <button class="btn-logout" onclick="logout()">تسجيل خروج</button>
         </div>
 
-        <!-- شريط التنقل بين الأشهر مباشرة فوق التقويم -->
+        <!-- شريط التنقل بين الأشهر فوق التقويم مباشرة -->
         <div class="calendar-nav-bar">
             <button class="btn-nav" onclick="changeMonth(-1)">&#10095; السابق</button>
             <h2 id="monthYearDisplay"></h2>
@@ -157,7 +159,7 @@
                     }
 
                     if (dayEvents.length > 0) {
-                        cellContent += `<div style="display:flex; flex-direction:column; gap:2px; width:100%; overflow:hidden;">`;
+                        cellContent += `<div style="display:flex; flex-direction:column; gap:2px; width:100%;">`;
                         dayEvents.forEach(ev => {
                             let displayHall = ev.hall || ev.hallName || 'صالة محجوزة';
                             cellContent += `<div class="event-item">🏛️ ${displayHall}</div>`;
@@ -218,8 +220,10 @@
             let addBtn = document.createElement('button');
             addBtn.innerText = "+ إضافة عقد جديد لهذا التاريخ";
             addBtn.style.cssText = "width:100%; padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:10px; font-size:13px;";
+            
             addBtn.onclick = function() {
                 localStorage.setItem("selectedContractDate", dateString);
+                localStorage.removeItem("selectedContractIndex"); 
                 window.location.href = `contract.html?date=${dateString}&action=new`;
             };
             listContainer.appendChild(addBtn);
