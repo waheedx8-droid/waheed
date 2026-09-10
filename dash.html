@@ -224,18 +224,17 @@
                 daysContainer.appendChild(emptyCell);
             }
 
-            for (let day = 1; day <= totalDays; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
+           for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'day-cell';
 
-                const formattedMonth = String(monthNumber).padStart(2, '0');
-                const formattedDay = String(day).padStart(2, '0');
-                const fullDatestr = `${year}-${formattedMonth}-${formattedDay}`;
+        const formattedMonth = String(monthNumber).padStart(2, '0');
+        const formattedDay = String(day).padStart(2, '0');
+        const fullDatestr = `${year}-${formattedMonth}-${formattedDay}`;
 
-                let cellContent = `<div class="day-number">${day}</div>`;
+        let cellContent = `<div class="day-number">${day}</div>`;
 
         if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
-            // اجعل الخلية قابلة للضغط لتفتح القائمة المنبثقة
             dayCell.style.cursor = 'pointer';
             dayCell.onclick = () => openModal(fullDatestr, allBookingsMap[fullDatestr]);
             
@@ -250,15 +249,12 @@
                 `;
             });
         }
-        cellContent += `<a href="contract.html?date=${fullDatestr}" class="btn-add-mini" onclick="event.stopPropagation()">+ إضافة</a>`;
-                    });
-                }
 
-                cellContent += `<a href="contract.html?date=${fullDatestr}" class="btn-add-mini">+ إضافة</a>`;
-                dayCell.innerHTML = cellContent;
-                daysContainer.appendChild(dayCell);
-            }
-        }
+        cellContent += `<a href="contract.html?date=${fullDatestr}" class="btn-add-mini" onclick="event.stopPropagation()">+ إضافة</a>`;
+        
+        dayCell.innerHTML = cellContent;
+        daysContainer.appendChild(dayCell);
+    }
 
         function changeMonth(offset) {
             currentDate.setMonth(currentDate.getMonth() + offset);
