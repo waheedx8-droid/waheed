@@ -471,7 +471,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
                 toggleInputsLock(true);
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
-                window.location.href = 'dash.html';
+                window.location.replace('dash.html');
 
             } catch (e) {
                 console.error('خطأ أثناء الحفظ في Supabase:', e);
