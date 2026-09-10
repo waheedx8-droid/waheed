@@ -21,10 +21,10 @@
         .btn-logout { background: #e74c3c; }
         .btn-logout:hover { background: #c0392b; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; text-align: center; }
         .day-header { font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; font-size: 14px; }
         
-        .day-cell { min-height: 140px; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 6px; background: #fff; display: flex; flex-direction: column; text-align: right; position: relative; }
+        .day-cell { min-height: 120px; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; background: #fff; display: flex; flex-direction: column; text-align: right; position: relative; }
         .day-cell.empty { background: #fafafa; border: none; }
         
         .day-number { font-weight: bold; font-size: 15px; text-align: left; padding: 2px 5px; color: #2c3e50; border-bottom: 1px solid #eee; margin-bottom: 4px; direction: ltr; }
@@ -75,7 +75,7 @@
     <script>
         // === إعدادات الاتصال بـ Supabase ===
         // استبدل 'YOUR_SUPABASE_URL' برابط مشروعك الفعلي (مثال: https://xyzcompany.supabase.co)
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; 
+        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         
         const supabaseClient = (SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
