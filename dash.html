@@ -3,63 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم الحجوزات وإدارة العقود - شهباروز</title>
-    <!-- مكتبة Supabase JS -->
+    <title>تقويم الحجوزات - نظام تنظيم الأعراس</title>
+    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; padding: 20px; color: #333; direction: rtl; text-align: right; }
+        body { background-color: #fef2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 10px; }
         
-        .calendar-container { max-width: 1050px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .calendar-container { 
+            width: 100%; 
+            max-width: 480px; 
+            background: #fff; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            overflow-hidden: hidden;
+        }
         
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .calendar-header h2 { font-size: 22px; color: #2c3e50; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .calendar-header h2 { font-size: 18px; color: #2c3e50; }
         
-        .header-buttons { display: flex; align-items: center; gap: 10px; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold; }
+        .header-buttons { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn-nav:hover { background: #2980b9; }
-        .btn-logout { background: #e74c3c; }
-        .btn-logout:hover { background: #c0392b; }
-
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-        .day-header { font-weight: bold; text-align: center; background: #f8f9fa; padding: 10px; border-radius: 4px; color: #555; font-size: 14px; }
+        .logout { background: #e74c3c; }
+        .logout:hover { background: #c0392b; }
         
-        .day-cell { min-height: 100px; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px; background: #fff; display: flex; flex-direction: column; text-align: right; position: relative; }
-        .day-cell.empty { background: #fafafa; border: none; }
+        .user-tag { background: #2c3e50; color: white; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+
+        /* تعديل شبكة التقويم لضبط المقاسات تماماً داخل الكارد */
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 4px; 
+            width: 100%;
+        }
         
-        .day-number { font-weight: bold; font-size: 14px; text-align: left; padding: 4px; color: #2c3e50; border-bottom: 1px solid #eee; margin-bottom: 4px; direction: ltr; }
-
-        /* بطاقة العقد المضافة (للانتقال للتفاصيل) */
-        .booking-badge { font-size: 11px; padding: 5px 7px; border-radius: 4px; margin-bottom: 4px; color: #fff; display: block; text-align: right; border-right: 3px solid #111; cursor: pointer; transition: 0.15s; text-decoration: none; }
-        .booking-badge:hover { opacity: 0.85; transform: scale(1.02); }
-        .badge-approved { background-color: #27ae60; }
-        .badge-pending { background-color: #e74c3c; }
+        .day-header { 
+            font-weight: bold; 
+            font-size: 11px; 
+            background: #f8f9fa; 
+            padding: 6px 2px; 
+            text-align: center; 
+            border-radius: 4px;
+            color: #2c3e50;
+        }
         
-        .badge-groom { font-weight: bold; font-size: 12px; display: block; }
-        .badge-hall { font-size: 10px; opacity: 0.95; display: block; margin-top: 1px; }
+        .day-cell { 
+            background: #fafafa; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 4px; 
+            min-height: 75px; 
+            display: flex; 
+            flex-direction: column; 
+            text-align: right; 
+            position: relative; 
+            padding: 2px;
+            overflow: hidden;
+        }
+        
+        .day-number { 
+            font-weight: bold; 
+            font-size: 12px; 
+            text-align: left; 
+            padding: 2px 4px; 
+            border-bottom: 1px solid #eee; 
+            margin-bottom: 2px; 
+            color: #333;
+        }
+        
+        /* زر إضافة حجز مصغر داخل المربع */
+        .btn-add-mini { 
+            background: #2980b9; 
+            color: white; 
+            border: none; 
+            border-radius: 3px; 
+            padding: 2px; 
+            font-size: 10px; 
+            cursor: pointer; 
+            text-align: center; 
+            display: block; 
+            width: 100%; 
+            text-decoration: none; 
+            margin-top: auto;
+        }
+        .btn-add-mini:hover { background: #2471a3; }
 
-        /* زر إضافة عقد صغير داخل خانة اليوم */
-        .btn-add-mini { background: #2980b9; color: white; border: none; border-radius: 3px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; margin-top: auto; text-align: center; display: block; width: 100%; text-decoration: none; }
-        .btn-add-mini:hover { background: #1f6391; }
+        .booking-badge { 
+            font-size: 9px; 
+            padding: 2px 4px; 
+            margin-bottom: 2px; 
+            border-radius: 3px; 
+            color: #fff; 
+            display: block; 
+            text-decoration: none; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        .badge-approved { background: #27ae60; }
+        .badge-pending { background: #e67e22; }
 
-        .en-num { direction: ltr !important; unicode-bidi: isolate; display: inline-block; }
-        .user-tag { background: #2c3e50; color: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .badge-groom { font-weight: bold; display: block; }
+        .badge-hall { font-size: 8px; opacity: 0.9; display: block; }
     </style>
 </head>
 <body>
 
     <div class="calendar-container">
         <div class="calendar-header">
-            <button class="btn-nav" onclick="changeMonth(-1)">&#10095; الشهر السابق</button>
-            <h2 id="monthYearDisplay">جاري التحميل...</h2>
+            <h2 id="monthYearDisplay"></h2>
             <div class="header-buttons">
-                <span id="roleDisplay" class="user-tag"></span>
-                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي &#10094;</button>
-                <button class="btn-nav btn-logout" onclick="logout()">خروج</button>
+                <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
+                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
+                <span id="roleDisplay" class="user-tag">user</span>
+                <button class="btn-nav logout" onclick="logout()">خروج</button>
             </div>
         </div>
 
-        <div class="calendar-grid">
+        <div class="calendar-grid" id="calendarDays">
+            <!-- أيام الأسبوع -->
             <div class="day-header">الأحد</div>
             <div class="day-header">الإثنين</div>
             <div class="day-header">الثلاثاء</div>
@@ -68,26 +131,22 @@
             <div class="day-header">الجمعة</div>
             <div class="day-header">السبت</div>
         </div>
-
-        <div class="calendar-grid" id="calendarDays" style="margin-top: 8px;"></div>
     </div>
 
     <script>
-        // === إعدادات الاتصال بـ Supabase ===
-        // استبدل 'YOUR_SUPABASE_URL' برابط مشروعك الفعلي (مثال: https://xyzcompany.supabase.co)
-        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
-        
-        const supabaseClient = (SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL') ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        // --- إعدادات الاتصال بـ Supabase ---
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // ضع رابط مشروعك هنا
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // ضع مفتاح الـ Anon هنا
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
 
-        let currentDate = new Date(2026, 6, 1); // يوليو 2026
+        let currentDate = new Date(2026, 6); // يوليو 2026 كمثال افتراضي
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        document.getElementById('roleDisplay').innerText = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
+        document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
 
         let allBookingsMap = {};
 
@@ -98,31 +157,26 @@
                     if (!error && data) {
                         allBookingsMap = {};
                         data.forEach(item => {
-                            const dateKey = item.booking_date; 
+                            const dateKey = item.booking_date;
                             if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
                             allBookingsMap[dateKey].push({
-                                id: item.id, 
+                                id: item.id,
                                 groomName: item.groom_name,
-                                hallName: item.hall_name || 'صالة رئيسية',
-                                status: item.status 
+                                hallName: item.hall_name,
+                                status: item.status || 'pending'
                             });
                         });
-                    } else {
-                        console.error('خطأ في جلب البيانات من Supabase:', error);
-                        loadLocalStorageFallback();
                     }
-                } else {
-                    loadLocalStorageFallback();
                 }
             } catch (e) {
-                console.log('العمل عبر الذاكرة المحلية مؤقتاً لحدث استثناء:', e);
+                console.error('خطأ في جلب الحجوزات من Supabase:', e);
                 loadLocalStorageFallback();
             }
             renderCalendar();
         }
 
         function loadLocalStorageFallback() {
-            const localData = JSON.parse(localStorage.getItem('hallBookings')) || {};
+            const localData = JSON.parse(localStorage.getItem('allBookings')) || {};
             formatBookingsData(localData);
         }
 
@@ -130,20 +184,11 @@
             allBookingsMap = {};
             for (let dateKey in rawObj) {
                 const val = rawObj[dateKey];
-                if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
-                
-                if (!Array.isArray(val)) {
-                    allBookingsMap[dateKey].push({
-                        id: val.id || 'local_' + Math.random(),
-                        groomName: val.groomName || val.groom_name || 'حجز',
-                        hallName: val.hallName || val.hall_name || 'صالة رئيسية',
-                        status: val.status || 'pending'
-                    });
-                } else {
+                if (Array.isArray(val)) {
                     allBookingsMap[dateKey] = val.map(b => ({
-                        id: b.id || 'local_' + Math.random(),
-                        groomName: b.groomName || b.groom_name || 'حجز',
-                        hallName: b.hallName || b.hall_name || 'صالة رئيسية',
+                        id: b.id || Math.random(),
+                        groomName: b.groom_name || b.groomName || 'حجز',
+                        hallName: b.hall_name || b.hallName || 'صالة',
                         status: b.status || 'pending'
                     }));
                 }
@@ -155,51 +200,60 @@
             const monthIndex = currentDate.getMonth();
             const monthNumber = monthIndex + 1;
 
-            const headerText = `${monthNames[monthIndex]} <span class="en-num">(${monthNumber})</span> - <span class="en-num">${year}</span>`;
+            const headerText = `${monthNames[monthIndex]} (${monthNumber}) - ${year}`;
             document.getElementById('monthYearDisplay').innerHTML = headerText;
 
             const daysContainer = document.getElementById('calendarDays');
-            daysContainer.innerHTML = '';
+            
+            // الاحتفاظ برؤوس الأيام وإعادة بناء المربعات فقط
+            const headersHTML = `
+                <div class="day-header">الأحد</div>
+                <div class="day-header">الإثنين</div>
+                <div class="day-header">الثلاثاء</div>
+                <div class="day-header">الأربعاء</div>
+                <div class="day-header">الخميس</div>
+                <div class="day-header">الجمعة</div>
+                <div class="day-header">السبت</div>
+            `;
+            daysContainer.innerHTML = headersHTML;
 
             const firstDayIndex = new Date(year, monthIndex, 1).getDay();
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
+            // خانات فارغة لبداية الشهر
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell empty';
+                emptyCell.className = 'day-cell';
+                emptyCell.style.background = '#fcfcfc';
+                emptyCell.style.border = 'none';
                 daysContainer.appendChild(emptyCell);
             }
 
+            // أيام الشهر
             for (let day = 1; day <= totalDays; day++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day-cell';
 
                 const formattedMonth = String(monthNumber).padStart(2, '0');
                 const formattedDay = String(day).padStart(2, '0');
-                const fullDateStr = `${year}-${formattedMonth}-${formattedDay}`;
+                const fullDatestr = `${year}-${formattedMonth}-${formattedDay}`;
 
-                let cellContent = `<div class="day-number en-num">${day}</div>`;
+                let cellContent = `<div class="day-number">${day}</div>`;
 
-                // عرض العقود والحجوزات الحالية داخل الخلية
-                if (allBookingsMap[fullDateStr] && allBookingsMap[fullDateStr].length > 0) {
-                    const bookingsList = allBookingsMap[fullDateStr];
-                    
+                if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
+                    const bookingsList = allBookingsMap[fullDatestr];
                     bookingsList.forEach(booking => {
                         const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
-                        const statusText = booking.status === 'pending' ? ' (مسودة)' : '';
-                        
                         cellContent += `
-                            <a href="contract.html?id=${booking.id}&date=${fullDateStr}" class="booking-badge ${statusClass}">
-                                <span class="badge-groom">👤 ${booking.groomName}${statusText}</span>
+                            <a href="contract.html?id=${booking.id}&date=${fullDatestr}" class="booking-badge ${statusClass}">
+                                <span class="badge-groom">🤵 ${booking.groomName}</span>
                                 <span class="badge-hall">📍 ${booking.hallName}</span>
                             </a>
                         `;
                     });
                 }
 
-                // زر إضافة عقد جديد في أسفل الخلية
-                cellContent += `<a href="contract.html?date=${fullDateStr}" class="btn-add-mini">+ إضافة عقد</a>`;
-
+                cellContent += `<a href="contract.html?date=${fullDatestr}" class="btn-add-mini">+ إضافة</a>`;
                 dayCell.innerHTML = cellContent;
                 daysContainer.appendChild(dayCell);
             }
@@ -212,7 +266,7 @@
 
         function logout() {
             localStorage.removeItem('currentUserRole');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
 
         initCalendarSystem();
