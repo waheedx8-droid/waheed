@@ -497,7 +497,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 }
 
                 alert('تم حذف العقد بنجاح.');
-                window.location.href = 'dash.html';
+              window.location.replace('dash.html');
             } catch (e) {
                 console.error('خطأ أثناء الحذف:', e);
                 alert('حدث خطأ أثناء الحذف: ' + e.message);
