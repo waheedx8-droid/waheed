@@ -234,16 +234,25 @@
 
                 let cellContent = `<div class="day-number">${day}</div>`;
 
-                if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
-                    const bookingsList = allBookingsMap[fullDatestr];
-                    bookingsList.forEach(booking => {
-                        const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
-                        cellContent += `
-                            <a href="contract.html?id=${booking.id}&date=${fullDatestr}" class="booking-badge ${statusClass}">
-                                <span class="badge-groom">🤵 ${booking.groomName}</span>
-                                <span class="badge-hall">📍 ${booking.hallName}</span>
-                            </a>
-                        `;
+               if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
+            // اجعل الخلية قابلة للضغط لتفتح القائمة المنبثقة
+            dayCell.style.cursor = 'pointer';
+            dayCell.onclick = () => openModal(fullDatestr, allBookingsMap[fullDatestr]);
+            
+            const bookingsList = allBookingsMap[fullDatestr];
+            bookingsList.forEach(booking => {
+                const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
+                cellContent += `
+                    <div class="booking-badge ${statusClass}">
+                        <span class="badge-groom">🤵 ${booking.groomName}</span>
+                        <span class="badge-hall">📍 ${booking.hallName}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // زر إضافة عقد تحت المعلومات (مع منع انتشار الحدث لكي لا تفتح المودال عند الضغط عليه مباشرة)
+        cellContent += `<a href="contract.html?date=${fullDatestr}" class="btn-add-mini" onclick="event.stopPropagation()">+ إضافة</a>`;
                     });
                 }
 
@@ -265,5 +274,16 @@
 
         initCalendarSystem();
     </script>
+    <!-- القائمة المنبثقة (Modal) لعرض تفاصيل الحجوزات -->
+<div id="bookingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+        <h3 id="modalDateTitle" style="margin-bottom:15px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:8px;"></h3>
+        <div id="modalBookingsList" style="max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
+        <div style="display:flex; gap:10px; justify-content:space-between;">
+            <a id="modalAddBtn" href="#" class="btn-nav" style="text-align:center; flex:1; text-decoration:none; background:#27ae60;">+ إضافة عقد جديد</a>
+            <button onclick="closeModal()" class="btn-nav logout" style="cursor:pointer;">إغلاق</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
