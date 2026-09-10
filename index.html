@@ -87,7 +87,7 @@
         };
 
         function gotocalendar() {
-            window.location.href = 'dash.html'; // توجيه لصفحة التقويم الرئيسية (dash.html)
+           window.location.replace('dash.html'); // توجيه لصفحة التقويم الرئيسية (dash.html)
         }
 
         // تهيئة البيانات الافتراضية أول مرة إذا كان الجدول فارغاً (باستخدام المفاتيح الرقمية 1 و 2)
@@ -146,7 +146,7 @@
                     document.getElementById('topCalendarBtn').style.display = 'block';
                 } else if (inputUser === userUserVal && inputPass === userPass) {
                     localStorage.setItem('currentUserRole', 'user');
-                    window.location.href = 'dash.html';
+                  window.location.replace('dash.html');
                 } else {
                     alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
                 }
