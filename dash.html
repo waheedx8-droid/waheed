@@ -141,7 +141,7 @@
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
 
-        let currentDate = new Date(2026, 6); 
+        let currentDate = new Date(); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
 
