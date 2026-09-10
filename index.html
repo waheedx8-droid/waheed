@@ -72,8 +72,8 @@
 
     <script>
         // === إعدادات الاتصال بـ Supabase ===
-        const SUPABASE_URL = 'https://xxxx.supabase.co'; // استبدل برابط مشروعك الحقيقي
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsIn...'; // استبدل بمفتاح الـ Anon الخاص بك
+        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; // استبدل برابط مشروعك الحقيقي
+        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; // استبدل بمفتاح الـ Anon الخاص بك
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // تهيئة الحسابات الافتراضية في Supabase وفي LocalStorage كاحتياط عند أول تشغيل
@@ -175,74 +175,90 @@
             document.getElementById('password').value = '';
         }
 
-        async function changeAdminPassword() {
-            const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
-            if (currentPass === null) return;
-            
-            let currentAdminPass = localStorage.getItem('adminPass');
-            try {
-                const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 'adminPass').single();
-                if (data) currentAdminPass = data.val;
-            } catch (err) {}
+      // دالة لتغيير كلمة سر المسؤول (Admin)
+async function changeAdminPassword() {
+    const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
+    if (currentPass === null) return;
 
-            if (currentPass !== currentAdminPass) {
-                alert('كلمة المرور غير صحيحة!');
-                return;
-            }
+    try {
+        // جلب كلمة السر الحالية من قاعدة البيانات
+        const { data, error } = await supabaseClient
+            .from('settings_table')
+            .select('val')
+            .eq('key_name', 'adminPass')
+            .single();
 
-            const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
-            if (newPass && newPass.trim() !== '') {
-                localStorage.setItem('adminPass', newPass);
-                
-                // التحديث في سحابية Supabase
-                const { error } = await supabaseClient
-                    .from('settings_table')
-                    .update({ val: newPass })
-                    .eq('key_name', 'adminPass');
-
-                if (error) {
-                    alert('حدث خطأ أثناء التحديث السحابي: ' + error.message);
-                } else {
-                    alert('تم تغيير كلمة سر المسؤول بنجاح سحابياً!');
-                }
-            }
+        if (error || !data) {
+            alert('حدث خطأ أثناء التحقق من قاعدة البيانات');
+            return;
         }
 
-        async function changeUserPassword() {
-            const adminCheck = prompt('هذا الإجراء يتطلب صلاحية المسؤول. أدخل كلمة سر المسؤول للتأكيد:');
-            if (adminCheck === null) return;
-            
-            let currentAdminPass = localStorage.getItem('adminPass');
-            try {
-                const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 'adminPass').single();
-                if (data) currentAdminPass = data.val;
-            } catch (err) {}
+        if (currentPass !== data.val) {
+            alert('كلمة المرور غير صحيحة');
+            return;
+        }
 
-            if (adminCheck !== currentAdminPass) {
-                alert('كلمة سر المسؤول غير صحيحة!');
-                return;
+        const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
+        if (newPass && newPass.trim() !== '') {
+            // تحديث كلمة السر مباشرة في Supabase
+            const { error: updateError } = await supabaseClient
+                .from('settings_table')
+                .update({ val: newPass })
+                .eq('key_name', 'adminPass');
+
+            if (updateError) {
+                alert('خطأ أثناء تحديث كلمة السر في قاعدة البيانات: ' + updateError.message);
+            } else {
+                alert('تم تغيير كلمة سر المسؤول بنجاح!');
             }
+        }
+    } catch (err) {
+        console.error('خطأ غير متوقع:', err);
+        alert('حدث خطأ في الاتصال بالسيرفر');
+    }
+}
 
-            const newUser = prompt('أدخل اسم المستخدم الجديد للمستخدم:', localStorage.getItem('userUser') || 'user');
-            if (newUser === null) return;
+// دالة لتغيير اسم المستخدم وكلمة السر للمستخدم العادي (User)
+async function changeUserPassword() {
+    const adminCheck = prompt('لإجراء طلب صلاحية المسؤول، أدخل كلمة سر المسؤول للتأكد:');
+    if (adminCheck === null) return;
 
-            const newPass = prompt('أدخل كلمة المرور الجديدة للمستخدم:');
-            if (newPass === null) return;
-            
-            try {
-                if (newUser && newUser.trim() !== '') {
-                    localStorage.setItem('userUser', newUser);
-                    await supabaseClient.from('settings_table').update({ val: newUser }).eq('key_name', 'userUser');
-                }
-                if (newPass && newPass.trim() !== '') {
-                    localStorage.setItem('userPass', newPass);
-                    await supabaseClient.from('settings_table').update({ val: newPass }).eq('key_name', 'userPass');
-                }
-                
-                alert('تم تحديث بيانات المستخدم العادي بنجاح سحابياً!');
-            } catch (e) {
-                console.error('خطأ في التحديث:', e);
-                alert('حدث خطأ أثناء تحديث بيانات المستخدم.');
+    try {
+        // التحقق من صلاحية المسؤول أولاً من قاعدة البيانات
+        const { data, error } = await supabaseClient
+            .from('settings_table')
+            .select('val')
+            .eq('key_name', 'adminPass')
+            .single();
+
+        if (error || !data || adminCheck !== data.val) {
+            alert('كلمة سر المسؤول غير صحيحة');
+            return;
+        }
+
+        // طلب اسم المستخدم الجديد
+        const newUser = prompt('أدخل اسم المستخدم الجديد:');
+        if (newUser && newUser.trim() !== '') {
+            await supabaseClient
+                .from('settings_table')
+                .update({ val: newUser })
+                .eq('key_name', 'userUser');
+        }
+
+        // طلب كلمة المرور الجديدة للمستخدم
+        const newPass = prompt('أدخل كلمة المرور الجديدة للمستخدم:');
+        if (newPass && newPass.trim() !== '') {
+            await supabaseClient
+                .from('settings_table')
+                .update({ val: newPass })
+                .eq('key_name', 'userPass');
+        }
+
+        alert('تم تحديث بيانات المستخدم بنجاح!');
+
+    } catch (err) {
+        console.error('خطأ في التحديث:', err);
+        alert('حدث خطأ أثناء الاتصال بقاعدة البيانات');
             }
         }
     </script>
