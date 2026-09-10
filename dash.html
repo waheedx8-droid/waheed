@@ -234,7 +234,7 @@
 
                 let cellContent = `<div class="day-number">${day}</div>`;
 
-               if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
+        if (allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0) {
             // اجعل الخلية قابلة للضغط لتفتح القائمة المنبثقة
             dayCell.style.cursor = 'pointer';
             dayCell.onclick = () => openModal(fullDatestr, allBookingsMap[fullDatestr]);
