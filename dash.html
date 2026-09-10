@@ -17,7 +17,6 @@
             padding: 15px; 
             border-radius: 8px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            
         }
         
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
@@ -31,7 +30,7 @@
         
         .user-tag { background: #2c3e50; color: white; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 
-        /* تعديل شبكة التقويم لضبط المقاسات تماماً داخل الكارد */
+        /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
@@ -59,7 +58,6 @@
             text-align: right; 
             position: relative; 
             padding: 2px;
-            overflow: hidden;
         }
         
         .day-number { 
@@ -72,7 +70,6 @@
             color: #333;
         }
         
-        /* زر إضافة حجز مصغر داخل المربع */
         .btn-add-mini { 
             background: #2980b9; 
             color: white; 
@@ -144,7 +141,7 @@
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
 
-        let currentDate = new Date(2026, 6); // يوليو 2026 كمثال افتراضي
+        let currentDate = new Date(2026, 6); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
 
@@ -205,7 +202,6 @@
 
             const daysContainer = document.getElementById('calendarDays');
             
-            // الاحتفاظ برؤوس الأيام وإعادة بناء المربعات فقط
             const headersHTML = `
                 <div class="day-header">الأحد</div>
                 <div class="day-header">الإثنين</div>
@@ -220,7 +216,6 @@
             const firstDayIndex = new Date(year, monthIndex, 1).getDay();
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
-            // خانات فارغة لبداية الشهر
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'day-cell';
@@ -229,7 +224,6 @@
                 daysContainer.appendChild(emptyCell);
             }
 
-            // أيام الشهر
             for (let day = 1; day <= totalDays; day++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day-cell';
