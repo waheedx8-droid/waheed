@@ -119,6 +119,10 @@
     <div class="calendar-container">
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
+            <div style="display: flex; gap: 5px; width: 100%; margin-top: 10px;">
+    <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+    <button class="btn-nav" onclick="searchGroom()" style="background: #27ae60;">بحث</button>
+</div>
          <div class="header-buttons">
     <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
     <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button> <!-- زر اليوم الجديد -->
@@ -334,6 +338,67 @@ function handleSwipe() {
     currentDate = new Date(); 
     // إعادة رسم التقويم ليظهر الشهر الحالي
     renderCalendar();
+}
+        async function searchGroom() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!query) {
+        alert('الرجاء إدخال اسم العريس للبحث.');
+        return;
+    }
+
+    try {
+        // البحث عن العريس في قاعدة بيانات Supabase
+        const { data, error } = await supabaseClient
+            .from('bookings_table')
+            .select('*')
+            .ilike('groom_name', `%${query}%`); // البحث الجزئي أو الكلي غير الحساس لحالة الفراغات/الحروف
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            alert('لم يتم العثور على أي حجز بهذا الاسم.');
+            return;
+        }
+
+        // إذا وجدنا الحجز، نأخذ تاريخ أول نتيجة مطابقة
+        const booking = data[0];
+        const bookingDateStr = booking.booking_date; // صيغة التاريخ المتوقعة: YYYY-MM-DD
+
+        if (!bookingDateStr) {
+            alert('هذا الحجز لا يحتوي على تاريخ مسجل.');
+            return;
+        }
+
+        const [bYear, bMonth, bDay] = bookingDateStr.split('-').map(Number);
+
+        // تغيير تاريخ التقويم الحالي إلى شهر وفنة الحجز للانتقال إليه مباشرة
+        currentDate = new Date(bYear, bMonth - 1, 1);
+        renderCalendar(); // إعادة رسم التقويم للشهر المطلوب
+
+        // تمييز خلية اليوم المطلوب بعد رسم التقويم بلون مختلف مؤقت لفت الانتباه
+        setTimeout(() => {
+            const cells = document.querySelectorAll('.day-cell');
+            cells.forEach(cell => {
+                const dayNumElem = cell.querySelector('.day-number');
+                if (dayNumElem && parseInt(dayNumElem.textContent) === bDay) {
+                    // تأثير بصري مؤقت على الخلية (توهج وإطار مميز)
+                    cell.style.transition = 'all 0.5s ease';
+                    cell.style.border = '2px solid #e74c3c';
+                    cell.style.backgroundColor = '#fadbd8';
+                    
+                    // إزالة التأثير بعد 3 ثواني
+                    setTimeout(() => {
+                        cell.style.border = '1px solid #e0e0e0';
+                        cell.style.backgroundColor = '#fafafa';
+                    }, 3000);
+                }
+            });
+        }, 100);
+
+    } catch (e) {
+        console.error('خطأ أثناء البحث:', e);
+        alert('حدث خطأ أثناء الاتصال بقاعدة البيانات للبحث.');
+    }
 }
     </script>
     <!-- القائمة المنبثقة (Modal) لعرض تفاصيل الحجوزات -->
