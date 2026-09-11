@@ -102,8 +102,20 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     <!-- الصفحة الأولى من العقد -->
     <div class="page">
         <div class="info-grid" style="margin-top: 10px;">
-            <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
             <div class="info-row"><label>الصـالـة :</label><input type="text" id="hall_name" class="contract-input"></div>
+            <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
+            <div class="info-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+    <div style="flex: 1;">
+        <label style="font-size: 13px; font-weight: bold;">لون المربع في التقويم:</label>
+        <select id="boxColor" class="input-inline" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="#27ae60">أخضر</option>
+            <option value="#e74c3c">أحمر</option>
+            <option value="#8e44ad">بنفسجي</option>
+            <option value="#2980b9">أزرق</option>
+            <option value="#f39c12">أصفر</option>
+        </select>
+    </div>
+</div>
             <div class="info-row"><label>المـوبـايـل :</label><input type="text" id="phone1" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
             <div class="info-row"><label>المـنـاسـبـة :</label><input type="text" id="event_type" class="contract-input"></div>
             <div class="info-row"><label>الهـاتـف :</label><input type="text" id="phone2" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
