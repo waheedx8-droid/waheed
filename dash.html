@@ -119,12 +119,13 @@
     <div class="calendar-container">
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
-            <div class="header-buttons">
-                <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
-                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
-                <span id="roleDisplay" class="user-tag">user</span>
-                <button class="btn-nav logout" onclick="logout()">خروج</button>
-            </div>
+         <div class="header-buttons">
+    <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
+    <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button> <!-- زر اليوم الجديد -->
+    <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
+    <span id="roleDisplay" class="user-tag">user</span>
+    <button class="btn-nav logout" onclick="logout()">خروج</button>
+</div>
         </div>
 
         <div class="calendar-grid" id="calendarDays">
@@ -327,6 +328,12 @@ function handleSwipe() {
         // سحب إلى اليمين -> الانتقال للشهر السابق
         changeMonth(-1);
     }
+}
+        function goToToday() {
+    // إعادة تعيين المتغير currentDate إلى تاريخ اليوم الحقيقي
+    currentDate = new Date(); 
+    // إعادة رسم التقويم ليظهر الشهر الحالي
+    renderCalendar();
 }
     </script>
     <!-- القائمة المنبثقة (Modal) لعرض تفاصيل الحجوزات -->
