@@ -94,8 +94,9 @@
         .btn-add-mini:hover { background: #2471a3; }
 
         .booking-badge { 
-            font-size: 9px; 
-            padding: 2px 4px; 
+            font-size: 11px ; 
+            font-weight: 700;
+            padding: 3px 4px; 
             margin-bottom: 2px; 
             border-radius: 3px; 
             color: #fff; 
@@ -104,6 +105,7 @@
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
+            max-width: 100;
         }
         .badge-approved { background: #27ae60; }
         .badge-pending { background: #e67e22; }
@@ -249,8 +251,7 @@
             bookingsList.forEach(booking => {
                 const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
                 cellContent += `
-                    <div class="booking-badge ${statusClass}">
-                        <span class="badge-groom">🤵 ${booking.groomName}</span>
+                    <div class="booking-badge ${statusClass}" title="${booking.groomName}">
                         <span class="badge-hall">📍 ${booking.hallName}</span>
                     </div>
                 `;
