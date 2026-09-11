@@ -400,6 +400,89 @@ function handleSwipe() {
         alert('حدث خطأ أثناء الاتصال بقاعدة البيانات للبحث.');
     }
 }
+        // دالة لتنظيف النص من المسافات الزائدة، والهمزات، والحركات للمقارنة المرنة
+function normalizeArabicText(text) {
+    if (!text) return '';
+    return text
+        .toString()
+        .toLowerCase()
+        .replace(/[\s\-_]/g, '') // إزالة جميع المسافات، الشرطات، والفاصل السفلي (لتتطابق "عبد النور" مع "عبدالنور")
+        .replace(/[أإآا]/g, 'ا')  // توحيد أشكال ألف
+        .replace(/[ةه]/g, 'ه')    // توحيد الهاء والتاء المربوطة لتفادي أخطاء الكتابة
+        .replace(/[ىي]/g, 'ي');   // توحيد الياء والألف المقصورة
+}
+
+async function searchGroom() {
+    const rawQuery = document.getElementById('searchInput').value.trim();
+    if (!rawQuery) {
+        alert('الرجاء إدخال اسم العريس للبحث.');
+        return;
+    }
+
+    // تنظيف كلمة البحث المدخلة
+    const cleanQuery = normalizeArabicText(rawQuery);
+
+    try {
+        // جلب كل الحجوزات من قاعدة البيانات لنتمكن من مقارنتها بذكاء ومرونة عالية
+        const { data, error } = await supabaseClient
+            .from('bookings_table')
+            .select('*');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            alert('لا توجد حجوزات مسجلة حالياً.');
+            return;
+        }
+
+        // البحث الذكي: مقارنة النصوص بعد تنظيفها من المسافات والأخطاء الإملائية الشائعة
+        const matchedBooking = data.find(item => {
+            const cleanGroomName = normalizeArabicText(item.groom_name);
+            // التحقق إذا كان الاسم يحتوي على ما تبحث عنه حتى لو كتبت جزءاً منه أو بدون مسافة
+            return cleanGroomName.includes(cleanQuery);
+        });
+
+        if (!matchedBooking) {
+            alert('لم يتم العثور على أي حجز مطابق أو قريب من هذا الاسم.');
+            return;
+        }
+
+        // استخراج تاريخ الحجز المطابق والانتقال إليه تلقائياً
+        const bookingDateStr = matchedBooking.booking_date; // صيغة YYYY-MM-DD
+        if (!bookingDateStr) {
+            alert('هذا الحجز لا يحتوي على تاريخ مسجل.');
+            return;
+        }
+
+        const [bYear, bMonth, bDay] = bookingDateStr.split('-').map(Number);
+
+        // الانتقال للشهر الخاص بالحجز وإعادة رسم التقويم
+        currentDate = new Date(bYear, bMonth - 1, 1);
+        renderCalendar();
+
+        // تمييز خلية اليوم المطلوب بلون مميز لفت الانتباه
+        setTimeout(() => {
+            const cells = document.querySelectorAll('.day-cell');
+            cells.forEach(cell => {
+                const dayNumElem = cell.querySelector('.day-number');
+                if (dayNumElem && parseInt(dayNumElem.textContent) === bDay) {
+                    cell.style.transition = 'all 0.5s ease';
+                    cell.style.border = '2px solid #e74c3c';
+                    cell.style.backgroundColor = '#fadbd8';
+                    
+                    setTimeout(() => {
+                        cell.style.border = '1px solid #e0e0e0';
+                        cell.style.backgroundColor = '#fafafa';
+                    }, 3000);
+                }
+            });
+        }, 100);
+
+    } catch (e) {
+        console.error('خطأ أثناء البحث:', e);
+        alert('حدث خطأ أثناء الاتصال بقاعدة البيانات للبحث.');
+    }
+}
     </script>
     <!-- القائمة المنبثقة (Modal) لعرض تفاصيل الحجوزات -->
 <div id="bookingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
