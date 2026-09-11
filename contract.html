@@ -104,18 +104,21 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         <div class="info-grid" style="margin-top: 10px;">
             <div class="info-row"><label>الصـالـة :</label><input type="text" id="hall_name" class="contract-input"></div>
             <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
+            
+            <!-- حقل اختيار لون المربع في التقويم -->
             <div class="info-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
-    <div style="flex: 1;">
-        <label style="font-size: 13px; font-weight: bold;">لون المربع في التقويم:</label>
-        <select id="boxColor" class="input-inline" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
-            <option value="#27ae60">أخضر</option>
-            <option value="#e74c3c">أحمر</option>
-            <option value="#8e44ad">بنفسجي</option>
-            <option value="#2980b9">أزرق</option>
-            <option value="#f39c12">أصفر</option>
-        </select>
-    </div>
-</div>
+                <div style="flex: 1;">
+                    <label style="font-size: 13px; font-weight: bold;">لون المربع:</label>
+                    <select id="boxColor" class="input-inline contract-input" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="#27ae60">أخضر</option>
+                        <option value="#e74c3c">أحمر</option>
+                        <option value="#8e44ad">بنفسجي</option>
+                        <option value="#2980b9">أزرق</option>
+                        <option value="#f39c12">أصفر</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="info-row"><label>المـوبـايـل :</label><input type="text" id="phone1" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
             <div class="info-row"><label>المـنـاسـبـة :</label><input type="text" id="event_type" class="contract-input"></div>
             <div class="info-row"><label>الهـاتـف :</label><input type="text" id="phone2" class="en-num contract-input" oninput="convertInputToEnglish(this)"></div>
@@ -262,8 +265,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
     <script>
         // === إعدادات الاتصال بـ Supabase ===
-        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; // استبدل الرابط برابط مشروعك الحقيقي
-        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; // استبدل المفتاح بمفتاح الـ Anon الخاص بك
+        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const userRole = localStorage.getItem('currentUserRole') || 'user';
@@ -319,7 +322,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
         const urlParams = new URLSearchParams(window.location.search);
         const selectedDate = urlParams.get('date');
-        const contractId = urlParams.get('id'); // معرف العقد السحابي
+        const contractId = urlParams.get('id'); 
         
         if (selectedDate) {
             const cleanSelectedDate = toEnglishDigits(selectedDate);
@@ -332,7 +335,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             window.location.href = 'dash.html';
         }
 
-        // جلب البيانات حصرياً من جدول bookings_table في Supabase
+        // جلب البيانات من Supabase
         async function loadContractData() {
             try {
                 if (contractId) {
@@ -347,6 +350,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     if (data) {
                         document.getElementById('groom_name').value = data.groom_name || '';
                         document.getElementById('hall_name').value = data.hall_name || '';
+                        document.getElementById('boxColor').value = data.box_color || '#27ae60'; // جلب اللون المخزن
                         document.getElementById('phone1').value = data.phone1 || '';
                         document.getElementById('phone2').value = data.phone2 || '';
                         document.getElementById('event_type').value = data.event_type || '';
@@ -364,7 +368,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         calculateMainTable();
                     }
                 } else {
-                    // إذا لم يكن هناك ID محدد، نفعل وضع التعديل مباشرة لإضافة حجز جديد
                     enableEditing();
                 }
             } catch (e) {
@@ -451,6 +454,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 booking_date: eventDate,
                 groom_name: groomName,
                 hall_name: document.getElementById('hall_name').value,
+                box_color: document.getElementById('boxColor').value, // إرسال اللون المختار لقاعدة البيانات
                 phone1: document.getElementById('phone1').value,
                 phone2: document.getElementById('phone2').value,
                 event_type: document.getElementById('event_type').value,
@@ -469,14 +473,12 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
             try {
                 if (contractId) {
-                    // تحديث العقد الحالي في Supabase
                     const { error } = await supabaseClient
                         .from('bookings_table')
                         .update(payload)
                         .eq('id', contractId);
                     if (error) throw error;
                 } else {
-                    // إدراج عقد جديد في Supabase
                     const { error } = await supabaseClient
                         .from('bookings_table')
                         .insert([payload]);
