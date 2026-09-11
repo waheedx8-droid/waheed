@@ -105,7 +105,7 @@
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
-            max-width: 100;
+            max-width: 100%;
         }
         .badge-approved { background: #27ae60; }
         .badge-pending { background: #e67e22; }
@@ -141,8 +141,8 @@
 
     <script>
         // --- إعدادات الاتصال بـ Supabase ---
-        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; // ضع رابط مشروعك هنا
-        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; // ضع مفتاح الـ Anon هنا
+        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const monthNames = [
@@ -169,7 +169,8 @@
                                 id: item.id,
                                 groomName: item.groom_name,
                                 hallName: item.hall_name,
-                                status: item.status || 'pending'
+                                status: item.status || 'pending',
+                                boxColor: item.box_color || '#27ae60' // جلب اللون المخصص للمربع
                             });
                         });
                     }
@@ -195,7 +196,8 @@
                         id: b.id || Math.random(),
                         groomName: b.groom_name || b.groomName || 'حجز',
                         hallName: b.hall_name || b.hallName || 'صالة',
-                        status: b.status || 'pending'
+                        status: b.status || 'pending',
+                        boxColor: b.box_color || '#27ae60'
                     }));
                 }
             }
@@ -249,9 +251,10 @@
             
             const bookingsList = allBookingsMap[fullDatestr];
             bookingsList.forEach(booking => {
-                const statusClass = booking.status === 'approved' ? 'badge-approved' : 'badge-pending';
+                // تطبيق اللون المختار بدلاً من الاعتماد فقط على الحالة
+                const customBgColor = booking.boxColor || '#27ae60';
                 cellContent += `
-                    <div class="booking-badge ${statusClass}" title="${booking.groomName}">
+                    <div class="booking-badge" style="background-color: ${customBgColor};" title="${booking.groomName}">
                         <span class="badge-hall">📍 ${booking.hallName}</span>
                     </div>
                 `;
@@ -280,7 +283,7 @@
             
             let listHTML = '';
             bookings.forEach(b => {
-                const badgeColor = b.status === 'approved' ? '#27ae60' : '#e67e22';
+                const badgeColor = b.boxColor || '#27ae60';
                 listHTML += `
                     <div style="background:#f9f9f9; border:1px solid #ddd; padding:10px; border-radius:5px; margin-bottom:8px;">
                         <p style="margin:0 0 5px 0;"><strong>العريس:</strong> ${b.groomName}</p>
