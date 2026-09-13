@@ -294,15 +294,15 @@
                 let html = '';
                 data.forEach(row => {
                     let roleTitle = row.role_user === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
-                    // جعل اسم المستخدم قابلاً للضغط لفتح نافذة التعديل مع تمرير البيانات
+                    // تم تصحيح تمرير المعرف بشكل صحيح لضمان وصول الـ id بدقة
                     html += `
                         <div style="background:#f9f9f9; border:1px solid #ddd; padding:6px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <div onclick="openEditUserModal(${row.id}, '${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
+                            <div onclick="openEditUserModal('${row.id}', '${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
                                 <strong style="color:#2980b9; text-decoration:underline;">${row.custom_user}</strong> <span style="color:#555;">(${roleTitle})</span>
                             </div>
                             <div style="display:flex; gap:4px;">
-                                <button onclick="openEditUserModal(${row.id}, '${row.custom_user}', '${row.val}', '${row.role_user}')" style="background:#2980b9; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">تعديل</button>
-                                <button onclick="deleteUser(${row.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                                <button onclick="openEditUserModal('${row.id}', '${row.custom_user}', '${row.val}', '${row.role_user}')" style="background:#2980b9; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">تعديل</button>
+                                <button onclick="deleteUser('${row.id}')" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
                             </div>
                         </div>
                     `;
@@ -373,6 +373,11 @@
             const newPassword = document.getElementById('editPasswordInput').value.trim();
             const newRole = document.getElementById('editRoleInput').value;
 
+            if (!id || id === 'undefined') {
+                alert('خطأ: معرف المستخدم غير متوفر!');
+                return;
+            }
+
             if (!newUsername || !newPassword) {
                 alert('الرجاء عدم إبقاء اسم المستخدم أو كلمة المرور فارغة.');
                 return;
@@ -400,6 +405,10 @@
         }
 
         async function deleteUser(rowId) {
+            if (!rowId || rowId === 'undefined') {
+                alert('خطأ: معرف المستخدم غير صحيح!');
+                return;
+            }
             if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
             try {
