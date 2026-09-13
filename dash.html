@@ -213,7 +213,6 @@
                             const dateKey = item.booking_date;
                             if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
                             
-                            // تلوين المسودات والعقود المعدلة باللون الرمادي الفضي
                             let finalColor = item.box_color || '#27ae60';
                             if (item.status === 'pending' || !item.status) {
                                 finalColor = '#95a5a6';
@@ -251,6 +250,9 @@
             const jumpDate = urlParams.get('jumpDate');
             
             if (jumpDate) {
+                // تنظيف شريط العنوان (URL) فوراً لكي لا يتكرر التحديد عند التحديث (Refresh)
+                window.history.replaceState({}, document.title, window.location.pathname);
+
                 setTimeout(() => {
                     const [bYear, bMonth, bDay] = jumpDate.split('-').map(Number);
                     currentDate = new Date(bYear, bMonth - 1, 1);
@@ -329,7 +331,7 @@
                         const customBgColor = booking.boxColor || '#27ae60';
                         cellContent += `
                             <div class="booking-badge" style="background-color: ${customBgColor};" title="${booking.groomName}">
-                                <span class="badge-hall"> ${booking.hallName}</span>
+                                <span class="badge-hall">📍 ${booking.hallName}</span>
                             </div>
                         `;
                     });
