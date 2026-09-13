@@ -104,7 +104,8 @@
         <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:350px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
             <h3 style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:15px;">تعديل بيانات المستخدم</h3>
             
-            <input type="hidden" id="editUserId">
+            <!-- حفظ اسم المستخدم القديم للبحث به عند التحديث -->
+            <input type="hidden" id="oldUsernameInput">
 
             <div style="margin-bottom:8px;">
                 <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">اسم المستخدم</label>
@@ -294,15 +295,15 @@
                 let html = '';
                 data.forEach(row => {
                     let roleTitle = row.role_user === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
-                    // تم تصحيح تمرير المعرف بشكل صحيح لضمان وصول الـ id بدقة
+                    // استخدام custom_user كمعرف فريد ومضمون 100% للتعديل والحذف
                     html += `
                         <div style="background:#f9f9f9; border:1px solid #ddd; padding:6px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <div onclick="openEditUserModal('${row.id}', '${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
+                            <div onclick="openEditUserModal('${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
                                 <strong style="color:#2980b9; text-decoration:underline;">${row.custom_user}</strong> <span style="color:#555;">(${roleTitle})</span>
                             </div>
                             <div style="display:flex; gap:4px;">
-                                <button onclick="openEditUserModal('${row.id}', '${row.custom_user}', '${row.val}', '${row.role_user}')" style="background:#2980b9; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">تعديل</button>
-                                <button onclick="deleteUser('${row.id}')" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                                <button onclick="openEditUserModal('${row.custom_user}', '${row.val}', '${row.role_user}')" style="background:#2980b9; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">تعديل</button>
+                                <button onclick="deleteUser('${row.custom_user}')" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
                             </div>
                         </div>
                     `;
@@ -354,9 +355,9 @@
             }
         }
 
-        // --- دوال نافذة تعديل المستخدم ---
-        function openEditUserModal(id, username, password, role) {
-            document.getElementById('editUserId').value = id;
+        // --- دوال نافذة تعديل المستخدم بالاعتماد على custom_user ---
+        function openEditUserModal(username, password, role) {
+            document.getElementById('oldUsernameInput').value = username;
             document.getElementById('editUsernameInput').value = username;
             document.getElementById('editPasswordInput').value = password;
             document.getElementById('editRoleInput').value = role || 'read_only';
@@ -368,15 +369,10 @@
         }
 
         async function updateUser() {
-            const id = document.getElementById('editUserId').value;
+            const oldUsername = document.getElementById('oldUsernameInput').value;
             const newUsername = document.getElementById('editUsernameInput').value.trim();
             const newPassword = document.getElementById('editPasswordInput').value.trim();
             const newRole = document.getElementById('editRoleInput').value;
-
-            if (!id || id === 'undefined') {
-                alert('خطأ: معرف المستخدم غير متوفر!');
-                return;
-            }
 
             if (!newUsername || !newPassword) {
                 alert('الرجاء عدم إبقاء اسم المستخدم أو كلمة المرور فارغة.');
@@ -384,6 +380,7 @@
             }
 
             try {
+                // التحديث بالاعتماد على مطابقة اسم المستخدم القديم في العمود custom_user
                 const { error } = await supabaseClient
                     .from('settings_table')
                     .update({
@@ -391,7 +388,7 @@
                         val: newPassword,
                         role_user: newRole
                     })
-                    .eq('id', id);
+                    .eq('custom_user', oldUsername);
 
                 if (error) throw error;
 
@@ -404,15 +401,15 @@
             }
         }
 
-        async function deleteUser(rowId) {
-            if (!rowId || rowId === 'undefined') {
-                alert('خطأ: معرف المستخدم غير صحيح!');
+        async function deleteUser(username) {
+            if (!username) {
+                alert('خطأ: اسم المستخدم غير صحيح!');
                 return;
             }
             if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
             try {
-                const { error } = await supabaseClient.from('settings_table').delete().eq('id', rowId);
+                const { error } = await supabaseClient.from('settings_table').delete().eq('custom_user', username);
                 if (error) throw error;
                 loadUsersList();
             } catch (e) {
