@@ -85,12 +85,12 @@
             background: #fafafa; 
             border: 1px solid #e0e0e0; 
             border-radius: 4px; 
-            min-height: 85px; /* زيادة بسيطة لإعطاء مساحة مريحة للكلمات */
+            min-height: 85px; 
             display: flex; 
             flex-direction: column; 
             text-align: right; 
             position: relative; 
-            padding: 2px; /* تقليل الهامش الداخلي للخلية لتوسيع مساحة المربع */
+            padding: 2px; 
             cursor: pointer; 
             overflow: hidden;
         }
@@ -105,7 +105,7 @@
             color: #333;
         }
 
-        /* تعديل المربع ليسمح بعرض المزيد من الحروف (3 إلى 4 أحرف وأكثر بوضوح) */
+        /* تنسيق المربع لعرض الكلمات بوضوح ودون قطع قاسي */
         .booking-badge { 
             font-size: 11.5px; 
             font-weight: 700;
@@ -115,7 +115,7 @@
             color: #fff; 
             display: block; 
             text-decoration: none; 
-            white-space: normal;      /* السماح بالالتفاف الذكي لعرض حروف أكثر بدلاً من القطع القاسي */
+            white-space: normal;      
             overflow: hidden;         
             text-overflow: ellipsis;  
             max-width: 100%;
@@ -283,7 +283,7 @@
                         const customBgColor = booking.boxColor || '#27ae60';
                         cellContent += `
                             <div class="booking-badge" style="background-color: ${customBgColor};" title="${booking.groomName}">
-                                <span class="badge-hall"> ${booking.hallName}</span>
+                                <span class="badge-hall">📍 ${booking.hallName}</span>
                             </div>
                         `;
                     });
@@ -332,7 +332,7 @@
             }
         }
 
-        // دالة فتح القائمة المنبثقة مع تفعيل تفاصيل العقد كاملة
+        // دالة فتح القائمة المنبثقة اليومية مع إرسال التاريخ والمعرف معاً لصفحة العقد
         function openModal(dateStr, bookings) {
             document.getElementById('modalDateTitle').textContent = dateStr ? `حجوزات يوم: ${dateStr}` : 'إدارة اليوم';
             let listHTML = '';
@@ -346,7 +346,7 @@
                                 <strong>العريس:</strong> ${b.groomName}<br>
                                 <span style="color:#555;"><strong>الصالة:</strong> ${b.hallName}</span>
                             </div>
-                            <a href="contract.html?id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#2980b9;">عرض التفاصيل</a>
+                            <a href="contract.html?date=${dateStr}&id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#2980b9;">عرض التفاصيل</a>
                         </div>
                     `;
                 });
