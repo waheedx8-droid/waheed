@@ -119,13 +119,13 @@
 
         <div class="calendar-grid" id="calendarDays">
             <!-- أيام الأسبوع -->
+            <div class="day-header">السبت</div>
             <div class="day-header">الأحد</div>
             <div class="day-header">الإثنين</div>
             <div class="day-header">الثلاثاء</div>
             <div class="day-header">الأربعاء</div>
             <div class="day-header">الخميس</div>
             <div class="day-header">الجمعة</div>
-            <div class="day-header">السبت</div>
         </div>
     </div>
 
@@ -299,9 +299,8 @@
         }
 
         // إيماءات اللمس للسحب يمين ويسار
-        let touchStartX = 0;
         let touchEndX = 0;
-
+        let touchStartX = 0;
         const container = document.querySelector('.calendar-container');
 
         container.addEventListener('touchstart', (e) => {
