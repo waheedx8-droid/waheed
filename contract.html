@@ -486,6 +486,15 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 }
 
                 toggleInputsLock(true);
+                // إرسال إشعار فوري للأدمن عند التعديل أو الإضافة
+        await supabaseClient.from('notifications').insert([
+            {
+                title: "تنبيه عقد جديد/تعديل",
+                message: `قام المستخدم بتعديل أو إضافة عقد للعريس: ${groomName}`,
+                link: "dash.html",
+                is_read: false
+            }
+        ]);
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
                 window.location.replace('dash.html');
 
