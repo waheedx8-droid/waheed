@@ -297,14 +297,28 @@
             }
 
             try {
-                // إضافة صف جديد في settings_table لتخزين بيانات المستخدم الجديد
+                // 1. جلب البيانات لمعرفة أعلى رقم key_name موجود حالياً وتحديد الرقم التالي تلقائياً
+                const { data: existingRows, error: fetchError } = await supabaseClient.from('settings_table').select('*');
+                if (fetchError) throw fetchError;
+
+                let maxKey = 1;
+                if (existingRows) {
+                    existingRows.forEach(row => {
+                        if (row.key_name && typeof row.key_name === 'number' && row.key_name > maxKey) {
+                            maxKey = row.key_name;
+                        }
+                    });
+                }
+                const nextKey = maxKey + 1; // الترقيم التلقائي المتسلسل (2, 3, 4...)
+
+                // 2. إضافة صف جديد في settings_table مع الترقيم التلقائي
                 const { error } = await supabaseClient.from('settings_table').insert([
-                    { key_name: null, val: password, custom_user: username, role_user: role }
+                    { key_name: nextKey, val: password, custom_user: username, role_user: role }
                 ]);
 
                 if (error) throw error;
 
-                alert('تم إضافة المستخدم بنجاح!');
+                alert('تم إضافة المستخدم برقم تسلسلي (' + nextKey + ') بنجاح!');
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
                 loadUsersList();
