@@ -105,7 +105,6 @@
             color: #333;
         }
 
-        /* تنسيق المربع لعرض الحروف بوضوح ودون قطع قاسي */
         .booking-badge { 
             font-size: 11.5px; 
             font-weight: 700;
@@ -171,7 +170,6 @@
         </div>
 
         <div class="calendar-grid" id="calendarDays">
-            <!-- أيام الأسبوع تبدأ من السبت -->
             <div class="day-header">السبت</div>
             <div class="day-header">الأحد</div>
             <div class="day-header">الإثنين</div>
@@ -194,7 +192,15 @@
 
         let currentDate = new Date(); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير (admin)' : 'مستخدم (user)';
+        
+        // عرض نوع الصلاحية الحالي
+        if (currentUserRole === 'admin') {
+            document.getElementById('roleDisplay').textContent = 'مدير (admin)';
+        } else if (currentUserRole === 'read_only') {
+            document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
+        } else {
+            document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
+        }
 
         // إظهار حاوية الإشعارات للأدمن فقط
         if (currentUserRole === 'admin') {
@@ -245,12 +251,10 @@
                 }
             }
 
-            // التحقق من وجود رابط قفز عند الضغط على الإشعار
             const urlParams = new URLSearchParams(window.location.search);
             const jumpDate = urlParams.get('jumpDate');
             
             if (jumpDate) {
-                // تنظيف شريط العنوان (URL) فوراً لكي لا يتكرر التحديد عند التحديث (Refresh)
                 window.history.replaceState({}, document.title, window.location.pathname);
 
                 setTimeout(() => {
@@ -354,6 +358,7 @@
 
         function logout() {
             localStorage.removeItem('currentUserRole');
+            localStorage.removeItem('currentUsername');
             window.location.replace('index.html');
         }
 
@@ -387,19 +392,36 @@
                 listHTML = '<p style="text-align:center; color:#777; font-size:12px; padding:10px;">لا توجد حجوزات مسجلة في هذا اليوم.</p>';
             } else {
                 bookings.forEach(b => {
+                    // إذا كان المستخدم read_only، نغير نص الزر أو نعرضه بشكل معاينة فقط دون إمكانية التعديل
+                    let detailsButtonHTML = '';
+                    if (currentUserRole === 'read_only') {
+                        detailsButtonHTML = `<a href="contract.html?date=${dateStr}&id=${b.id}&view=only" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#7f8c8d;">استعراض</a>`;
+                    } else {
+                        detailsButtonHTML = `<a href="contract.html?date=${dateStr}&id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#2980b9;">عرض التفاصيل</a>`;
+                    }
+
                     listHTML += `
                         <div style="background:#f9f9f9; border:1px solid #ddd; padding:8px; border-radius:4px; margin-bottom:6px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
                             <div>
                                 <strong>العريس:</strong> ${b.groomName}<br>
                                 <span style="color:#555;"><strong>الصالة:</strong> ${b.hallName}</span>
                             </div>
-                            <a href="contract.html?date=${dateStr}&id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#2980b9;">عرض التفاصيل</a>
+                            ${detailsButtonHTML}
                         </div>
                     `;
                 });
             }
             document.getElementById('modalBookingsList').innerHTML = listHTML;
-            document.getElementById('modalAddBtn').href = dateStr ? `contract.html?date=${dateStr}` : 'contract.html';
+
+            // إخفاء زر إضافة عقد جديد للمستخدم ذي الصلاحية read_only بالكامل
+            const addBtnElement = document.getElementById('modalAddBtn');
+            if (currentUserRole === 'read_only') {
+                addBtnElement.style.display = 'none';
+            } else {
+                addBtnElement.style.display = 'block';
+                addBtnElement.href = dateStr ? `contract.html?date=${dateStr}` : 'contract.html';
+            }
+
             document.getElementById('bookingModal').style.display = 'flex';
         }
 
@@ -522,7 +544,6 @@
                     return;
                 }
 
-                // عرض القائمة المنبثقة بغض النظر عن عدد النتائج (سواء نتيجة واحدة أو عدة نتائج)
                 showSearchSelectionModal(matchedBookings);
 
             } catch (e) {
