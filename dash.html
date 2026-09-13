@@ -214,7 +214,8 @@
             `;
             daysContainer.innerHTML = headersHTML;
 
-            const firstDayIndex = new Date(year, monthIndex, 1).getDay();
+          const jsDay = new Date(year, monthIndex, 1).getDay();
+const firstDayIndex = (jsDay + 1) % 7; // جعل يوم السبت هو بداية الأسبوع (البداية 0)
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
             for (let i = 0; i < firstDayIndex; i++) {
