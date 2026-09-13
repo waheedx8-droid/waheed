@@ -15,7 +15,8 @@
             align-items: flex-start; 
             min-height: 100vh; 
             padding: 10px; 
-            touch-action: pan-y; /* السماح بالتمرير العمودي ومنع تعارض اللمس الأفقي */
+            touch-action: pan-y; 
+            overflow-x: hidden; /* لمنع أي انزياح أفقي للشاشة تماماً */
         }
         .calendar-container { 
             width: 100%; 
@@ -24,6 +25,7 @@
             padding: 15px; 
             border-radius: 8px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            position: relative;
         }
         
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
@@ -37,11 +39,25 @@
         
         .user-tag { background: #2c3e50; color: white; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 
-        /* تنسيق الإشعارات وجرس التنبيه */
+        /* تنسيق الإشعارات وجرس التنبيه (مع تثبيت العرض لمنع انزياح الشاشة) */
         .notification-container { position: relative; display: inline-block; }
         .notification-badge-count { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; }
-        .notification-dropdown { display: none; position: absolute; right: 0; background: #fff; min-width: 260px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1200; border-radius: 6px; padding: 8px; text-align: right; }
-        .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; }
+        .notification-dropdown { 
+            display: none; 
+            position: absolute; 
+            left: 0; /* التموضع من اليسار لمنع خروج القائمة خارج الشاشة يميناً */
+            right: auto; 
+            background: #fff; 
+            width: 250px; 
+            max-width: 85vw; 
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
+            z-index: 1200; 
+            border-radius: 6px; 
+            padding: 8px; 
+            text-align: right; 
+            border: 1px solid #ddd;
+        }
+        .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; word-break: break-word; }
         .notification-item:hover { background: #f1f1f1; }
         .notification-item.unread { font-weight: bold; background: #fdf2e9; }
 
@@ -297,13 +313,11 @@
         }, { passive: true });
 
         function handleSwipeGesture() {
-            const threshold = 50; // الحد الأدنى لمسافة السحب
+            const threshold = 50; 
             if (touchEndX < touchStartX - threshold) {
-                // سحب لليسار -> الانتقال للشهر التالي
                 changeMonth(1);
             }
             if (touchEndX > touchStartX + threshold) {
-                // سحب لليمين -> الانتقال للشهر السابق
                 changeMonth(-1);
             }
         }
