@@ -33,7 +33,7 @@
 <body>
 
     <div class="login-card">
-        <!-- زر الدخول للتقويم (يظهر فقط عند تسجيل الدخول كمسؤول) -->
+        <!-- زر الدخول للتقويم (يظهر للمسؤول أو المستخدمين المسجلين) -->
         <button id="topCalendarBtn" class="top-calendar-btn" onclick="gotocalendar()">الدخول إلى التقويم</button>
 
         <!-- قسم نموذج تسجيل الدخول (الافتراضي) -->
@@ -65,7 +65,7 @@
         <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
             <h3 style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:16px;">إدارة المستخدمين والصلاحيات</h3>
             
-            <!-- نموذج إضافة مستخدم جديد بالترتيب المطلوب -->
+            <!-- نموذج إضافة مستخدم جديد عبر الأعمدة الجديدة في settings_table -->
             <div style="background:#fdf2e9; padding:10px; border-radius:5px; margin-bottom:12px;">
                 <p style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#d35400;">إضافة مستخدم جديد:</p>
                 
@@ -105,10 +105,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // الاحتفاظ بنسخة محلية للأدمن الأساسي ودعم الإعدادات
-        if(!localStorage.getItem('adminUser')) localStorage.setItem('adminUser', 'admin');
-        if(!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '123456');
-
         // التحقق عند تحميل الصفحة إذا كان مسجلاً دخول مسبقاً
         window.onload = async function() {
             await initStateSettings();
@@ -126,7 +122,7 @@
             window.location.replace('dash.html'); // توجيه لصفحة التقويم الرئيسية (dash.html)
         }
 
-        // تهيئة البيانات الافتراضية لأدمن الأساسي في settings_table
+        // تهيئة البيانات الافتراضية للأدمن الأساسي في settings_table إذا كان الجدول فارغاً
         async function initStateSettings() {
             try {
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
@@ -134,7 +130,7 @@
 
                 if (!data || data.length === 0) {
                     await supabaseClient.from('settings_table').insert([
-                        { key_name: 1, val: '123456' } // كلمة مرور الأدمن الأساسي
+                        { key_name: 1, val: '123456', custom_user: null, role_user: null }
                     ]);
                 }
             } catch (e) {
@@ -142,7 +138,7 @@
             }
         }
 
-        // دالة تسجيل الدخول (تدعم الأدمن الأساسي أو أي مستخدم مسجل في users_table)
+        // دالة تسجيل الدخول (تدعم الأدمن الأساسي key_name=1 أو أي صف يحتوي على custom_user)
         async function login() {
             const inputUser = document.getElementById('username').value.trim();
             const inputPass = document.getElementById('password').value.trim();
@@ -153,35 +149,45 @@
             }
 
             try {
-                // 1. التحقق إذا كان الحساب هو الأدمن الأساسي
-                let adminPass = localStorage.getItem('adminPass') || '123456';
-                const adminUserVal = localStorage.getItem('adminUser') || 'admin';
+                const { data: rows, error } = await supabaseClient.from('settings_table').select('*');
+                if (error) throw error;
 
-                try {
-                    const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 1).single();
-                    if (data) adminPass = data.val;
-                } catch (err) {}
+                let isAdminAuthenticated = false;
+                let isUserAuthenticated = false;
+                let loggedRole = '';
+                let loggedUsername = '';
 
-                if (inputUser === adminUserVal && inputPass === adminPass) {
+                if (rows) {
+                    rows.forEach(row => {
+                        // 1. فحص الأدمن الأساسي (المفتاح رقم 1)
+                        if (row.key_name === 1) {
+                            if (inputUser === 'admin' && inputPass === row.val) {
+                                isAdminAuthenticated = true;
+                                loggedRole = 'admin';
+                                loggedUsername = 'admin';
+                            }
+                        }
+                        // 2. فحص المستخدمين الجدد المخزنين في نفس الجدول عبر custom_user
+                        if (row.custom_user && row.custom_user === inputUser && row.val === inputPass) {
+                            isUserAuthenticated = true;
+                            loggedRole = row.role_user || 'read_only';
+                            loggedUsername = row.custom_user;
+                        }
+                    });
+                }
+
+                if (isAdminAuthenticated) {
                     localStorage.setItem('currentUserRole', 'admin');
-                    localStorage.setItem('currentUsername', adminUserVal);
+                    localStorage.setItem('currentUsername', 'admin');
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
                     document.getElementById('topCalendarBtn').style.display = 'block';
                     return;
                 }
 
-                // 2. التحقق من جدول المستخدمين الإضافيين (users_table)
-                const { data: usersData, error: usersError } = await supabaseClient
-                    .from('users_table')
-                    .select('*')
-                    .eq('username', inputUser)
-                    .eq('password', inputPass);
-
-                if (!usersError && usersData && usersData.length > 0) {
-                    const loggedUser = usersData[0];
-                    localStorage.setItem('currentUserRole', loggedUser.role); // 'user' أو 'read_only'
-                    localStorage.setItem('currentUsername', loggedUser.username);
+                if (isUserAuthenticated) {
+                    localStorage.setItem('currentUserRole', loggedRole);
+                    localStorage.setItem('currentUsername', loggedUsername);
                     window.location.replace('dash.html');
                     return;
                 }
@@ -209,35 +215,35 @@
             const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
             if (currentPass === null) return;
 
-            let adminPassStored = localStorage.getItem('adminPass') || '123456';
-            
             try {
-                const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 1).single();
-                if (data) adminPassStored = data.val;
-            } catch (err) {}
+                const { data, error } = await supabaseClient.from('settings_table').select('*').eq('key_name', 1).single();
+                if (error) throw error;
 
-            if (currentPass !== adminPassStored) {
-                alert('كلمة المرور غير صحيحة!');
-                return;
-            }
-
-            const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
-            if (newPass && newPass.trim() !== '') {
-                localStorage.setItem('adminPass', newPass);
-                const { error } = await supabaseClient
-                    .from('settings_table')
-                    .update({ val: newPass })
-                    .eq('key_name', 1);
-
-                if (error) {
-                    alert('حدث خطأ أثناء التحديث السحابي: ' + error.message);
-                } else {
-                    alert('تم تغيير كلمة سر المسؤول بنجاح!');
+                if (!data || currentPass !== data.val) {
+                    alert('كلمة المرور غير صحيحة!');
+                    return;
                 }
+
+                const newPass = prompt('أدخل كلمة سر المسؤول الجديدة:');
+                if (newPass && newPass.trim() !== '') {
+                    const { error: updateError } = await supabaseClient
+                        .from('settings_table')
+                        .update({ val: newPass })
+                        .eq('key_name', 1);
+
+                    if (updateError) {
+                        alert('حدث خطأ أثناء التحديث السحابي: ' + updateError.message);
+                    } else {
+                        alert('تم تغيير كلمة سر المسؤول بنجاح!');
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء التحقق من كلمة المرور.');
             }
         }
 
-        // --- دوال القائمة المنبثقة لإدارة المستخدمين والصلاحيات ---
+        // --- دوال القائمة المنبثقة لإدارة المستخدمين والصلاحيات عبر settings_table ---
         function openManageUsersModal() {
             document.getElementById('manageUsersModal').style.display = 'flex';
             loadUsersList();
@@ -252,7 +258,8 @@
             listDiv.innerHTML = '<div style="text-align:center; color:#777; font-size:11px;">جاري تحميل المستخدمين...</div>';
 
             try {
-                const { data, error } = await supabaseClient.from('users_table').select('*');
+                // جلب الصفوف التي تحتوي على مستخدمين مضافين (custom_user ليس فارغاً)
+                const { data, error } = await supabaseClient.from('settings_table').select('*').not('custom_user', 'is', null);
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
@@ -261,21 +268,21 @@
                 }
 
                 let html = '';
-                data.forEach(u => {
-                    let roleTitle = u.role === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
+                data.forEach(row => {
+                    let roleTitle = row.role_user === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
                     html += `
                         <div style="background:#f9f9f9; border:1px solid #ddd; padding:5px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <strong>${u.username}</strong> <span style="color:#555;">(${roleTitle})</span>
+                                <strong>${row.custom_user}</strong> <span style="color:#555;">(${roleTitle})</span>
                             </div>
-                            <button onclick="deleteUser(${u.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                            <button onclick="deleteUser(${row.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
                         </div>
                     `;
                 });
                 listDiv.innerHTML = html;
             } catch (e) {
                 console.error(e);
-                listDiv.innerHTML = '<p style="text-align:center; color:red; font-size:11px;">تأكد من إنشاء جدول users_table في Supabase.</p>';
+                listDiv.innerHTML = '<p style="text-align:center; color:red; font-size:11px;">تأكد من إضافة عمودي custom_user و role_user في جدول settings_table على Supabase.</p>';
             }
         }
 
@@ -290,8 +297,9 @@
             }
 
             try {
-                const { error } = await supabaseClient.from('users_table').insert([
-                    { username: username, password: password, role: role }
+                // إضافة صف جديد في settings_table لتخزين بيانات المستخدم الجديد
+                const { error } = await supabaseClient.from('settings_table').insert([
+                    { key_name: null, val: password, custom_user: username, role_user: role }
                 ]);
 
                 if (error) throw error;
@@ -302,15 +310,15 @@
                 loadUsersList();
             } catch (e) {
                 console.error(e);
-                alert('حدث خطأ أثناء إضافة المستخدم (قد يكون اسم المستخدم مستخدماً مسبقاً).');
+                alert('حدث خطأ أثناء إضافة المستخدم.');
             }
         }
 
-        async function deleteUser(userId) {
+        async function deleteUser(rowId) {
             if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
             try {
-                const { error } = await supabaseClient.from('users_table').delete().eq('id', userId);
+                const { error } = await supabaseClient.from('settings_table').delete().eq('id', rowId);
                 if (error) throw error;
                 loadUsersList();
             } catch (e) {
