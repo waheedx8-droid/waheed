@@ -114,8 +114,8 @@
             color: #fff; 
             display: block; 
             text-decoration: none; 
-            white-space: normal;      
-            overflow: hidden;         
+            white-space: normal;     
+            overflow: hidden;       
             text-overflow: ellipsis;  
             max-width: 100%;
             line-height: 1.2;
@@ -392,7 +392,6 @@
                 listHTML = '<p style="text-align:center; color:#777; font-size:12px; padding:10px;">لا توجد حجوزات مسجلة في هذا اليوم.</p>';
             } else {
                 bookings.forEach(b => {
-                    // إذا كان المستخدم read_only، نغير نص الزر أو نعرضه بشكل معاينة فقط دون إمكانية التعديل
                     let detailsButtonHTML = '';
                     if (currentUserRole === 'read_only') {
                         detailsButtonHTML = `<a href="contract.html?date=${dateStr}&id=${b.id}&view=only" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#7f8c8d;">استعراض</a>`;
@@ -413,7 +412,6 @@
             }
             document.getElementById('modalBookingsList').innerHTML = listHTML;
 
-            // إخفاء زر إضافة عقد جديد للمستخدم ذي الصلاحية read_only بالكامل
             const addBtnElement = document.getElementById('modalAddBtn');
             if (currentUserRole === 'read_only') {
                 addBtnElement.style.display = 'none';
