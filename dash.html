@@ -15,7 +15,7 @@
             align-items: flex-start; 
             min-height: 100vh; 
             padding: 10px; 
-            touch-action: manipulation; 
+            touch-action: pan-y; /* السماح بالتمرير العمودي ومنع تعارض اللمس الأفقي */
         }
         .calendar-container { 
             width: 100%; 
@@ -105,7 +105,7 @@
 </head>
 <body>
 
-    <div class="calendar-container">
+    <div class="calendar-container" id="calendarContainer">
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
             
@@ -280,6 +280,32 @@
         function logout() {
             localStorage.removeItem('currentUserRole');
             window.location.replace('index.html');
+        }
+
+        // تفعيل ميزة السحب (Swipe) يمينًا ويسارًا للتنقل بين الشهور
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const calendarContainerEl = document.getElementById('calendarContainer');
+        calendarContainerEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        calendarContainerEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipeGesture();
+        }, { passive: true });
+
+        function handleSwipeGesture() {
+            const threshold = 50; // الحد الأدنى لمسافة السحب
+            if (touchEndX < touchStartX - threshold) {
+                // سحب لليسار -> الانتقال للشهر التالي
+                changeMonth(1);
+            }
+            if (touchEndX > touchStartX + threshold) {
+                // سحب لليمين -> الانتقال للشهر السابق
+                changeMonth(-1);
+            }
         }
 
         // دالة فتح نافذة الـ Modal اليومية
