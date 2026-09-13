@@ -234,10 +234,6 @@
                 emptyCell.style.background = '#fcfcfc';
                 emptyCell.style.border = 'none';
                 emptyCell.style.cursor = 'pointer';
-                const formattedMonth = String(monthNumber).padStart(2, '0');
-                const prevMonthLastDay = new Date(year, monthIndex, 0).getDate();
-                const targetDayNum = prevMonthLastDay - (firstDayIndex - 1 - i);
-                // تفعيل النقر حتى على الخلايا الفارغة
                 emptyCell.onclick = () => openModal('', []);
                 daysContainer.appendChild(emptyCell);
             }
@@ -308,7 +304,7 @@
 
         initCalendarSystem();
 
-        // دوال الإشعارات
+        // دوال الإشعارات مع منع انزياح الشاشة
         async function sendAdminNotification(title, message, linkUrl) {
             try {
                 await supabaseClient.from('notifications').insert([
@@ -345,7 +341,7 @@
                         data.forEach(n => {
                             const unreadClass = n.is_read ? '' : 'unread';
                             listHTML += `
-                                <div class="notification-item ${unreadClass}" onclick="openNotificationLink(${n.id}, '${n.link}')">
+                                <div class="notification-item ${unreadClass}" onclick="openNotificationLink(event, ${n.id}, '${n.link}')">
                                     <strong>${n.title}</strong>
                                     <p style="margin: 2px 0 0 0; color: #555; font-size: 11px;">${n.message}</p>
                                 </div>
@@ -364,7 +360,11 @@
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        async function openNotificationLink(notificationId, link) {
+        async function openNotificationLink(event, notificationId, link) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             try {
                 await supabaseClient
                     .from('notifications')
