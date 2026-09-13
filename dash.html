@@ -15,7 +15,7 @@
             align-items: flex-start; 
             min-height: 100vh; 
             padding: 10px; 
-            touch-action: manipulation; /* هذا السطر يحل مشاكل استجابة اللمس والتكبير */
+            touch-action: manipulation; 
         }
         .calendar-container { 
             width: 100%; 
@@ -65,7 +65,7 @@
             text-align: right; 
             position: relative; 
             padding: 2px;
-            cursor: pointer; /* جعل المؤشر يدعم النقر على كل الأيام */
+            cursor: pointer; 
         }
         
         .day-number { 
@@ -79,7 +79,7 @@
         }
 
         .booking-badge { 
-            font-size: 11px ; 
+            font-size: 11px; 
             font-weight: 700;
             padding: 3px 4px; 
             margin-bottom: 2px; 
@@ -92,10 +92,6 @@
             text-overflow: ellipsis; 
             max-width: 100%;
         }
-        .badge-approved { background: #27ae60; }
-        .badge-pending { background: #e67e22; }
-
-        .badge-groom { font-weight: bold; display: block; }
         .badge-hall { font-size: 8px; opacity: 0.9; display: block; }
     </style>
 </head>
@@ -118,7 +114,7 @@
         </div>
 
         <div class="calendar-grid" id="calendarDays">
-            <!-- أيام الأسبوع -->
+            <!-- أيام الأسبوع تبدأ من السبت -->
             <div class="day-header">السبت</div>
             <div class="day-header">الأحد</div>
             <div class="day-header">الإثنين</div>
@@ -130,7 +126,6 @@
     </div>
 
     <script>
-        // --- إعدادات الاتصال بـ Supabase ---
         const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -160,37 +155,15 @@
                                 groomName: item.groom_name,
                                 hallName: item.hall_name,
                                 status: item.status || 'pending',
-                                boxColor: item.box_color || '#27ae60' // جلب اللون المخصص للمربع
+                                boxColor: item.box_color || '#27ae60'
                             });
                         });
                     }
                 }
             } catch (e) {
-                console.error('خطأ في جلب الحجوزات من Supabase:', e);
-                loadLocalStorageFallback();
+                console.error('خطأ في جلب الحجوزات:', e);
             }
             renderCalendar();
-        }
-
-        function loadLocalStorageFallback() {
-            const localData = JSON.parse(localStorage.getItem('allBookings')) || {};
-            formatBookingsData(localData);
-        }
-
-        function formatBookingsData(rawObj) {
-            allBookingsMap = {};
-            for (let dateKey in rawObj) {
-                const val = rawObj[dateKey];
-                if (Array.isArray(val)) {
-                    allBookingsMap[dateKey] = val.map(b => ({
-                        id: b.id || Math.random(),
-                        groomName: b.groom_name || b.groomName || 'حجز',
-                        hallName: b.hall_name || b.hallName || 'صالة',
-                        status: b.status || 'pending',
-                        boxColor: b.box_color || '#27ae60'
-                    }));
-                }
-            }
         }
 
         function renderCalendar() {
@@ -214,8 +187,9 @@
             `;
             daysContainer.innerHTML = headersHTML;
 
-          const jsDay = new Date(year, monthIndex, 1).getDay();
-          const firstDayIndex = (jsDay + 1) % 7; // جعل يوم السبت هو بداية الأسبوع (البداية 0)
+            // حساب الفراغات ليبدأ السبت في أول عمود
+            const jsDay = new Date(year, monthIndex, 1).getDay();
+            const firstDayIndex = (jsDay + 1) % 7; 
             const totalDays = new Date(year, monthIndex + 1, 0).getDate();
 
             for (let i = 0; i < firstDayIndex; i++) {
@@ -236,11 +210,8 @@
                 const fullDatestr = `${year}-${formattedMonth}-${formattedDay}`;
 
                 let cellContent = `<div class="day-number">${day}</div>`;
-
-                // تحديد الحجوزات الخاصة بهذا اليوم (إذا وجدت)
                 const dayBookings = allBookingsMap[fullDatestr] && allBookingsMap[fullDatestr].length > 0 ? allBookingsMap[fullDatestr] : [];
 
-                // تفعيل النقر على اليوم لإظهار القائمة المنبثقة سواء كان فارغاً أو محجوزاً
                 dayCell.onclick = () => openModal(fullDatestr, dayBookings);
 
                 if (dayBookings.length > 0) {
@@ -264,6 +235,11 @@
             renderCalendar();
         }
 
+        function goToToday() {
+            currentDate = new Date(); 
+            renderCalendar();
+        }
+
         function logout() {
             localStorage.removeItem('currentUserRole');
             window.location.replace('index.html');
@@ -271,73 +247,16 @@
 
         initCalendarSystem();
 
-        function openModal(dateStr, bookings) {
-            document.getElementById('modalDateTitle').textContent = `حجوزات تاريخ: ${dateStr}`;
-            
-            let listHTML = '';
-            if (bookings && bookings.length > 0) {
-                bookings.forEach(b => {
-                    const badgeColor = b.boxColor || '#27ae60';
-                    listHTML += `
-                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:10px; border-radius:5px; margin-bottom:8px;">
-                            <p style="margin:0 0 5px 0;"><strong>العريس:</strong> ${b.groomName}</p>
-                            <p style="margin:0 0 5px 0;"><strong>الصالة:</strong> ${b.hallName}</p>
-                            <a href="contract.html?id=${b.id}&date=${dateStr}" style="display:inline-block; background:${badgeColor}; color:#fff; padding:4px 8px; border-radius:3px; text-decoration:none; font-size:12px; margin-top:5px;">عرض تفاصيل العقد</a>
-                        </div>
-                    `;
-                });
-            } else {
-                listHTML = '<p style="color:#77f; text-align:center; padding:10px; color:#666;">لا توجد حجوزات مسجلة في هذا اليوم.</p>';
-            }
-            
-            document.getElementById('modalBookingsList').innerHTML = listHTML;
-            document.getElementById('modalAddBtn').href = `contract.html?date=${dateStr}`;
-            document.getElementById('bookingModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('bookingModal').style.display = 'none';
-        }
-
-        // إيماءات اللمس للسحب يمين ويسار
-        let touchEndX = 0;
-        let touchStartX = 0;
-        const container = document.querySelector('.calendar-container');
-
-        container.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        container.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
-            const swipeThreshold = 50; 
-            if (touchEndX < touchStartX - swipeThreshold) {
-                changeMonth(1);
-            }
-            if (touchEndX > touchStartX + swipeThreshold) {
-                changeMonth(-1);
-            }
-        }
-
-        function goToToday() {
-            currentDate = new Date(); 
-            renderCalendar();
-        }
-
-        // دالة لتنظيف النص من المسافات الزائدة، والهمزات للمقارنة المرنة
+        // دوال البحث الذكي لعرض النتائج في القائمة المنبثقة
         function normalizeArabicText(text) {
             if (!text) return '';
             return text
                 .toString()
                 .toLowerCase()
-                .replace(/[\s\-_]/g, '') // إزالة المسافات والشرطات
-                .replace(/[أإآا]/g, 'ا')  // توحيد أشكال الألف
-                .replace(/[ةه]/g, 'ه')    // توحيد الهاء والتاء المربوطة
-                .replace(/[ىي]/g, 'ي');   // توحيد الياء
+                .replace(/[\s\-_]/g, '')
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/[ةه]/g, 'ه')
+                .replace(/[ىي]/g, 'ي');
         }
 
         async function searchGroom() {
@@ -350,10 +269,7 @@
             const cleanQuery = normalizeArabicText(rawQuery);
 
             try {
-                const { data, error } = await supabaseClient
-                    .from('bookings_table')
-                    .select('*');
-
+                const { data, error } = await supabaseClient.from('bookings_table').select('*');
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
@@ -361,60 +277,111 @@
                     return;
                 }
 
-                // البحث الذكي المتسامح مع المسافات والأخطاء الإملائية
-                const matchedBooking = data.find(item => {
+                const matchedBookings = data.filter(item => {
                     const cleanGroomName = normalizeArabicText(item.groom_name);
                     return cleanGroomName.includes(cleanQuery);
                 });
 
-                if (!matchedBooking) {
+                if (matchedBookings.length === 0) {
                     alert('لم يتم العثور على أي حجز مطابق أو قريب من هذا الاسم.');
                     return;
                 }
 
-                const bookingDateStr = matchedBooking.booking_date; 
-                if (!bookingDateStr) {
-                    alert('هذا الحجز لا يحتوي على تاريخ مسجل.');
-                    return;
+                // إذا كانت النتيجة واحدة ينتقل إليها مباشرة، وإذا تعددت تفتح قائمة منبثقة
+                if (matchedBookings.length === 1) {
+                    jumpToBookingDate(matchedBookings[0]);
+                } else {
+                    showSearchSelectionModal(matchedBookings);
                 }
-
-                const [bYear, bMonth, bDay] = bookingDateStr.split('-').map(Number);
-
-                currentDate = new Date(bYear, bMonth - 1, 1);
-                renderCalendar();
-
-                setTimeout(() => {
-                    const cells = document.querySelectorAll('.day-cell');
-                    cells.forEach(cell => {
-                        const dayNumElem = cell.querySelector('.day-number');
-                        if (dayNumElem && parseInt(dayNumElem.textContent) === bDay) {
-                            cell.style.transition = 'all 0.5s ease';
-                            cell.style.border = '2px solid #e74c3c';
-                            cell.style.backgroundColor = '#fadbd8';
-                            
-                            setTimeout(() => {
-                                cell.style.border = '1px solid #e0e0e0';
-                                cell.style.backgroundColor = '#fafafa';
-                            }, 3000);
-                        }
-                    });
-                }, 100);
 
             } catch (e) {
                 console.error('خطأ أثناء البحث:', e);
                 alert('حدث خطأ أثناء الاتصال بقاعدة البيانات للبحث.');
             }
         }
+
+        function showSearchSelectionModal(bookings) {
+            document.getElementById('searchCountText').textContent = `تم العثور على (${bookings.length}) حجوزات مطابقة. اختر الحجز المطلوب:`;
+            
+            let listHTML = '';
+            bookings.forEach((b) => {
+                const badgeColor = b.box_color || b.boxColor || '#27ae60';
+                // تجهيز كائن البيانات لتمريره للدالة بشكل آمن
+                const bookingObjStr = JSON.stringify({
+                    booking_date: b.booking_date,
+                    groom_name: b.groom_name,
+                    hall_name: b.hall_name
+                }).replace(/"/g, '&quot;');
+
+                listHTML += `
+                    <div onclick='selectAndJump(${bookingObjStr})' style="background:#f9f9f9; border:1px solid #ddd; padding:10px; border-radius:5px; margin-bottom:8px; cursor:pointer;">
+                        <p style="margin:0 0 3px 0; font-size:13px;"><strong>العريس:</strong> ${b.groom_name}</p>
+                        <p style="margin:0 0 3px 0; font-size:12px; color:#555;"><strong>التاريخ:</strong> ${b.booking_date} | <strong>الصالة:</strong> ${b.hall_name}</p>
+                        <span style="display:inline-block; background:${badgeColor}; color:#fff; padding:2px 6px; border-radius:3px; font-size:11px; margin-top:4px;">انتقال للحجز</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('searchSelectionList').innerHTML = listHTML;
+            document.getElementById('searchSelectionModal').style.display = 'flex';
+        }
+
+        function closeSearchSelectionModal() {
+            document.getElementById('searchSelectionModal').style.display = 'none';
+        }
+
+        function selectAndJump(booking) {
+            closeSearchSelectionModal();
+            jumpToBookingDate(booking);
+        }
+
+        function jumpToBookingDate(booking) {
+            const bookingDateStr = booking.booking_date; 
+            if (!bookingDateStr) return;
+
+            const [bYear, bMonth, bDay] = bookingDateStr.split('-').map(Number);
+            currentDate = new Date(bYear, bMonth - 1, 1);
+            renderCalendar();
+
+            setTimeout(() => {
+                const cells = document.querySelectorAll('.day-cell');
+                cells.forEach(cell => {
+                    const dayNumElem = cell.querySelector('.day-number');
+                    if (dayNumElem && parseInt(dayNumElem.textContent) === bDay) {
+                        cell.style.transition = 'all 0.5s ease';
+                        cell.style.border = '2px solid #e74c3c';
+                        cell.style.backgroundColor = '#fadbd8';
+                        
+                        setTimeout(() => {
+                            cell.style.border = '1px solid #e0e0e0';
+                            cell.style.backgroundColor = '#fafafa';
+                        }, 3000);
+                    }
+                });
+            }, 100);
+        }
     </script>
 
-    <!-- القائمة المنبثقة (Modal) لعرض تفاصيل الحجوزات أو الإضافة -->
+    <!-- القائمة المنبثقة للتفاصيل اليومية -->
     <div id="bookingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
             <h3 id="modalDateTitle" style="margin-bottom:15px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:8px;"></h3>
             <div id="modalBookingsList" style="max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
             <div style="display:flex; gap:10px; justify-content:space-between;">
                 <a id="modalAddBtn" href="#" class="btn-nav" style="text-align:center; flex:1; text-decoration:none; background:#27ae60;">+ إضافة عقد جديد</a>
-                <button onclick="closeModal()" class="btn-nav logout" style="cursor:pointer;">إغلاق</button>
+                <button onclick="document.getElementById('bookingModal').style.display = 'none'" class="btn-nav logout" style="cursor:pointer;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة منبثقة لاختيار النتائج المتشابهة عند البحث -->
+    <div id="searchSelectionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1100; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:10px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:8px; font-size:16px;">نتائج البحث المتشابهة</h3>
+            <p id="searchCountText" style="font-size:13px; color:#555; margin-bottom:10px;"></p>
+            <div id="searchSelectionList" style="max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button onclick="closeSearchSelectionModal()" class="btn-nav logout" style="cursor:pointer; padding:6px 12px;">إغلاق</button>
             </div>
         </div>
     </div>
