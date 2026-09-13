@@ -10,11 +10,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: manipulation; }
 
-/* تم تعديل الحاوية لتتجاوب مع الموبايل وتماثل تصميم التقويم */
 .page { 
     background: #fff; 
     width: 100%; 
-    max-width: 480px; /* نفس عرض التقويم تماماً */
+    max-width: 480px; 
     min-height: auto; 
     padding: 15px; 
     margin: 0 auto 20px auto; 
@@ -49,7 +48,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 .input-inline { border: none; border-bottom: 1px dotted #000; outline: none; width: 100%; background: transparent; font-size: 14px; }
 .readonly-field { background-color: #f9f9f9; font-weight: bold; color: #2c3e50; }
 
-/* تنسيق شريط الأزرار في أعلى العقد ليناسب الشاشات الصغيرة */
 .actions-bar {
     position: relative;
     top: 0;
@@ -78,6 +76,11 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     min-width: 90px;
     transition: background 0.2s;
 }
+.btn-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #bdc3c7 !important;
+}
 .btn-approve { background: #27ae60; }
 .btn-save { background: #2980b9; }
 .btn-edit { background: #e67e22; }
@@ -85,14 +88,13 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 .btn-print { background: #8e44ad; }
 .btn-back { background: #7f8c8d; }
 
-/* عند الطباعة يعود الوضع لعرض A4 الطبيعي */
 @media print {
     body { background: none; padding: 0; }
     .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 15mm; }
     .actions-bar { display: none !important; }
     .no-print { display: none !important; }
 }
-        </style>
+    </style>
 </head>
 <body>
 
@@ -105,7 +107,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             <div class="info-row"><label>الصـالـة :</label><input type="text" id="hall_name" class="contract-input"></div>
             <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
             
-            <!-- حقل اختيار لون المربع في التقويم -->
             <div class="info-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
                 <div style="flex: 1;">
                     <label style="font-size: 13px; font-weight: bold;">لون المربع:</label>
@@ -270,27 +271,46 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const userRole = localStorage.getItem('currentUserRole') || 'user';
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedDate = urlParams.get('date');
+        const contractId = urlParams.get('id'); // إذا وجد id يعني عقد قديم، وإذا لم يوجد فهو عقد جديد
 
         function setupButtons() {
             const bar = document.getElementById('actionBar');
             if (userRole === 'admin') {
                 bar.innerHTML = `
                     <button class="btn-action btn-approve" onclick="approveContract()">قبول العقد</button>
-                    <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
-                    <button class="btn-action btn-save" onclick="saveContract(true)">حفظ</button>
+                    <button class="btn-action btn-edit" id="btnEdit" onclick="enableEditing()">تعديل</button>
+                    <button class="btn-action btn-save" id="btnSave" onclick="saveContract(true)">حفظ</button>
                     <button class="btn-action btn-delete" onclick="deleteContract()">حذف العقد</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
                     <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             } else {
                 bar.innerHTML = `
-                    <button class="btn-action btn-edit" onclick="enableEditing()">تعديل</button>
-                    <button class="btn-action btn-save" onclick="saveContract(false)">حفظ</button>
+                    <button class="btn-action btn-edit" id="btnEdit" onclick="enableEditing()">تعديل</button>
+                    <button class="btn-action btn-save" id="btnSave" onclick="saveContract(false)">حفظ</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
                     <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             }
-            toggleInputsLock(true);
+
+            // تطبيق حالة القفل/الفتح حسب العقد (جديد أم قديم)
+            applyContractModeState();
+        }
+
+        function applyContractModeState() {
+            const btnEdit = document.getElementById('btnEdit');
+
+            if (!contractId) {
+                // العقد جديد: الحقول مفتوحة للكتابة فوراً، وزر التعديل معطل تماماً
+                toggleInputsLock(false);
+                if (btnEdit) btnEdit.disabled = true;
+            } else {
+                // العقد قديم (محفوظ سابقاً): الحقول مقفلة، وزر التعديل مفعل لتتمكن من الضغط عليه للبدء بالتعديل
+                toggleInputsLock(true);
+                if (btnEdit) btnEdit.disabled = false;
+            }
         }
 
         function toggleInputsLock(lock) {
@@ -301,6 +321,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         }
 
         function enableEditing() {
+            // فتح الحقول للتعديل عند الضغط على زر تعديل للعقود القديمة
             toggleInputsLock(false);
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
@@ -320,10 +341,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             return parseFloat(cleanStr) || 0;
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedDate = urlParams.get('date');
-        const contractId = urlParams.get('id'); 
-        
         if (selectedDate) {
             const cleanSelectedDate = toEnglishDigits(selectedDate);
             document.getElementById('event_date').value = cleanSelectedDate;
@@ -335,7 +352,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             window.location.href = 'dash.html';
         }
 
-        // جلب البيانات من Supabase
         async function loadContractData() {
             try {
                 if (contractId) {
@@ -350,7 +366,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     if (data) {
                         document.getElementById('groom_name').value = data.groom_name || '';
                         document.getElementById('hall_name').value = data.hall_name || '';
-                        document.getElementById('boxColor').value = data.box_color || '#27ae60'; // جلب اللون المخزن
+                        document.getElementById('boxColor').value = data.box_color || '#27ae60'; 
                         document.getElementById('phone1').value = data.phone1 || '';
                         document.getElementById('phone2').value = data.phone2 || '';
                         document.getElementById('event_type').value = data.event_type || '';
@@ -367,8 +383,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         
                         calculateMainTable();
                     }
-                } else {
-                    enableEditing();
                 }
             } catch (e) {
                 console.error('خطأ في جلب تفاصيل العقد من Supabase:', e);
@@ -435,7 +449,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
         }
 
-        // حفظ البيانات في Supabase
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
@@ -454,7 +467,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 booking_date: eventDate,
                 groom_name: groomName,
                 hall_name: document.getElementById('hall_name').value,
-                box_color: document.getElementById('boxColor').value, // إرسال اللون المختار لقاعدة البيانات
+                box_color: document.getElementById('boxColor').value, 
                 phone1: document.getElementById('phone1').value,
                 phone2: document.getElementById('phone2').value,
                 event_type: document.getElementById('event_type').value,
@@ -492,8 +505,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 }
 
                 toggleInputsLock(true);
+                applyContractModeState();
 
-                // إرسال إشعار فوري للأدمن مع تضمين رابط القفز المباشر لتاريخ ويوم الععد
                 await supabaseClient.from('notifications').insert([
                     {
                         title: "تنبيه عقد جديد/تعديل",
@@ -516,7 +529,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             await saveContract(true);
         }
 
-        // حذف العقد من Supabase
         async function deleteContract() {
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحابة؟')) return;
 
@@ -530,7 +542,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 }
 
                 alert('تم حذف العقد بنجاح.');
-              window.location.replace('dash.html');
+                window.location.replace('dash.html');
             } catch (e) {
                 console.error('خطأ أثناء الحذف:', e);
                 alert('حدث خطأ أثناء الحذف: ' + e.message);
