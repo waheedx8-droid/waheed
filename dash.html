@@ -20,7 +20,7 @@
         }
         .calendar-container { 
             width: 100%; 
-            max-width: 600px; 
+            max-width: 600px; /* تم زيادة عرض الحاوية لتوفير مساحة أوسع للخلايا */
             background: #fff; 
             padding: 15px; 
             border-radius: 8px; 
@@ -83,12 +83,12 @@
             background: #fafafa; 
             border: 1px solid #e0e0e0; 
             border-radius: 4px; 
-            min-height: 75px; 
+            min-height: 85px; 
             display: flex; 
             flex-direction: column; 
             text-align: right; 
             position: relative; 
-            padding: 2px;
+            padding: 4px;
             cursor: pointer; 
         }
         
@@ -102,21 +102,28 @@
             color: #333;
         }
 
+        /* تنسيق خط الحجز واسم الصالة بحجم كبير وقص النص الزائد بالنقاط لضمان عدم تخريب شكل المربع */
         .booking-badge { 
-            font-size: 14px; 
+            font-size: 13px; 
             font-weight: 700;
-            padding: 3px 4px; 
+            padding: 4px 6px; 
             margin-bottom: 2px; 
             border-radius: 3px; 
             color: #fff; 
             display: block; 
             text-decoration: none; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            white-space: nowrap;      /* يمنع نزول النص لأسطر متعددة */
+            overflow: hidden;         /* يخفي الحروف الزائدة خارج الخلية */
+            text-overflow: ellipsis;  /* يضع ثلاث نقاط (...) بدل الجزء المخفي */
             max-width: 100%;
         }
-        .badge-hall { font-size: 13px; opacity: 0.9; display: block; }
+        .badge-hall { 
+            font-size: 12px; /* خط اسم الصالة واضح وكبير */
+            font-weight: bold;
+            display: block; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -132,9 +139,11 @@
             </div>
 
             <div class="header-buttons">
-               <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
+                <!-- أزرار التنقل بين الأشهر -->
+                <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
+                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
-                 <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
+                
                 <!-- أيقونة الجرس للإشعارات -->
                 <div class="notification-container" id="notifContainer">
                     <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
