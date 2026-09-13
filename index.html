@@ -60,12 +60,12 @@
         </div>
     </div>
 
-    <!-- نافذة منبثقة لإدارة المستخدمين والصلاحيات (تفتح من لوحة تحكم الأدمن) -->
+    <!-- نافذة منبثقة لإدارة المستخدمين والصلاحيات -->
     <div id="manageUsersModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1200; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
             <h3 style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:16px;">إدارة المستخدمين والصلاحيات</h3>
             
-            <!-- نموذج إضافة مستخدم جديد عبر الأعمدة الجديدة في settings_table -->
+            <!-- نموذج إضافة مستخدم جديد -->
             <div style="background:#fdf2e9; padding:10px; border-radius:5px; margin-bottom:12px;">
                 <p style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#d35400;">إضافة مستخدم جديد:</p>
                 
@@ -90,11 +90,43 @@
                 <button onclick="addNewUser()" style="background:#27ae60; color:white; border:none; width:100%; padding:7px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">إضافة المستخدم</button>
             </div>
 
-            <p style="font-size:12px; font-weight:bold; margin-bottom:6px;">المستخدمون الحاليون:</p>
+            <p style="font-size:12px; font-weight:bold; margin-bottom:6px;">المستخدمون الحاليون (اضغط على المستخدم للتعديل):</p>
             <div id="usersListContainer" style="max-height:140px; overflow-y:auto; margin-bottom:12px; border:1px solid #eee; padding:5px; border-radius:4px;"></div>
 
             <div style="display:flex; justify-content:flex-end;">
                 <button onclick="closeManageUsersModal()" style="background:#c0392b; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة منبثقة لتعديل خصائص المستخدم المحدد -->
+    <div id="editUserModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1300; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:350px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:15px;">تعديل بيانات المستخدم</h3>
+            
+            <input type="hidden" id="editUserId">
+
+            <div style="margin-bottom:8px;">
+                <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">اسم المستخدم</label>
+                <input type="text" id="editUsernameInput" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">كلمة المرور الجديدة</label>
+                <input type="text" id="editPasswordInput" placeholder="أدخل كلمة المرور الجديدة" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">الصلاحية</label>
+                <select id="editRoleInput" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <option value="read_only">قراءة فقط (Read Only)</option>
+                    <option value="user">إضافة وتعديل</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:5px;">
+                <button onclick="updateUser()" style="background:#27ae60; color:white; border:none; flex:1; padding:7px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">حفظ التعديلات</button>
+                <button onclick="closeEditUserModal()" style="background:#7f8c8d; color:white; border:none; flex:1; padding:7px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">إلغاء</button>
             </div>
         </div>
     </div>
@@ -105,7 +137,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // التحقق عند تحميل الصفحة إذا كان مسجلاً دخول مسبقاً
         window.onload = async function() {
             await initStateSettings();
             const role = localStorage.getItem('currentUserRole');
@@ -119,10 +150,9 @@
         };
 
         function gotocalendar() {
-            window.location.replace('dash.html'); // توجيه لصفحة التقويم الرئيسية (dash.html)
+            window.location.replace('dash.html');
         }
 
-        // تهيئة البيانات الافتراضية للأدمن الأساسي في settings_table إذا كان الجدول فارغاً
         async function initStateSettings() {
             try {
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
@@ -138,7 +168,6 @@
             }
         }
 
-        // دالة تسجيل الدخول (تدعم الأدمن الأساسي key_name=1 أو أي صف يحتوي على custom_user)
         async function login() {
             const inputUser = document.getElementById('username').value.trim();
             const inputPass = document.getElementById('password').value.trim();
@@ -159,7 +188,6 @@
 
                 if (rows) {
                     rows.forEach(row => {
-                        // 1. فحص الأدمن الأساسي (المفتاح رقم 1)
                         if (row.key_name === 1) {
                             if (inputUser === 'admin' && inputPass === row.val) {
                                 isAdminAuthenticated = true;
@@ -167,7 +195,6 @@
                                 loggedUsername = 'admin';
                             }
                         }
-                        // 2. فحص المستخدمين الجدد المخزنين في نفس الجدول عبر custom_user
                         if (row.custom_user && row.custom_user === inputUser && row.val === inputPass) {
                             isUserAuthenticated = true;
                             loggedRole = row.role_user || 'read_only';
@@ -210,7 +237,6 @@
             document.getElementById('password').value = '';
         }
 
-        // دالة تغيير كلمة سر المسؤول الأساسي (تتحدث مع المفتاح رقم 1)
         async function changeAdminPassword() {
             const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
             if (currentPass === null) return;
@@ -243,7 +269,6 @@
             }
         }
 
-        // --- دوال القائمة المنبثقة لإدارة المستخدمين والصلاحيات عبر settings_table ---
         function openManageUsersModal() {
             document.getElementById('manageUsersModal').style.display = 'flex';
             loadUsersList();
@@ -258,7 +283,6 @@
             listDiv.innerHTML = '<div style="text-align:center; color:#777; font-size:11px;">جاري تحميل المستخدمين...</div>';
 
             try {
-                // جلب الصفوف التي تحتوي على مستخدمين مضافين (custom_user ليس فارغاً)
                 const { data, error } = await supabaseClient.from('settings_table').select('*').not('custom_user', 'is', null);
                 if (error) throw error;
 
@@ -270,19 +294,23 @@
                 let html = '';
                 data.forEach(row => {
                     let roleTitle = row.role_user === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
+                    // جعل اسم المستخدم قابلاً للضغط لفتح نافذة التعديل مع تمرير البيانات
                     html += `
-                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:5px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <strong>${row.custom_user}</strong> <span style="color:#555;">(${roleTitle})</span>
+                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:6px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <div onclick="openEditUserModal(${row.id}, '${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
+                                <strong style="color:#2980b9; text-decoration:underline;">${row.custom_user}</strong> <span style="color:#555;">(${roleTitle})</span>
                             </div>
-                            <button onclick="deleteUser(${row.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                            <div style="display:flex; gap:4px;">
+                                <button onclick="openEditUserModal(${row.id}, '${row.custom_user}', '${row.val}', '${row.role_user}')" style="background:#2980b9; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">تعديل</button>
+                                <button onclick="deleteUser(${row.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                            </div>
                         </div>
                     `;
                 });
                 listDiv.innerHTML = html;
             } catch (e) {
                 console.error(e);
-                listDiv.innerHTML = '<p style="text-align:center; color:red; font-size:11px;">تأكد من إضافة عمودي custom_user و role_user في جدول settings_table على Supabase.</p>';
+                listDiv.innerHTML = '<p style="text-align:center; color:red; font-size:11px;">تأكد من إعداد أعمدة الجدول في سابابيز.</p>';
             }
         }
 
@@ -297,7 +325,6 @@
             }
 
             try {
-                // 1. جلب البيانات لمعرفة أعلى رقم key_name موجود حالياً وتحديد الرقم التالي تلقائياً
                 const { data: existingRows, error: fetchError } = await supabaseClient.from('settings_table').select('*');
                 if (fetchError) throw fetchError;
 
@@ -309,22 +336,66 @@
                         }
                     });
                 }
-                const nextKey = maxKey + 1; // الترقيم التلقائي المتسلسل (2, 3, 4...)
+                const nextKey = maxKey + 1;
 
-                // 2. إضافة صف جديد في settings_table مع الترقيم التلقائي
                 const { error } = await supabaseClient.from('settings_table').insert([
                     { key_name: nextKey, val: password, custom_user: username, role_user: role }
                 ]);
 
                 if (error) throw error;
 
-                alert('تم إضافة المستخدم برقم تسلسلي (' + nextKey + ') بنجاح!');
+                alert('تم إضافة المستخدم بنجاح!');
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
                 loadUsersList();
             } catch (e) {
                 console.error(e);
                 alert('حدث خطأ أثناء إضافة المستخدم.');
+            }
+        }
+
+        // --- دوال نافذة تعديل المستخدم ---
+        function openEditUserModal(id, username, password, role) {
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editUsernameInput').value = username;
+            document.getElementById('editPasswordInput').value = password;
+            document.getElementById('editRoleInput').value = role || 'read_only';
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        async function updateUser() {
+            const id = document.getElementById('editUserId').value;
+            const newUsername = document.getElementById('editUsernameInput').value.trim();
+            const newPassword = document.getElementById('editPasswordInput').value.trim();
+            const newRole = document.getElementById('editRoleInput').value;
+
+            if (!newUsername || !newPassword) {
+                alert('الرجاء عدم إبقاء اسم المستخدم أو كلمة المرور فارغة.');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('settings_table')
+                    .update({
+                        custom_user: newUsername,
+                        val: newPassword,
+                        role_user: newRole
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                alert('تم تحديث بيانات المستخدم بنجاح!');
+                closeEditUserModal();
+                loadUsersList();
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء تحديث بيانات المستخدم.');
             }
         }
 
