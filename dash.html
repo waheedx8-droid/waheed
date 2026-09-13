@@ -105,7 +105,7 @@
             color: #333;
         }
 
-        /* تنسيق المربع لعرض الكلمات بوضوح ودون قطع قاسي */
+        /* تنسيق المربع لعرض الحروف بوضوح ودون قطع قاسي */
         .booking-badge { 
             font-size: 11.5px; 
             font-weight: 700;
@@ -204,12 +204,19 @@
                         data.forEach(item => {
                             const dateKey = item.booking_date;
                             if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
+                            
+                            // تلوين المسودات أو العقود المعدلة الجديدة باللون الرمادي الفضي
+                            let finalColor = item.box_color || '#27ae60';
+                            if (item.status === 'pending' || !item.status) {
+                                finalColor = '#95a5a6';
+                            }
+
                             allBookingsMap[dateKey].push({
                                 id: item.id,
                                 groomName: item.groom_name,
                                 hallName: item.hall_name,
                                 status: item.status || 'pending',
-                                boxColor: item.box_color || '#27ae60'
+                                boxColor: finalColor
                             });
                         });
                     }
@@ -323,7 +330,7 @@
         }, { passive: true });
 
         function handleSwipeGesture() {
-            const threshold = 100; 
+            const threshold = 130; // عتبة السحب المحسنة (حوالي 1 سم)
             if (touchEndX < touchStartX - threshold) {
                 changeMonth(1);
             }
@@ -332,7 +339,7 @@
             }
         }
 
-        // دالة فتح القائمة المنبثقة اليومية مع إرسال التاريخ والمعرف معاً لصفحة العقد
+        // دالة فتح القائمة المنبثقة اليومية مع زر عرض التفاصيل الممرر للـ date و id
         function openModal(dateStr, bookings) {
             document.getElementById('modalDateTitle').textContent = dateStr ? `حجوزات يوم: ${dateStr}` : 'إدارة اليوم';
             let listHTML = '';
