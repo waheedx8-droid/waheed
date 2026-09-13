@@ -7,7 +7,7 @@
     <!-- مكتبة Supabase JS الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
- * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: manipulation; }
 
 /* تم تعديل الحاوية لتتجاوب مع الموبايل وتماثل تصميم التقويم */
@@ -472,6 +472,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             };
 
             try {
+                let savedBookingId = contractId;
+
                 if (contractId) {
                     const { error } = await supabaseClient
                         .from('bookings_table')
@@ -479,22 +481,28 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         .eq('id', contractId);
                     if (error) throw error;
                 } else {
-                    const { error } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('bookings_table')
-                        .insert([payload]);
+                        .insert([payload])
+                        .select();
                     if (error) throw error;
+                    if (data && data.length > 0) {
+                        savedBookingId = data[0].id;
+                    }
                 }
 
                 toggleInputsLock(true);
-                // إرسال إشعار فوري للأدمن عند التعديل أو الإضافة
-        await supabaseClient.from('notifications').insert([
-            {
-                title: "تنبيه عقد جديد/تعديل",
-                message: `قام المستخدم بتعديل أو إضافة عقد للعريس: ${groomName}`,
-                link: "dash.html",
-                is_read: false
-            }
-        ]);
+
+                // إرسال إشعار فوري للأدمن مع تضمين رابط القفز المباشر لتاريخ ويوم الععد
+                await supabaseClient.from('notifications').insert([
+                    {
+                        title: "تنبيه عقد جديد/تعديل",
+                        message: `قام المستخدم بتعديل أو إضافة عقد للعريس: ${groomName}`,
+                        link: `dash.html?jumpDate=${eventDate}&jumpId=${savedBookingId || ''}`,
+                        is_read: false
+                    }
+                ]);
+
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
                 window.location.replace('dash.html');
 
