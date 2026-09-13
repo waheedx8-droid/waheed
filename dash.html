@@ -393,9 +393,7 @@
             } else {
                 bookings.forEach(b => {
                     let detailsButtonHTML = '';
-                    if (currentUserRole === 'read_only') {
-                        detailsButtonHTML = `<a href="contract.html?date=${dateStr}&id=${b.id}&view=only" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#7f8c8d;">استعراض</a>`;
-                    } else {
+                    if (currentUserRole !== 'read_only') {
                         detailsButtonHTML = `<a href="contract.html?date=${dateStr}&id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; text-decoration:none; background:#2980b9;">عرض التفاصيل</a>`;
                     }
 
