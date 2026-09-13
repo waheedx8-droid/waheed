@@ -37,6 +37,14 @@
         
         .user-tag { background: #2c3e50; color: white; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 
+        /* تنسيق الإشعارات وجرس التنبيه */
+        .notification-container { position: relative; display: inline-block; }
+        .notification-badge-count { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; }
+        .notification-dropdown { display: none; position: absolute; right: 0; background: #fff; min-width: 260px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1200; border-radius: 6px; padding: 8px; text-align: right; }
+        .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; }
+        .notification-item:hover { background: #f1f1f1; }
+        .notification-item.unread { font-weight: bold; background: #fdf2e9; }
+
         /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
@@ -100,14 +108,31 @@
     <div class="calendar-container">
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
+            
+            <!-- حقل وزر البحث الذكي -->
             <div style="display: flex; gap: 5px; width: 100%; margin-top: 10px;">
                 <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
                 <button class="btn-nav" onclick="searchGroom()" style="background: #27ae60;">بحث</button>
             </div>
+
             <div class="header-buttons">
                 <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
+                
+                <!-- أيقونة الجرس للإشعارات -->
+                <div class="notification-container" id="notifContainer">
+                    <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
+                        🔔 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
+                    </button>
+                    <div id="notifDropdown" class="notification-dropdown">
+                        <div style="font-weight: bold; margin-bottom: 5px; font-size: 13px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">الإشعارات الواردة</div>
+                        <div id="notifList" style="max-height: 200px; overflow-y: auto;">
+                            <div style="padding: 6px; text-align: center; color: #777; font-size: 11px;">جاري تحميل الإشعارات...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <span id="roleDisplay" class="user-tag">user</span>
                 <button class="btn-nav logout" onclick="logout()">خروج</button>
             </div>
@@ -137,7 +162,7 @@
 
         let currentDate = new Date(); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير النظام (admin)' : 'مستخدم (user)';
+        document.getElementById('roleDisplay').textContent = currentUserRole === 'admin' ? 'مدير (admin)' : 'مستخدم (user)';
 
         let allBookingsMap = {};
 
@@ -164,6 +189,17 @@
                 console.error('خطأ في جلب الحجوزات:', e);
             }
             renderCalendar();
+            fetchNotifications();
+
+            // الاستماع الفوري للإشعارات الجديدة عبر Realtime
+            if (supabaseClient) {
+                supabaseClient
+                  .channel('public:notifications')
+                  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+                      fetchNotifications();
+                  })
+                  .subscribe();
+            }
         }
 
         function renderCalendar() {
@@ -197,7 +233,12 @@
                 emptyCell.className = 'day-cell';
                 emptyCell.style.background = '#fcfcfc';
                 emptyCell.style.border = 'none';
-                emptyCell.style.cursor = 'default';
+                emptyCell.style.cursor = 'pointer';
+                const formattedMonth = String(monthNumber).padStart(2, '0');
+                const prevMonthLastDay = new Date(year, monthIndex, 0).getDate();
+                const targetDayNum = prevMonthLastDay - (firstDayIndex - 1 - i);
+                // تفعيل النقر حتى على الخلايا الفارغة
+                emptyCell.onclick = () => openModal('', []);
                 daysContainer.appendChild(emptyCell);
             }
 
@@ -245,7 +286,95 @@
             window.location.replace('index.html');
         }
 
+        // دالة فتح نافذة الـ Modal اليومية
+        function openModal(dateStr, bookings) {
+            document.getElementById('modalDateTitle').textContent = dateStr ? `حجوزات يوم: ${dateStr}` : 'إدارة اليوم';
+            let listHTML = '';
+            if (bookings.length === 0) {
+                listHTML = '<p style="text-align:center; color:#777; font-size:13px; padding:10px;">لا توجد حجوزات مسجلة في هذا اليوم.</p>';
+            } else {
+                bookings.forEach(b => {
+                    listHTML += `
+                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:8px; border-radius:4px; margin-bottom:5px; font-size:13px;">
+                            <strong>العريس:</strong> ${b.groomName} | <strong>الصالة:</strong> ${b.hallName}
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('modalBookingsList').innerHTML = listHTML;
+            document.getElementById('modalAddBtn').href = dateStr ? `contract.html?date=${dateStr}` : 'contract.html';
+            document.getElementById('bookingModal').style.display = 'flex';
+        }
+
         initCalendarSystem();
+
+        // دوال الإشعارات
+        async function sendAdminNotification(title, message, linkUrl) {
+            try {
+                await supabaseClient.from('notifications').insert([
+                    { title: title, message: message, link: linkUrl, is_read: false }
+                ]);
+            } catch (e) {
+                console.error('خطأ في إرسال الإشعار:', e);
+            }
+        }
+
+        async function fetchNotifications() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (!error && data) {
+                    const unreadCount = data.filter(n => !n.is_read).length;
+                    const countSpan = document.getElementById('notifCount');
+                    
+                    if (unreadCount > 0) {
+                        countSpan.textContent = unreadCount;
+                        countSpan.style.display = 'inline-block';
+                    } else {
+                        countSpan.style.display = 'none';
+                    }
+
+                    let listHTML = '';
+                    if (data.length === 0) {
+                        listHTML = '<div style="padding: 8px; text-align: center; color: #777; font-size: 12px;">لا توجد إشعارات</div>';
+                    } else {
+                        data.forEach(n => {
+                            const unreadClass = n.is_read ? '' : 'unread';
+                            listHTML += `
+                                <div class="notification-item ${unreadClass}" onclick="openNotificationLink(${n.id}, '${n.link}')">
+                                    <strong>${n.title}</strong>
+                                    <p style="margin: 2px 0 0 0; color: #555; font-size: 11px;">${n.message}</p>
+                                </div>
+                            `;
+                        });
+                    }
+                    document.getElementById('notifList').innerHTML = listHTML;
+                }
+            } catch (e) {
+                console.error('خطأ في جلب الإشعارات:', e);
+            }
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function openNotificationLink(notificationId, link) {
+            try {
+                await supabaseClient
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('id', notificationId);
+                window.location.href = link;
+            } catch (e) {
+                window.location.href = link;
+            }
+        }
 
         // دوال البحث الذكي لعرض النتائج في القائمة المنبثقة
         function normalizeArabicText(text) {
@@ -287,7 +416,6 @@
                     return;
                 }
 
-                // إذا كانت النتيجة واحدة ينتقل إليها مباشرة، وإذا تعددت تفتح قائمة منبثقة
                 if (matchedBookings.length === 1) {
                     jumpToBookingDate(matchedBookings[0]);
                 } else {
@@ -306,7 +434,6 @@
             let listHTML = '';
             bookings.forEach((b) => {
                 const badgeColor = b.box_color || b.boxColor || '#27ae60';
-                // تجهيز كائن البيانات لتمريره للدالة بشكل آمن
                 const bookingObjStr = JSON.stringify({
                     booking_date: b.booking_date,
                     groom_name: b.groom_name,
