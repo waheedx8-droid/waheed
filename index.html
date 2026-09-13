@@ -20,13 +20,13 @@
         .btn-submit:hover { background: #2471a3; }
         .admin-dashboard { display: none; }
         .welcome-msg { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; margin-top: 25px; }
-        .btn-dashboard { width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-dashboard { width: 100%; background: #27ae60; color: #fff; border: none; padding: 12px; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
         .btn-dashboard:hover { background: #219150; }
         .btn-pass-admin { background: #8e44ad; }
         .btn-pass-admin:hover { background: #732d91; }
-        .btn-pass-user { background: #e67e22; }
-        .btn-pass-user:hover { background: #d35400; }
-        .btn-logout { background: #c0392b; margin-top: 10px; }
+        .btn-manage-users { background: #d35400; }
+        .btn-manage-users:hover { background: #ba4a00; }
+        .btn-logout { background: #c0392b; margin-top: 5px; }
         .btn-logout:hover { background: #a93226; }
     </style>
 </head>
@@ -55,22 +55,59 @@
             <div class="welcome-msg">أهلاً بك في نظام تنظيم الأعراس</div>
             <button class="btn-dashboard" onclick="gotocalendar()">الانتقال إلى التقويم</button>
             <button class="btn-dashboard btn-pass-admin" onclick="changeAdminPassword()">تغيير كلمة سر المسؤول</button>
-            <button class="btn-dashboard btn-pass-user" onclick="changeUserPassword()">تغيير كلمة سر المستخدم</button>
+            <button class="btn-dashboard btn-manage-users" onclick="openManageUsersModal()">إدارة المستخدمين والصلاحيات</button>
             <button class="btn-dashboard btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <!-- نافذة منبثقة لإدارة المستخدمين والصلاحيات (تفتح من لوحة تحكم الأدمن) -->
+    <div id="manageUsersModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1200; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:400px; text-align:right; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:16px;">إدارة المستخدمين والصلاحيات</h3>
+            
+            <!-- نموذج إضافة مستخدم جديد بالترتيب المطلوب -->
+            <div style="background:#fdf2e9; padding:10px; border-radius:5px; margin-bottom:12px;">
+                <p style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#d35400;">إضافة مستخدم جديد:</p>
+                
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">اسم المستخدم</label>
+                    <input type="text" id="newUsername" placeholder="أدخل اسم المستخدم" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                </div>
+
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">كلمة المرور</label>
+                    <input type="password" id="newPassword" placeholder="أدخل كلمة المرور" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label style="display:block; font-size:11px; font-weight:bold; margin-bottom:3px;">خيارات الصلاحية</label>
+                    <select id="newUserRole" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                        <option value="read_only">مستخدم عادي للقراءة فقط (Read Only)</option>
+                        <option value="user">مستخدم متقدم للإضافة والتعديل</option>
+                    </select>
+                </div>
+
+                <button onclick="addNewUser()" style="background:#27ae60; color:white; border:none; width:100%; padding:7px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">إضافة المستخدم</button>
+            </div>
+
+            <p style="font-size:12px; font-weight:bold; margin-bottom:6px;">المستخدمون الحاليون:</p>
+            <div id="usersListContainer" style="max-height:140px; overflow-y:auto; margin-bottom:12px; border:1px solid #eee; padding:5px; border-radius:4px;"></div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button onclick="closeManageUsersModal()" style="background:#c0392b; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">إغلاق</button>
+            </div>
         </div>
     </div>
 
     <script>
         // --- إعدادات الاتصال بـ Supabase ---
-        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; // ضع رابط مشروعك هنا
-        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; // ضع مفتاح الـ Anon هنا
+        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // الاحتفاظ بنسخة محلية كدعم سريع للاستعلام
+        // الاحتفاظ بنسخة محلية للأدمن الأساسي ودعم الإعدادات
         if(!localStorage.getItem('adminUser')) localStorage.setItem('adminUser', 'admin');
         if(!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '123456');
-        if(!localStorage.getItem('userUser')) localStorage.setItem('userUser', 'user');
-        if(!localStorage.getItem('userPass')) localStorage.setItem('userPass', '12345678');
 
         // التحقق عند تحميل الصفحة إذا كان مسجلاً دخول مسبقاً
         window.onload = async function() {
@@ -80,17 +117,16 @@
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
                 document.getElementById('topCalendarBtn').style.display = 'block';
-            } else if (role === 'user') {
-                // إذا كان المستخدم العادي مسجلاً، نقله فوراً أو أظهر له الزر
+            } else if (role === 'user' || role === 'read_only') {
                 document.getElementById('topCalendarBtn').style.display = 'block';
             }
         };
 
         function gotocalendar() {
-           window.location.replace('dash.html'); // توجيه لصفحة التقويم الرئيسية (dash.html)
+            window.location.replace('dash.html'); // توجيه لصفحة التقويم الرئيسية (dash.html)
         }
 
-        // تهيئة البيانات الافتراضية أول مرة إذا كان الجدول فارغاً (باستخدام المفاتيح الرقمية 1 و 2)
+        // تهيئة البيانات الافتراضية لأدمن الأساسي في settings_table
         async function initStateSettings() {
             try {
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
@@ -98,8 +134,7 @@
 
                 if (!data || data.length === 0) {
                     await supabaseClient.from('settings_table').insert([
-                        { key_name: 1, val: '123456' },      // كلمة مرور الأدمن
-                        { key_name: 2, val: '12345678' }    // كلمة مرور المستخدم العادي
+                        { key_name: 1, val: '123456' } // كلمة مرور الأدمن الأساسي
                     ]);
                 }
             } catch (e) {
@@ -107,7 +142,7 @@
             }
         }
 
-        // دالة تسجيل الدخول
+        // دالة تسجيل الدخول (تدعم الأدمن الأساسي أو أي مستخدم مسجل في users_table)
         async function login() {
             const inputUser = document.getElementById('username').value.trim();
             const inputPass = document.getElementById('password').value.trim();
@@ -118,38 +153,41 @@
             }
 
             try {
-                // جلب القيم من قاعدة البيانات
-                const { data: settings, error } = await supabaseClient
-                    .from('settings_table')
-                    .select('*');
-
-                if (error) throw error;
-
+                // 1. التحقق إذا كان الحساب هو الأدمن الأساسي
                 let adminPass = localStorage.getItem('adminPass') || '123456';
-                let userPass = localStorage.getItem('userPass') || '12345678';
-
-                if (settings && settings.length > 0) {
-                    settings.forEach(row => {
-                        if (row.key_name === 1 || row.key_name === '1') adminPass = row.val;
-                        if (row.key_name === 2 || row.key_name === '2') userPass = row.val;
-                    });
-                }
-
-                // التحقق من الصلاحيات (الأدمن: اسم المستخدم admin وكلمة السر رقم 1)
                 const adminUserVal = localStorage.getItem('adminUser') || 'admin';
-                const userUserVal = localStorage.getItem('userUser') || 'user';
+
+                try {
+                    const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 1).single();
+                    if (data) adminPass = data.val;
+                } catch (err) {}
 
                 if (inputUser === adminUserVal && inputPass === adminPass) {
                     localStorage.setItem('currentUserRole', 'admin');
+                    localStorage.setItem('currentUsername', adminUserVal);
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
                     document.getElementById('topCalendarBtn').style.display = 'block';
-                } else if (inputUser === userUserVal && inputPass === userPass) {
-                    localStorage.setItem('currentUserRole', 'user');
-                  window.location.replace('dash.html');
-                } else {
-                    alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+                    return;
                 }
+
+                // 2. التحقق من جدول المستخدمين الإضافيين (users_table)
+                const { data: usersData, error: usersError } = await supabaseClient
+                    .from('users_table')
+                    .select('*')
+                    .eq('username', inputUser)
+                    .eq('password', inputPass);
+
+                if (!usersError && usersData && usersData.length > 0) {
+                    const loggedUser = usersData[0];
+                    localStorage.setItem('currentUserRole', loggedUser.role); // 'user' أو 'read_only'
+                    localStorage.setItem('currentUsername', loggedUser.username);
+                    window.location.replace('dash.html');
+                    return;
+                }
+
+                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+
             } catch (e) {
                 console.error('خطأ أثناء تسجيل الدخول:', e);
                 alert('حدث خطأ في الاتصال بالسحاب!');
@@ -158,6 +196,7 @@
 
         function logout() {
             localStorage.removeItem('currentUserRole');
+            localStorage.removeItem('currentUsername');
             document.getElementById('adminDashboard').style.display = 'none';
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('topCalendarBtn').style.display = 'none';
@@ -165,7 +204,7 @@
             document.getElementById('password').value = '';
         }
 
-        // دالة تغيير كلمة سر المسؤول (تتحدث مع المفتاح رقم 1)
+        // دالة تغيير كلمة سر المسؤول الأساسي (تتحدث مع المفتاح رقم 1)
         async function changeAdminPassword() {
             const currentPass = prompt('أدخل كلمة سر المسؤول الحالية:');
             if (currentPass === null) return;
@@ -198,35 +237,85 @@
             }
         }
 
-        // دالة تغيير كلمة سر المستخدم العادي (تتحدث مع المفتاح رقم 2)
-        async function changeUserPassword() {
-            const adminCheck = prompt('هذا الإجراء يتطلب صلاحية المسؤول. أدخل كلمة سر المسؤول للتأكيد:');
-            if (adminCheck === null) return;
+        // --- دوال القائمة المنبثقة لإدارة المستخدمين والصلاحيات ---
+        function openManageUsersModal() {
+            document.getElementById('manageUsersModal').style.display = 'flex';
+            loadUsersList();
+        }
 
-            let adminPassStored = localStorage.getItem('adminPass') || '123456';
+        function closeManageUsersModal() {
+            document.getElementById('manageUsersModal').style.display = 'none';
+        }
+
+        async function loadUsersList() {
+            const listDiv = document.getElementById('usersListContainer');
+            listDiv.innerHTML = '<div style="text-align:center; color:#777; font-size:11px;">جاري تحميل المستخدمين...</div>';
+
             try {
-                const { data } = await supabaseClient.from('settings_table').select('*').eq('key_name', 1).single();
-                if (data) adminPassStored = data.val;
-            } catch (err) {}
+                const { data, error } = await supabaseClient.from('users_table').select('*');
+                if (error) throw error;
 
-            if (adminCheck !== adminPassStored) {
-                alert('كلمة سر المسؤول غير صحيحة!');
+                if (!data || data.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align:center; color:#777; font-size:11px;">لا توجد حسابات إضافية مسجلة.</p>';
+                    return;
+                }
+
+                let html = '';
+                data.forEach(u => {
+                    let roleTitle = u.role === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
+                    html += `
+                        <div style="background:#f9f9f9; border:1px solid #ddd; padding:5px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong>${u.username}</strong> <span style="color:#555;">(${roleTitle})</span>
+                            </div>
+                            <button onclick="deleteUser(${u.id})" style="background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:10px; cursor:pointer;">حذف</button>
+                        </div>
+                    `;
+                });
+                listDiv.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                listDiv.innerHTML = '<p style="text-align:center; color:red; font-size:11px;">تأكد من إنشاء جدول users_table في Supabase.</p>';
+            }
+        }
+
+        async function addNewUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const role = document.getElementById('newUserRole').value;
+
+            if (!username || !password) {
+                alert('الرجاء إدخال اسم المستخدم وكلمة المرور.');
                 return;
             }
 
-            const newPass = prompt('أدخل كلمة سر المستخدم الجديدة:');
-            if (newPass && newPass.trim() !== '') {
-                localStorage.setItem('userPass', newPass);
-                const { error } = await supabaseClient
-                    .from('settings_table')
-                    .update({ val: newPass })
-                    .eq('key_name', 2);
+            try {
+                const { error } = await supabaseClient.from('users_table').insert([
+                    { username: username, password: password, role: role }
+                ]);
 
-                if (error) {
-                    alert('حدث خطأ أثناء التحديث السحابي: ' + error.message);
-                } else {
-                    alert('تم تغيير كلمة سر المستخدم بنجاح!');
-                }
+                if (error) throw error;
+
+                alert('تم إضافة المستخدم بنجاح!');
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                loadUsersList();
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء إضافة المستخدم (قد يكون اسم المستخدم مستخدماً مسبقاً).');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+
+            try {
+                const { error } = await supabaseClient.from('users_table').delete().eq('id', userId);
+                if (error) throw error;
+                loadUsersList();
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء حذف المستخدم.');
             }
         }
     </script>
