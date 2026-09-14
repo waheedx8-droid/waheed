@@ -7,93 +7,93 @@
     <!-- مكتبة Supabase JS الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: manipulation; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: manipulation; }
 
-.page { 
-    background: #fff; 
-    width: 100%; 
-    max-width: 480px; 
-    min-height: auto; 
-    padding: 15px; 
-    margin: 0 auto 20px auto; 
-    border-radius: 8px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-    position: relative; 
-}
+        .page { 
+            background: #fff; 
+            width: 100%; 
+            max-width: 480px; 
+            min-height: auto; 
+            padding: 15px; 
+            margin: 0 auto 20px auto; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            position: relative; 
+        }
 
-.info-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; font-size: 14px; }
-.info-row { display: flex; align-items: center; width: 100%; gap: 10px; }
-.info-row label { min-width: 90px; font-weight: bold; font-size: 13px; }
-.info-row input { flex: 1; border: none; border-bottom: 1px dotted #000; outline: none; padding: 4px; font-size: 14px; width: 100%; }
+        .info-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; font-size: 14px; }
+        .info-row { display: flex; align-items: center; width: 100%; gap: 10px; }
+        .info-row label { min-width: 90px; font-weight: bold; font-size: 13px; }
+        .info-row input { flex: 1; border: none; border-bottom: 1px dotted #000; outline: none; padding: 4px; font-size: 14px; width: 100%; }
 
-.main-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; overflow-x: auto; display: block; }
-.main-table th, .main-table td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-.main-table th { background-color: #f8f9fa; text-align: center; }
+        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; overflow-x: auto; display: block; }
+        .main-table th, .main-table td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+        .main-table th { background-color: #f8f9fa; text-align: center; }
 
-.signatures { margin-top: 20px; }
-.signatures .info-row { margin-bottom: 12px; }
+        .signatures { margin-top: 20px; }
+        .signatures .info-row { margin-bottom: 12px; }
 
-.deposit-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-.deposit-row .info-row { width: 100%; margin-bottom: 0; }
+        .deposit-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .deposit-row .info-row { width: 100%; margin-bottom: 0; }
 
-.services-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-.services-table th, .services-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
-.services-table th { background-color: #f8f9fa; }
-.checkbox-cell { text-align: right !important; display: flex; align-items: center; gap: 6px; }
-.checkbox-cell input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+        .services-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .services-table th, .services-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
+        .services-table th { background-color: #f8f9fa; }
+        .checkbox-cell { text-align: right !important; display: flex; align-items: center; gap: 6px; }
+        .checkbox-cell input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 
-input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
-.en-num { direction: ltr !important; text-align: center; }
-.input-inline { border: none; border-bottom: 1px dotted #000; outline: none; width: 100%; background: transparent; font-size: 14px; }
-.readonly-field { background-color: #f9f9f9; font-weight: bold; color: #2c3e50; }
+        input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
+        .en-num { direction: ltr !important; text-align: center; }
+        .input-inline { border: none; border-bottom: 1px dotted #000; outline: none; width: 100%; background: transparent; font-size: 14px; }
+        .readonly-field { background-color: #f9f9f9; font-weight: bold; color: #2c3e50; }
 
-.actions-bar {
-    position: relative;
-    top: 0;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
-    text-align: center;
-    margin: 0 auto 15px auto;
-    max-width: 480px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: center;
-}
-.btn-action {
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-    flex: 1;
-    min-width: 90px;
-    transition: background 0.2s;
-}
-.btn-action:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: #bdc3c7 !important;
-}
-.btn-approve { background: #27ae60; }
-.btn-save { background: #2980b9; }
-.btn-edit { background: #e67e22; }
-.btn-delete { background: #e74c3c; }
-.btn-print { background: #8e44ad; }
-.btn-back { background: #7f8c8d; }
+        .actions-bar {
+            position: relative;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+            text-align: center;
+            margin: 0 auto 15px auto;
+            max-width: 480px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+        .btn-action {
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 90px;
+            transition: background 0.2s;
+        }
+        .btn-action:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #bdc3c7 !important;
+        }
+        .btn-approve { background: #27ae60; }
+        .btn-save { background: #2980b9; }
+        .btn-edit { background: #e67e22; }
+        .btn-delete { background: #e74c3c; }
+        .btn-print { background: #8e44ad; }
+        .btn-back { background: #7f8c8d; }
 
-@media print {
-    body { background: none; padding: 0; }
-    .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 15mm; }
-    .actions-bar { display: none !important; }
-    .no-print { display: none !important; }
-}
+        @media print {
+            body { background: none; padding: 0; }
+            .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 15mm; }
+            .actions-bar { display: none !important; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -190,77 +190,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     <th style="width: 20%;">المجموع</th>
                 </tr>
             </thead>
-            <tbody id="servicesContainer">
-                <script>
-                    const servicesGrid = [
-                        [{ text: "كوشـة", empty: false }, null],
-                        [{ text: "أرجـمـانـات", empty: false }, { text: "زيـنـة مدخـل", empty: false }],
-                        [{ text: "خـدمـة بـنـات", empty: false }, { text: "خـدمـة شـبـاب", empty: false }],
-                        [{ text: "درج مـلـكـي", empty: false }, { text: "مـصـعـد كـاتـو", empty: false }],
-                        [{ text: "جـسـر إنـارة", empty: false }, { text: "ربـاعـي", empty: false }],
-                        [{ text: "بـيـمـات", empty: false }, { text: "بـارات", empty: false }, { text: "بـقـعـة ضـوء", empty: false }],
-                        [{ text: "دانـس فـلـور", empty: false }, { text: "مـمـر دانـس", empty: false }],
-                        [{ text: "طـبـالـة", empty: false }, { text: "DG + وصـل نـقـابـة", empty: false }],
-                        [{ text: "تـصـويـر فـيـديـو + فـوتـو 40 كـرت مـطـبـوع", empty: false }, null],
-                        [{ text: "شـاشـة LED", empty: false }, { text: "لـيـمـوزيـن", empty: false }],
-                        [{ text: "دخـان", empty: false }, { text: "كـفـرات مـوبـايـل", empty: false }],
-                        [{ text: "فـرقـة ررقـص", empty: false }, { text: "فـرقـة نـحـاسـيـة أو عـراضـة", empty: false }],
-                        [{ text: "كـاتـو", empty: false }, { text: "خـدمـة كـاتـو", empty: false }],
-                        [{ text: "كـولا", empty: false }, { text: "خـدمـة كـولا", empty: false }],
-                        [{ text: "عـصـيـر", empty: false }, { text: "خـدمـة عـصـيـر", empty: false }],
-                        [{ text: "قـهـوة", empty: false }, { text: "خـدمـة قـهـوة", empty: false }],
-                        [{ text: "شـراب الـلـوز", empty: false }, { text: "خـدمـة شـراب الـلـوز", empty: false }],
-                        [{ text: "خـدمـة عـشـاء", empty: false }, { text: "قـهـوة مـرة", empty: false }],
-                        [{ text: "خـدمـة فـواكـة", empty: false }, { text: "خـدمـة مـوالـح", empty: false }],
-                        [{ text: "مـمـر ورد", empty: false }, { text: "لـوح أسـمـاء", empty: false }],
-                        [{ text: "سـتـانـد ذهـب", empty: false }, { text: "بـالـون عـروس", empty: false }],
-                        [{ text: "ألـعـاب نـاريـة", empty: false }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null]
-                    ];
-
-                    let serviceIndex = 0;
-                    let htmlBuilder = '';
-
-                    servicesGrid.forEach((row) => {
-                        htmlBuilder += `<tr><td style="padding: 3px 5px;"><div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">`;
-
-                        row.forEach((item) => {
-                            if (item) {
-                                const currentIndex = serviceIndex++;
-                                if (item.customInput) {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <input type="text" class="input-inline srv-custom-name contract-input" data-index="${currentIndex}" placeholder="إضافة خدمة أخرى..." style="border-bottom: 1px dotted #999;">
-                                        </div>
-                                    `;
-                                } else {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <span>${item.text}</span>
-                                        </div>
-                                    `;
-                                }
-                            } else {
-                                htmlBuilder += `<div class="checkbox-cell" style="flex: 1;"><input type="checkbox" disabled style="opacity: 0.3;"> <span></span></div>`;
-                            }
-                        });
-
-                        const rowId = serviceIndex - 1;
-                        htmlBuilder += `</div></td>
-                            <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${rowId}" value="1" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${rowId}" value="0" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${rowId}" readonly value="0"></td>
-                        </tr>`;
-                    });
-
-                    document.write(htmlBuilder);
-                </script>
-            </tbody>
+            <tbody id="servicesContainer"></tbody>
         </table>
     </div>
 
@@ -273,7 +203,80 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         const userRole = localStorage.getItem('currentUserRole') || 'user';
         const urlParams = new URLSearchParams(window.location.search);
         const selectedDate = urlParams.get('date');
-        const contractId = urlParams.get('id'); // إذا وجد id يعني عقد قديم، وإذا لم يوجد فهو عقد جديد
+        const contractId = urlParams.get('id');
+
+        // بناء جدول الخدمات ديناميكياً
+        const servicesGrid = [
+            [{ text: "كوشـة", empty: false }, null],
+            [{ text: "أرجـمـانـات", empty: false }, { text: "زيـنـة مدخـل", empty: false }],
+            [{ text: "خـدمـة بـنـات", empty: false }, { text: "خـدمـة شـبـاب", empty: false }],
+            [{ text: "درج مـلـكـي", empty: false }, { text: "مـصـعـد كـاتـو", empty: false }],
+            [{ text: "جـسـر إنـارة", empty: false }, { text: "ربـاعـي", empty: false }],
+            [{ text: "بـيـمـات", empty: false }, { text: "بـارات", empty: false }, { text: "بـقـعـة ضـوء", empty: false }],
+            [{ text: "دانـس فـلـور", empty: false }, { text: "مـمـر دانـس", empty: false }],
+            [{ text: "طـبـالـة", empty: false }, { text: "DG + وصـل نـقـابـة", empty: false }],
+            [{ text: "تـصـويـر فـيـديـو + فـوتـو 40 كـرت مـطـبـوع", empty: false }, null],
+            [{ text: "شـاشـة LED", empty: false }, { text: "لـيـمـوزيـن", empty: false }],
+            [{ text: "دخـان", empty: false }, { text: "كـفـرات مـوبـايـل", empty: false }],
+            [{ text: "فـرقـة ررقـص", empty: false }, { text: "فـرقـة نـحـاسـيـة أو عـراضـة", empty: false }],
+            [{ text: "كـاتـو", empty: false }, { text: "خـدمـة كـاتـو", empty: false }],
+            [{ text: "كـولا", empty: false }, { text: "خـدمـة كـولا", empty: false }],
+            [{ text: "عـصـيـر", empty: false }, { text: "خـدمـة عـصـيـر", empty: false }],
+            [{ text: "قـهـوة", empty: false }, { text: "خـدمـة قـهـوة", empty: false }],
+            [{ text: "شـراب الـلـوز", empty: false }, { text: "خـدمـة شـراب الـلـوز", empty: false }],
+            [{ text: "خـدمـة عـشـاء", empty: false }, { text: "قـهـوة مـرة", empty: false }],
+            [{ text: "خـدمـة فـواكـة", empty: false }, { text: "خـدمـة مـوالـح", empty: false }],
+            [{ text: "مـمـر ورد", empty: false }, { text: "لـوح أسـمـاء", empty: false }],
+            [{ text: "سـتـانـد ذهـب", empty: false }, { text: "بـالـون عـروس", empty: false }],
+            [{ text: "ألـعـاب نـاريـة", empty: false }, null],
+            [{ text: "", customInput: true }, null],
+            [{ text: "", customInput: true }, null],
+            [{ text: "", customInput: true }, null],
+            [{ text: "", customInput: true }, null]
+        ];
+
+        function renderServicesTable() {
+            let serviceIndex = 0;
+            let htmlBuilder = '';
+
+            servicesGrid.forEach((row) => {
+                htmlBuilder += `<tr><td style="padding: 3px 5px;"><div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">`;
+
+                row.forEach((item) => {
+                    if (item) {
+                        const currentIndex = serviceIndex++;
+                        if (item.customInput) {
+                            htmlBuilder += `
+                                <div class="checkbox-cell" style="flex: 1;">
+                                    <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
+                                    <input type="text" class="input-inline srv-custom-name contract-input" data-index="${currentIndex}" placeholder="إضافة خدمة أخرى..." style="border-bottom: 1px dotted #999;">
+                                </div>
+                            `;
+                        } else {
+                            htmlBuilder += `
+                                <div class="checkbox-cell" style="flex: 1;">
+                                    <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
+                                    <span>${item.text}</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        htmlBuilder += `<div class="checkbox-cell" style="flex: 1;"><input type="checkbox" disabled style="opacity: 0.3;"> <span></span></div>`;
+                    }
+                });
+
+                const rowId = serviceIndex - 1;
+                htmlBuilder += `</div></td>
+                    <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${rowId}" value="1" oninput="calculateServices()"></td>
+                    <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${rowId}" value="0" oninput="calculateServices()"></td>
+                    <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${rowId}" readonly value="0"></td>
+                </tr>`;
+            });
+
+            document.getElementById('servicesContainer').innerHTML = htmlBuilder;
+        }
+
+        renderServicesTable();
 
         function setupButtons() {
             const bar = document.getElementById('actionBar');
@@ -294,20 +297,15 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>
                 `;
             }
-
-            // تطبيق حالة القفل/الفتح حسب العقد (جديد أم قديم)
             applyContractModeState();
         }
 
         function applyContractModeState() {
             const btnEdit = document.getElementById('btnEdit');
-
             if (!contractId) {
-                // العقد جديد: الحقول مفتوحة للكتابة فوراً، وزر التعديل معطل تماماً
                 toggleInputsLock(false);
                 if (btnEdit) btnEdit.disabled = true;
             } else {
-                // العقد قديم (محفوظ سابقاً): الحقول مقفلة، وزر التعديل مفعل لتتمكن من الضغط عليه للبدء بالتعديل
                 toggleInputsLock(true);
                 if (btnEdit) btnEdit.disabled = false;
             }
@@ -321,7 +319,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         }
 
         function enableEditing() {
-            // فتح الحقول للتعديل عند الضغط على زر تعديل للعقود القديمة
             toggleInputsLock(false);
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
@@ -345,7 +342,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             const cleanSelectedDate = toEnglishDigits(selectedDate);
             document.getElementById('event_date').value = cleanSelectedDate;
             document.getElementById('page2_date').value = cleanSelectedDate;
-            
             loadContractData();
         } else {
             alert('لم يتم تحديد التاريخ!');
@@ -393,7 +389,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
-        document.getElementById('contract_date').value = `${year}-${month}-${day}`;
+        document.querySelectorAll('[id^="contract_date"]').forEach(el => el.value = `${year}-${month}-${day}`);
 
         function calculateServices() {
             let totalExtras = 0;
@@ -409,7 +405,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
                 const qty = parseEnglishNumber(qtyInput ? qtyInput.value : 1);
                 const price = parseEnglishNumber(priceInput ? priceInput.value : 0);
-
                 const totalCell = document.getElementById(`srv_total_${idx}`);
 
                 if (check.checked) {
