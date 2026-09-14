@@ -34,7 +34,7 @@
         .calendar-header h2 { font-size: 17px; color: #2c3e50; }
         
         .header-buttons { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 7px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-nav { background: #3498db; color: white; border: none; padding: 7px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block; }
         .btn-nav:hover { background: #2980b9; }
         .logout { background: #e74c3c; }
         .logout:hover { background: #c0392b; }
@@ -136,10 +136,11 @@
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
             
-            <!-- حقل وزر البحث الذكي -->
-            <div style="display: flex; gap: 5px; width: 100%; margin-top: 5px;">
-                <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+            <!-- حقل وزر البحث الذكي مع زر إضافة عقد جديد سريع -->
+            <div style="display: flex; gap: 5px; width: 100%; margin-top: 5px; flex-wrap: wrap;">
+                <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; min-width: 140px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
                 <button class="btn-nav" onclick="searchGroom()" style="background: #27ae60;">بحث</button>
+                <a id="topAddBtn" href="contract.html" class="btn-nav" style="background: #8e44ad; display: none;">+ عقد جديد</a>
             </div>
 
             <div class="header-buttons">
@@ -148,6 +149,9 @@
                 <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 
+                <!-- زر لوحة التحكم (العودة لصفحة تسجيل الدخول / الاندكس) -->
+                <a href="index.html" class="btn-nav" style="background: #d35400;" title="العودة لوحة التحكم / تسجيل الدخول">لوحة التحكم</a>
+
                 <!-- أيقونة الجرس للإشعارات (تظهر فقط للأدمن) -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
                     <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
@@ -202,9 +206,12 @@
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
 
-        // إظهار حاوية الإشعارات للأدمن فقط
+        // إظهار حاوية الإشعارات للأدمن فقط وإظهار زر الإضافة العلوي إذا لم يكن الحساب للقراءة فقط
         if (currentUserRole === 'admin') {
             document.getElementById('notifContainer').style.display = 'inline-block';
+        }
+        if (currentUserRole !== 'read_only') {
+            document.getElementById('topAddBtn').style.display = 'inline-block';
         }
 
         let allBookingsMap = {};
@@ -218,7 +225,6 @@
                         data.forEach(item => {
                             if (!item.booking_date) return;
                             
-                            // توحيد وصياغة التاريخ بدقة لضمان المطابقة مع التقويم (يزيل الأوقات ويضمن وجود الأصفار القياسية)
                             let rawDate = item.booking_date.toString().trim().split('T')[0];
                             let dateParts = rawDate.split('-');
                             let dateKey = rawDate;
