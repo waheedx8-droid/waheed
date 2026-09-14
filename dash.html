@@ -115,7 +115,7 @@
             display: block; 
             text-decoration: none; 
             white-space: normal;     
-            overflow: hidden;        
+            overflow: hidden;     
             text-overflow: ellipsis;  
             max-width: 100%;
             line-height: 1.2;
@@ -216,7 +216,19 @@
                     if (!error && data) {
                         allBookingsMap = {};
                         data.forEach(item => {
-                            const dateKey = item.booking_date;
+                            if (!item.booking_date) return;
+                            
+                            // توحيد وصياغة التاريخ بدقة لضمان المطابقة مع التقويم (يزيل الأوقات ويضمن وجود الأصفار القياسية)
+                            let rawDate = item.booking_date.toString().trim().split('T')[0];
+                            let dateParts = rawDate.split('-');
+                            let dateKey = rawDate;
+                            if (dateParts.length === 3) {
+                                const pYear = dateParts[0];
+                                const pMonth = String(dateParts[1]).padStart(2, '0');
+                                const pDay = String(dateParts[2]).padStart(2, '0');
+                                dateKey = `${pYear}-${pMonth}-${pDay}`;
+                            }
+
                             if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
                             
                             let finalColor = item.box_color || '#27ae60';
