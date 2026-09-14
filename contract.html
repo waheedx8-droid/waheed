@@ -22,22 +22,43 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     position: relative; 
 }
 
-.info-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; font-size: 14px; }
+/* ترويسة الصفحة (الاسم واللوغو) */
+.contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+.contract-header .brand-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+    letter-spacing: 0.5px;
+}
+.contract-header .logo-img {
+    max-height: 45px;
+    max-width: 100px;
+    object-fit: contain;
+}
+
+.info-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; font-size: 14px; }
 .info-row { display: flex; align-items: center; width: 100%; gap: 10px; }
 .info-row label { min-width: 90px; font-weight: bold; font-size: 13px; }
 .info-row input { flex: 1; border: none; border-bottom: 1px dotted #000; outline: none; padding: 4px; font-size: 14px; width: 100%; }
 
-.main-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; overflow-x: auto; display: block; }
-.main-table th, .main-table td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+.main-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; overflow-x: auto; display: block; }
+.main-table th, .main-table td { border: 1px solid #000; padding: 5px; vertical-align: top; }
 .main-table th { background-color: #f8f9fa; text-align: center; }
 
-.signatures { margin-top: 20px; }
-.signatures .info-row { margin-bottom: 12px; }
+.signatures { margin-top: 15px; }
+.signatures .info-row { margin-bottom: 10px; }
 
-.deposit-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+.deposit-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .deposit-row .info-row { width: 100%; margin-bottom: 0; }
 
-.services-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+.services-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; }
 .services-table th, .services-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; vertical-align: middle; }
 .services-table th { background-color: #f8f9fa; }
 .checkbox-cell { text-align: right !important; display: flex; align-items: center; gap: 6px; }
@@ -91,7 +112,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
 @media print {
     body { background: none; padding: 0; }
-    .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 15mm; }
+    .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 12mm; }
     .actions-bar { display: none !important; }
     .no-print { display: none !important; }
 }
@@ -104,14 +125,21 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
     <!-- الصفحة الأولى من العقد -->
     <div class="page">
-        <div class="info-grid" style="margin-top: 10px;">
+        <!-- ترويسة الصفحة الأولى -->
+        <div class="contract-header">
+            <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
+            <!-- ضع رابط أو مسار صورة اللوجو الخاص بك هنا بدل placeholder -->
+            <img src="رابط_اللوجو_هنا.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+        </div>
+
+        <div class="info-grid">
             <div class="info-row"><label>الصـالـة :</label><input type="text" id="hall_name" class="contract-input"></div>
             <div class="info-row"><label>الـزبـون :</label><input type="text" id="groom_name" class="contract-input"></div>
             
-            <div class="info-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+            <div class="info-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
                 <div style="flex: 1;">
                     <label style="font-size: 13px; font-weight: bold;">لون المربع:</label>
-                    <select id="boxColor" class="input-inline contract-input" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+                    <select id="boxColor" class="input-inline contract-input" style="width: 100%; padding: 4px; border-radius: 4px; border: 1px solid #ccc;">
                         <option value="#27ae60">أخضر</option>
                         <option value="#e74c3c">أحمر</option>
                         <option value="#8e44ad">بنفسجي</option>
@@ -171,12 +199,18 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             <div class="info-row"><label>حجز من قبل :</label><input type="text" id="booked_by" class="contract-input"></div>
             <div class="info-row"><label>توقيع المنظم :</label><input type="text" class="contract-input"></div>
             <div class="info-row"><label>توقيع الزبون :</label><input type="text" class="contract-input"></div>
-            <div class="info-row" style="margin-top: 20px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
+            <div class="info-row" style="margin-top: 10px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
         </div>
     </div>
 
     <!-- الصفحة الثانية من العقد -->
     <div class="page">
+        <!-- ترويسة الصفحة الثانية -->
+        <div class="contract-header">
+            <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
+            <img src="رابط_اللوجو_هنا.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold;">
             <div>يوم : <input type="text" id="event_day" class="contract-input" style="border: none; border-bottom: 1px dotted #000; outline: none; width: 120px; text-align: center;"></div>
             <div>التاريخ : <input type="text" id="page2_date" class="readonly-field en-num" readonly style="border: none; border-bottom: 1px dotted #000; text-align: center; width: 120px;"></div>
@@ -236,12 +270,12 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         `;
                     }
 
-                    // استبدال الأسطر الثلاثة الأخيرة بمربع ملاحظات قابل للكتابة
+                    // مربع ملاحظات الخدمات
                     htmlBuilder += `
                         <tr>
-                            <td colspan="4" style="text-align: right; padding: 8px;">
-                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">ملاحظات الخدمات:</label>
-                                <textarea id="general_notes5" class="contract-input" style="width: 100%; height: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+                            <td colspan="4" style="text-align: right; padding: 6px;">
+                                <label style="font-weight: bold; display: block; margin-bottom: 3px;">ملاحظات الخدمات:</label>
+                                <textarea id="general_notes5" class="contract-input" style="width: 100%; height: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;" placeholder="اكتب ملاحظاتك هنا..."></textarea>
                             </td>
                         </tr>
                     `;
@@ -340,9 +374,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             try {
                 const { error } = await supabaseClient
                     .from('bookings_table')
-                    .update({ 
-                        booking_date: cleanNewDate
-                    })
+                    .update({ booking_date: cleanNewDate })
                     .eq('id', contractId);
 
                 if (error) throw error;
@@ -445,7 +477,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 convertInputToEnglish(priceInput);
 
                 const qty = parseEnglishNumber(qtyInput ? qtyInput.value : 1);
-                const price = parseEnglishNumber(priceInput ? priceInput.value : 0);
+                const price = parseEnglishNumber(priceInfo = priceInput ? priceInput.value : 0);
 
                 const totalCell = document.getElementById(`srv_total_${idx}`);
 
