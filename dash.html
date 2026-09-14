@@ -136,11 +136,10 @@
         <div class="calendar-header">
             <h2 id="monthYearDisplay"></h2>
             
-            <!-- حقل وزر البحث الذكي مع زر إضافة عقد جديد سريع -->
+            <!-- حقل وزر البحث الذكي فقط -->
             <div style="display: flex; gap: 5px; width: 100%; margin-top: 5px; flex-wrap: wrap;">
                 <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; min-width: 140px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
                 <button class="btn-nav" onclick="searchGroom()" style="background: #27ae60;">بحث</button>
-                <a id="topAddBtn" href="contract.html" class="btn-nav" style="background: #8e44ad; display: none;">+ عقد جديد</a>
             </div>
 
             <div class="header-buttons">
@@ -206,12 +205,9 @@
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
 
-        // إظهار حاوية الإشعارات للأدمن فقط وإظهار زر الإضافة العلوي إذا لم يكن الحساب للقراءة فقط
+        // إظهار حاوية الإشعارات للأدمن فقط
         if (currentUserRole === 'admin') {
             document.getElementById('notifContainer').style.display = 'inline-block';
-        }
-        if (currentUserRole !== 'read_only') {
-            document.getElementById('topAddBtn').style.display = 'inline-block';
         }
 
         let allBookingsMap = {};
