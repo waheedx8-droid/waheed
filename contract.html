@@ -328,7 +328,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
 
-        // --- دالة نقل الحجز المحدثة والمضبوطة تماماً ---
+        // --- دالة نقل الحجز المصححة بالكامل ---
         async function moveBookingDate() {
             if (!contractId) {
                 alert('لا يمكن نقل حجز غير محفوظ بعد!');
@@ -361,14 +361,19 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
                 if (error) throw error;
 
-                await supabaseClient.from('notifications').insert([
-                    {
-                        title: "نقل حجز",
-                        message: `تم نقل حجز العريس إلى تاريخ جديد: ${cleanNewDate}`,
-                        link: `dash.html?jumpDate=${cleanNewDate}&jumpId=${contractId}`,
-                        is_read: false
-                    }
-                ]).catch(err => console.log('Notice error:', err));
+                // تم تعديل طريقة معالجة الإشعار لتفادي خطأ catch
+                try {
+                    await supabaseClient.from('notifications').insert([
+                        {
+                            title: "نقل حجز",
+                            message: `تم نقل حجز العريس إلى تاريخ جديد: ${cleanNewDate}`,
+                            link: `dash.html?jumpDate=${cleanNewDate}&jumpId=${contractId}`,
+                            is_read: false
+                        }
+                    ]);
+                } catch (err) {
+                    console.log('Notice error:', err);
+                }
 
                 alert('تم نقل الحجز بنجاح إلى التاريخ الجديد!');
                 window.location.href = `contract.html?date=${cleanNewDate}&id=${contractId}`;
@@ -564,14 +569,19 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 toggleInputsLock(true);
                 applyContractModeState();
 
-                await supabaseClient.from('notifications').insert([
-                    {
-                        title: "تنبيه عقد جديد/تعديل",
-                        message: `قام المستخدم بتعديل أو إضافة عقد للعريس: ${groomName}`,
-                        link: `dash.html?jumpDate=${eventDate}&jumpId=${savedBookingId || ''}`,
-                        is_read: false
-                    }
-                ]).catch(err => console.log('Notice error:', err));
+                // تم تعديل إرسال الإشعار لتفادي مشكلة catch
+                try {
+                    await supabaseClient.from('notifications').insert([
+                        {
+                            title: "تنبيه عقد جديد/تعديل",
+                            message: `قام المستخدم بتعديل أو إضافة عقد للعريس: ${groomName}`,
+                            link: `dash.html?jumpDate=${eventDate}&jumpId=${savedBookingId || ''}`,
+                            is_read: false
+                        }
+                    ]);
+                } catch (err) {
+                    console.log('Notice error:', err);
+                }
 
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
                 window.location.replace('dash.html');
