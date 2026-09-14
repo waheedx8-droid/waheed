@@ -116,8 +116,15 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 .btn-back { background: #7f8c8d; }
 
 @media print {
-    body { background: none; padding: 0; }
-    .page { width: 210mm; min-height: 297mm; max-width: none; box-shadow: none; margin: 0; page-break-after: always; padding: 12mm; }
+    body { background: none; padding: 0; direction: rtl; }
+    .page { 
+        width: 100%; 
+        max-width: 100%; 
+        box-shadow: none; 
+        margin: 0; 
+        padding: 10mm; 
+        page-break-after: always; 
+    }
     .actions-bar { display: none !important; }
     .no-print { display: none !important; }
 }
