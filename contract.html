@@ -22,7 +22,7 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     position: relative; 
 }
 
-/* ترويسة الصفحة (الاسم واللوغو) */
+/* ترويسة الصفحة المعدلة (الاسم بالمنتصف واللوغو على اليسار) */
 .contract-header {
     display: flex;
     justify-content: space-between;
@@ -30,15 +30,20 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     border-bottom: 2px solid #2c3e50;
     padding-bottom: 8px;
     margin-bottom: 12px;
+    position: relative;
+}
+.contract-header .header-spacer {
+    width: 60px; /* عنصر وهمي لموازنة التوسيط بدقة */
 }
 .contract-header .brand-title {
-    font-size: 20px;
+    font-size: 21px;
     font-weight: bold;
     color: #2c3e50;
-    letter-spacing: 0.5px;
+    text-align: center;
+    flex: 1;
 }
 .contract-header .logo-img {
-    max-height: 45px;
+    max-height: 50px;
     max-width: 100px;
     object-fit: contain;
 }
@@ -127,8 +132,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     <div class="page">
         <!-- ترويسة الصفحة الأولى -->
         <div class="contract-header">
-            <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
-            <!-- ضع رابط أو مسار صورة اللوجو الخاص بك هنا بدل placeholder -->
+            <div class="header-spacer"></div>
+            <div class="brand-title">شهبا روز</div>
             <img src="ww.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
         </div>
 
@@ -207,6 +212,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     <div class="page">
         <!-- ترويسة الصفحة الثانية -->
         <div class="contract-header">
+            <div class="header-spacer"></div>
             <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
             <img src="رابط_اللوجو_هنا.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
         </div>
