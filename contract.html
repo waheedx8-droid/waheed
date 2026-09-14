@@ -22,7 +22,7 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     position: relative; 
 }
 
-/* ترويسة الصفحة المعدلة (الاسم بالمنتصف واللوغو على اليسار) */
+/* ترويسة الصفحة المحدثة (الاسم بالمنتصف تماماً واللوغو على اليسار) */
 .contract-header {
     display: flex;
     justify-content: space-between;
@@ -33,7 +33,7 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     position: relative;
 }
 .contract-header .header-spacer {
-    width: 60px; /* عنصر وهمي لموازنة التوسيط بدقة */
+    width: 60px; /* عنصر لموازنة التوسيط بدقة */
 }
 .contract-header .brand-title {
     font-size: 21px;
@@ -133,8 +133,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         <!-- ترويسة الصفحة الأولى -->
         <div class="contract-header">
             <div class="header-spacer"></div>
-            <div class="brand-title">شهبا روز</div>
-            <img src="ww.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+            <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
+            <img src="رابط_اللوجو_هنا.png" alt="Logo" class="logo-img">
         </div>
 
         <div class="info-grid">
@@ -213,8 +213,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         <!-- ترويسة الصفحة الثانية -->
         <div class="contract-header">
             <div class="header-spacer"></div>
-            <div class="brand-title">شهبا روز</div>
-            <img src="ww.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+            <div class="brand-title">صالة شهباروز للحفلات والتنظيم</div>
+            <img src="رابط_اللوجو_هنا.png" alt="Logo" class="logo-img">
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold;">
@@ -483,7 +483,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 convertInputToEnglish(priceInput);
 
                 const qty = parseEnglishNumber(qtyInput ? qtyInput.value : 1);
-                const price = parseEnglishNumber(priceInfo = priceInput ? priceInput.value : 0);
+                const price = parseEnglishNumber(priceInput ? priceInput.value : 0);
 
                 const totalCell = document.getElementById(`srv_total_${idx}`);
 
