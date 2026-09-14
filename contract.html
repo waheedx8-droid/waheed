@@ -352,7 +352,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             }
 
             try {
-                // تحديث التاريخ في الحقول المرتبطة في قاعدة البيانات (تاريخ الحجز وتاريخ الصفحة الثانية)
                 const { error } = await supabaseClient
                     .from('bookings_table')
                     .update({ 
@@ -362,8 +361,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
                 if (error) throw error;
 
-                // إرسال إشعار بالتحديث
-                await supabaseClient.from('notifications'].insert([
+                await supabaseClient.from('notifications').insert([
                     {
                         title: "نقل حجز",
                         message: `تم نقل حجز العريس إلى تاريخ جديد: ${cleanNewDate}`,
@@ -373,8 +371,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 ]).catch(err => console.log('Notice error:', err));
 
                 alert('تم نقل الحجز بنجاح إلى التاريخ الجديد!');
-                
-                // إعادة توجيه الصفحة لتحديث البيانات بالكامل على التاريخ الجديد
                 window.location.href = `contract.html?date=${cleanNewDate}&id=${contractId}`;
 
             } catch (e) {
