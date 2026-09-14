@@ -148,8 +148,8 @@
                 <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 
-                <!-- زر لوحة التحكم (العودة لصفحة تسجيل الدخول / الاندكس) -->
-                <a href="index.html" class="btn-nav" style="background: #d35400;" title="العودة لوحة التحكم / تسجيل الدخول">لوحة التحكم</a>
+                <!-- زر لوحة التحكم (يظهر للأدمن فقط) -->
+                <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="العودة لوحة التحكم / تسجيل الدخول">لوحة التحكم</a>
 
                 <!-- أيقونة الجرس للإشعارات (تظهر فقط للأدمن) -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
@@ -196,18 +196,15 @@
         let currentDate = new Date(); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
-        // عرض نوع الصلاحية الحالي
+        // عرض نوع الصلاحية الحالي وتفعيل أزرار الأدمن فقط
         if (currentUserRole === 'admin') {
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
+            document.getElementById('notifContainer').style.display = 'inline-block';
+            document.getElementById('dashboardBtn').style.display = 'inline-block'; // يظهر للأدمن فقط هنا
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
         } else {
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
-        }
-
-        // إظهار حاوية الإشعارات للأدمن فقط
-        if (currentUserRole === 'admin') {
-            document.getElementById('notifContainer').style.display = 'inline-block';
         }
 
         let allBookingsMap = {};
