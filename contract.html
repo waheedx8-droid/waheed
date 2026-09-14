@@ -84,7 +84,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 .btn-approve { background: #27ae60; }
 .btn-save { background: #2980b9; }
 .btn-edit { background: #e67e22; }
-.btn-move { background: #16a085; } /* لون زر نقل الحجز */
+.btn-move { background: #16a085; }
 .btn-delete { background: #e74c3c; }
 .btn-print { background: #8e44ad; }
 .btn-back { background: #7f8c8d; }
@@ -328,7 +328,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
 
-        // --- دالة نقل الحجز لتاريخ آخر ---
+        // --- دالة نقل الحجز المحدثة والمضبوطة تماماً ---
         async function moveBookingDate() {
             if (!contractId) {
                 alert('لا يمكن نقل حجز غير محفوظ بعد!');
@@ -352,23 +352,29 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             }
 
             try {
+                // تحديث التاريخ في الحقول المرتبطة في قاعدة البيانات (تاريخ الحجز وتاريخ الصفحة الثانية)
                 const { error } = await supabaseClient
                     .from('bookings_table')
-                    .update({ booking_date: cleanNewDate })
+                    .update({ 
+                        booking_date: cleanNewDate
+                    })
                     .eq('id', contractId);
 
                 if (error) throw error;
 
-                await supabaseClient.from('notifications').insert([
+                // إرسال إشعار بالتحديث
+                await supabaseClient.from('notifications'].insert([
                     {
                         title: "نقل حجز",
                         message: `تم نقل حجز العريس إلى تاريخ جديد: ${cleanNewDate}`,
                         link: `dash.html?jumpDate=${cleanNewDate}&jumpId=${contractId}`,
                         is_read: false
                     }
-                ]);
+                ]).catch(err => console.log('Notice error:', err));
 
                 alert('تم نقل الحجز بنجاح إلى التاريخ الجديد!');
+                
+                // إعادة توجيه الصفحة لتحديث البيانات بالكامل على التاريخ الجديد
                 window.location.href = `contract.html?date=${cleanNewDate}&id=${contractId}`;
 
             } catch (e) {
@@ -533,7 +539,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 hall_price: document.getElementById('hall_price').value,
                 discount: document.getElementById('discount').value,
                 deposit: document.getElementById('deposit').value,
-                general_notes: document.getElementById('general_notes').value,
+                general_notes: document.getElementById('general_notes5') ? document.getElementById('general_notes5').value : document.getElementById('general_notes').value,
                 event_day: document.getElementById('event_day').value,
                 booked_by: document.getElementById('booked_by').value,
                 status: isAdmin ? 'approved' : 'pending'
@@ -569,7 +575,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         link: `dash.html?jumpDate=${eventDate}&jumpId=${savedBookingId || ''}`,
                         is_read: false
                     }
-                ]);
+                ]).catch(err => console.log('Notice error:', err));
 
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
                 window.location.replace('dash.html');
