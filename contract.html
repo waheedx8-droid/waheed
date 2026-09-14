@@ -38,7 +38,7 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
 .deposit-row .info-row { width: 100%; margin-bottom: 0; }
 
 .services-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-.services-table th, .services-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
+.services-table th, .services-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; vertical-align: middle; }
 .services-table th { background-color: #f8f9fa; }
 .checkbox-cell { text-align: right !important; display: flex; align-items: center; gap: 6px; }
 .checkbox-cell input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
@@ -185,79 +185,66 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         <table class="services-table">
             <thead>
                 <tr>
-                    <th style="width: 45%;">البيــــــــان</th>
+                    <th style="width: 40%;">البيــــــــان</th>
                     <th style="width: 15%;">العدد</th>
                     <th style="width: 20%;">السعر</th>
-                    <th style="width: 20%;">المجموع</th>
+                    <th style="width: 25%;">المجموع</th>
                 </tr>
             </thead>
             <tbody id="servicesContainer">
                 <script>
-                    const servicesGrid = [
-                        [{ text: "كوشـة", empty: false }, null],
-                        [{ text: "أرجـمـانـات", empty: false }, { text: "زيـنـة مدخـل", empty: false }],
-                        [{ text: "خـدمـة بـنـات", empty: false }, { text: "خـدمـة شـبـاب", empty: false }],
-                        [{ text: "درج مـلـكـي", empty: false }, { text: "مـصـعـد كـاتـو", empty: false }],
-                        [{ text: "جـسـر إنـارة", empty: false }, { text: "ربـاعـي", empty: false }],
-                        [{ text: "بـيـمـات", empty: false }, { text: "بـارات", empty: false }, { text: "بـقـعـة ضـوء", empty: false }],
-                        [{ text: "دانـس فـلـور", empty: false }, { text: "مـمـر دانـس", empty: false }],
-                        [{ text: "طـبـالـة", empty: false }, { text: "DG + وصـل نـقـابـة", empty: false }],
-                        [{ text: "تـصـويـر فـيـديـو + فـوتـو 40 كـرت مـطـبـوع", empty: false }, null],
-                        [{ text: "شـاشـة LED", empty: false }, { text: "لـيـمـوزيـن", empty: false }],
-                        [{ text: "دخـان", empty: false }, { text: "كـفـرات مـوبـايـل", empty: false }],
-                        [{ text: "فـرقـة ررقـص", empty: false }, { text: "فـرقـة نـحـاسـيـة أو عـراضـة", empty: false }],
-                        [{ text: "كـاتـو", empty: false }, { text: "خـدمـة كـاتـو", empty: false }],
-                        [{ text: "كـولا", empty: false }, { text: "خـدمـة كـولا", empty: false }],
-                        [{ text: "عـصـيـر", empty: false }, { text: "خـدمـة عـصـيـر", empty: false }],
-                        [{ text: "قـهـوة", empty: false }, { text: "خـدمـة قـهـوة", empty: false }],
-                        [{ text: "شـراب الـلـوز", empty: false }, { text: "خـدمـة شـراب الـلـوز", empty: false }],
-                        [{ text: "خـدمـة عـشـاء", empty: false }, { text: "قـهـوة مـرة", empty: false }],
-                        [{ text: "خـدمـة فـواكـة", empty: false }, { text: "خـدمـة مـوالـح", empty: false }],
-                        [{ text: "مـمـر ورد", empty: false }, { text: "لـوح أسـمـاء", empty: false }],
-                        [{ text: "سـتـانـد ذهـب", empty: false }, { text: "بـالـون عـروس", empty: false }],
-                        [{ text: "ألـعـاب نـاريـة", empty: false }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null],
-                        [{ text: "", customInput: true }, null]
+                    const servicesList = [
+                        "كوشـة", "أرجـمـانـات", "زيـنـة مدخـل", "خـدمـة بـنـات", "خـدمـة شـبـاب",
+                        "درج مـلـكـي", "مـصـعـد كـاتـو", "جـسـر إنـارة", "ربـاعـي", "بـيـمـات",
+                        "بـارات", "بـقـعـة ضـوء", "دانـس فـلـور", "مـمـر دانـس", "طـبـالـة",
+                        "DG + وصـل نـقـابـة", "تـصـويـر فـيـديـو + فـوتـو 40 كـرت مـطـبـوع", "شـاشـة LED",
+                        "لـيـمـوزيـن", "دخـان", "كـفـرات مـوبـايـل", "فـرقـة ررقـص", "فـرقـة نـحـاسـيـة أو عـراضـة",
+                        "كـاتـو", "خـدمـة كـاتـو", "كـولا", "خـدمـة كـولا", "عـصـيـر", "خـدمـة عـصـيـر",
+                        "قـهـوة", "خـدمـة قـهـوة", "شـراب الـلـوز", "خـدمـة شـراب الـلـوز", "خـدمـة عـشـاء",
+                        "قـهـوة مـرة", "خـدمـة فـواكـة", "خـدمـة مـوالـح", "مـمـر ورد", "لـوح أسـمـاء",
+                        "سـتـانـد ذهـب", "بـالـون عـروس", "ألـعـاب نـاريـة"
                     ];
 
-                    let serviceIndex = 0;
                     let htmlBuilder = '';
-
-                    servicesGrid.forEach((row) => {
-                        htmlBuilder += `<tr><td style="padding: 3px 5px;"><div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">`;
-
-                        row.forEach((item) => {
-                            if (item) {
-                                const currentIndex = serviceIndex++;
-                                if (item.customInput) {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <input type="text" class="input-inline srv-custom-name contract-input" data-index="${currentIndex}" placeholder="إضافة خدمة أخرى..." style="border-bottom: 1px dotted #999;">
-                                        </div>
-                                    `;
-                                } else {
-                                    htmlBuilder += `
-                                        <div class="checkbox-cell" style="flex: 1;">
-                                            <input type="checkbox" class="srv-check contract-input" data-index="${currentIndex}" onchange="calculateServices()"> 
-                                            <span>${item.text}</span>
-                                        </div>
-                                    `;
-                                }
-                            } else {
-                                htmlBuilder += `<div class="checkbox-cell" style="flex: 1;"><input type="checkbox" disabled style="opacity: 0.3;"> <span></span></div>`;
-                            }
-                        });
-
-                        const rowId = serviceIndex - 1;
-                        htmlBuilder += `</div></td>
-                            <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${rowId}" value="1" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${rowId}" value="0" oninput="calculateServices()"></td>
-                            <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${rowId}" readonly value="0"></td>
-                        </tr>`;
+                    servicesList.forEach((serviceName, idx) => {
+                        htmlBuilder += `
+                            <tr>
+                                <td class="checkbox-cell">
+                                    <input type="checkbox" class="srv-check contract-input" data-index="${idx}" onchange="calculateServices()">
+                                    <span>${serviceName}</span>
+                                </td>
+                                <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${idx}" value="1" oninput="calculateServices()"></td>
+                                <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${idx}" value="0" oninput="calculateServices()"></td>
+                                <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${idx}" readonly value="0"></td>
+                            </tr>
+                        `;
                     });
+
+                    // إضافة 4 خانات مخصصة فارغة
+                    for (let i = 0; i < 4; i++) {
+                        const idx = servicesList.length + i;
+                        htmlBuilder += `
+                            <tr>
+                                <td class="checkbox-cell">
+                                    <input type="checkbox" class="srv-check contract-input" data-index="${idx}" onchange="calculateServices()">
+                                    <input type="text" class="input-inline srv-custom-name contract-input" data-index="${idx}" placeholder="إضافة خدمة أخرى..." style="border-bottom: 1px dotted #999;">
+                                </td>
+                                <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${idx}" value="1" oninput="calculateServices()"></td>
+                                <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${idx}" value="0" oninput="calculateServices()"></td>
+                                <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${idx}" readonly value="0"></td>
+                            </tr>
+                        `;
+                    }
+
+                    // استبدال الأسطر الثلاثة الأخيرة بمربع ملاحظات قابل للكتابة
+                    htmlBuilder += `
+                        <tr>
+                            <td colspan="4" style="text-align: right; padding: 8px;">
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">ملاحظات الخدمات:</label>
+                                <textarea id="general_notes5" class="contract-input" style="width: 100%; height: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+                            </td>
+                        </tr>
+                    `;
 
                     document.write(htmlBuilder);
                 </script>
@@ -328,7 +315,6 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
         }
 
-        // --- دالة نقل الحجز (تم تنظيفها تماماً) ---
         async function moveBookingDate() {
             if (!contractId) {
                 alert('لا يمكن نقل حجز غير محفوظ بعد!');
@@ -426,6 +412,9 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         document.getElementById('discount').value = data.discount || '0';
                         document.getElementById('deposit').value = data.deposit || '0';
                         document.getElementById('general_notes').value = data.general_notes || '';
+                        if(document.getElementById('general_notes5')) {
+                            document.getElementById('general_notes5').value = data.general_notes || '';
+                        }
                         document.getElementById('booked_by').value = data.booked_by || '';
                         if(data.event_day) document.getElementById('event_day').value = data.event_day;
                         
@@ -511,6 +500,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 return;
             }
 
+            const notesVal = document.getElementById('general_notes5') ? document.getElementById('general_notes5').value : document.getElementById('general_notes').value;
+
             const payload = {
                 booking_date: eventDate,
                 groom_name: groomName,
@@ -526,7 +517,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 hall_price: document.getElementById('hall_price').value,
                 discount: document.getElementById('discount').value,
                 deposit: document.getElementById('deposit').value,
-                general_notes: document.getElementById('general_notes5') ? document.getElementById('general_notes5').value : document.getElementById('general_notes').value,
+                general_notes: notesVal,
                 event_day: document.getElementById('event_day').value,
                 booked_by: document.getElementById('booked_by').value,
                 status: isAdmin ? 'approved' : 'pending'
