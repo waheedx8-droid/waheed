@@ -126,16 +126,14 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         page-break-after: always; 
     }
     
-    /* === التعديل المطلوب هنا فقط === */
     .contract-header .logo-img {
-        max-height: 90px !important; /* زيادة الارتفاع الأقصى للوجو */
-        max-width: 180px !important; /* زيادة العرض الأقصى للوجو */
+        max-height: 90px !important;
+        max-width: 180px !important;
         width: auto !important;
     }
 
     .actions-bar { display: none !important; }
     .no-print { display: none !important; }
-}
 }
     </style>
 </head>
@@ -472,7 +470,22 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         document.getElementById('booked_by').value = data.booked_by || '';
                         if(data.event_day) document.getElementById('event_day').value = data.event_day;
                         
-                        calculateMainTable();
+                        // === استرجاع بيانات وتفاصيل الملحقات والخدمات ===
+                        if (data.services_data && Array.isArray(data.services_data)) {
+                            data.services_data.forEach(item => {
+                                const check = document.querySelector(`.srv-check[data-index="${item.index}"]`);
+                                const qtyInput = document.querySelector(`.srv-qty[data-index="${item.index}"]`);
+                                const priceInput = document.querySelector(`.srv-price[data-index="${item.index}"]`);
+                                const customNameInput = document.querySelector(`.srv-custom-name[data-index="${item.index}"]`);
+
+                                if (check) check.checked = item.checked;
+                                if (qtyInput) qtyInput.value = item.qty;
+                                if (priceInput) priceInput.value = item.price;
+                                if (customNameInput && item.customName) customNameInput.value = item.customName;
+                            });
+                        }
+
+                        calculateServices();
                     }
                 }
             } catch (e) {
@@ -556,6 +569,24 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
 
             const notesVal = document.getElementById('general_notes5') ? document.getElementById('general_notes5').value : document.getElementById('general_notes').value;
 
+            // === تجهيز بيانات الملحقات والخدمات للحفظ في عمود JSONB ===
+            const servicesPayload = [];
+            const checks = document.querySelectorAll('.srv-check');
+            checks.forEach(check => {
+                const idx = check.getAttribute('data-index');
+                const qtyInput = document.querySelector(`.srv-qty[data-index="${idx}"]`);
+                const priceInput = document.querySelector(`.srv-price[data-index="${idx}"]`);
+                const customNameInput = document.querySelector(`.srv-custom-name[data-index="${idx}"]`);
+                
+                servicesPayload.push({
+                    index: idx,
+                    checked: check.checked,
+                    qty: qtyInput ? qtyInput.value : "1",
+                    price: priceInput ? priceInput.value : "0",
+                    customName: customNameInput ? customNameInput.value : ""
+                });
+            });
+
             const payload = {
                 booking_date: eventDate,
                 groom_name: groomName,
@@ -574,6 +605,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 general_notes: notesVal,
                 event_day: document.getElementById('event_day').value,
                 booked_by: document.getElementById('booked_by').value,
+                services_data: servicesPayload, // إرسال تفاصيل الملحقات والخدمات مع الحفظ
                 status: isAdmin ? 'approved' : 'pending'
             };
 
