@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>شهباروز - عقد الحجز والتنظيم</title>
-    <!-- مكتبة Supabase JS الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ضبط حقول الأرقام لتتوسع وتستوعب الأرقام الكبيرة وتمنع اختفائها */
 .main-table input.en-num, 
 .readonly-field.en-num,
 .deposit-row input.en-num {
@@ -47,13 +45,11 @@ body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: mani
     font-weight: bold;
     color: #2c3e50;
     text-align: center;
-    flex: 1;
-}
+    flex: 1;}
 .contract-header .logo-img {
     max-height: 75px;
     max-width: 200px;
-    object-fit: contain;
-}
+    object-fit: contain;}
 .info-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 13px; }
 .info-row { display: flex; align-items: center; width: 100%; gap: 10px; }
 .info-row label { min-width: 90px; font-weight: bold; font-size: 12px; }
@@ -88,8 +84,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    justify-content: center;
-}
+    justify-content: center;}
 .btn-action {
     color: #fff;
     border: none;
@@ -100,13 +95,11 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
     cursor: pointer;
     flex: 1;
     min-width: 90px;
-    transition: background 0.2s;
-}
+    transition: background 0.2s;}
 .btn-action:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    background: #bdc3c7 !important;
-}
+    background: #bdc3c7 !important;}
 .btn-approve { background: #27ae60; }
 .btn-save { background: #2980b9; }
 .btn-edit { background: #e67e22; }
@@ -122,23 +115,18 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
         box-shadow: none; 
         margin: 0; 
         padding: 8mm 6mm 6mm 6mm !important; 
-        page-break-after: always; 
-    }
+        page-break-after: always;  }
     .contract-header .logo-img {
         max-height: 90px !important;
         max-width: 180px !important;
-        width: auto !important;
-    }
+        width: auto !important;  }
     .actions-bar { display: none !important; }
-    .no-print { display: none !important; }
-}
+    .no-print { display: none !important; }}
     </style>
 </head>
 <body>
     <div class="actions-bar no-print" id="actionBar"></div>
-    <!-- الصفحة الأولى من العقد -->
     <div class="page">
-        <!-- ترويسة الصفحة الأولى -->
         <div class="contract-header">
             <div class="header-spacer"></div>
             <div class="brand-title">شهبا روز</div>
@@ -209,9 +197,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             <div class="info-row" style="margin-top: 5px;"><label>تاريخ :</label><input type="text" id="contract_date" class="readonly-field en-num" readonly></div>
         </div>
     </div>
-    <!-- الصفحة الثانية من العقد -->
     <div class="page">
-        <!-- ترويسة الصفحة الثانية -->
         <div class="contract-header">
             <div class="header-spacer"></div>
             <div class="brand-title">شهبا روز</div>
@@ -240,8 +226,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         "كـاتـو", "خـدمـة كـاتـو", "كـولا", "خـدمـة كـولا", "عـصـيـر", "خـدمـة عـصـيـر",
                         "قـهـوة", "خـدمـة قـهـوة", "شـراب الـلـوز", "خـدمـة شـراب الـلـوز", "خـدمـة عـشـاء",
                         "قـهـوة مـرة", "خـدمـة فـواكـة", "خـدمـة مـوالـح", "لـوح أسـمـاء",
-                        "سـتـانـد ذهـب", "ألـعـاب نـاريـة"
-                    ];
+                        "سـتـانـد ذهـب", "ألـعـاب نـاريـة"                 ];
                     let htmlBuilder = '';
                     servicesList.forEach((serviceName, idx) => {
                         htmlBuilder += `
@@ -253,8 +238,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                                 <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${idx}" value="1" oninput="calculateServices()"></td>
                                 <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${idx}" value="0" oninput="calculateServices()"></td>
                                 <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${idx}" readonly value="0"></td>
-                            </tr>`;
-                    });
+                            </tr>`;    });
                     for (let i = 0; i < 4; i++) {
                         const idx = servicesList.length + i;
                         htmlBuilder += `
@@ -266,8 +250,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                                 <td><input type="text" class="input-inline srv-qty en-num contract-input" data-index="${idx}" value="1" oninput="calculateServices()"></td>
                                 <td><input type="text" class="input-inline srv-price en-num contract-input" data-index="${idx}" value="0" oninput="calculateServices()"></td>
                                 <td><input type="text" class="input-inline srv-total readonly-field en-num" id="srv_total_${idx}" readonly value="0"></td>
-                            </tr>`;
-                    }
+                            </tr>`;   }
                     htmlBuilder += `
                         <tr>
                             <td colspan="4" style="text-align: right; padding: 4px;">
@@ -306,10 +289,8 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     <button class="btn-action btn-move" id="btnMove" onclick="moveBookingDate()">نقل الحجز</button>
                     <button class="btn-action btn-save" id="btnSave" onclick="saveContract(false)">حفظ</button>
                     <button class="btn-action btn-print" onclick="window.print()">طباعة العقد</button>
-                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>`;
-            }
-            applyContractModeState();
-        }
+                    <button class="btn-action btn-back" onclick="window.location.href='dash.html'">العودة للتقويم</button>`; }
+            applyContractModeState();  }
         function applyContractModeState() {
             const btnEdit = document.getElementById('btnEdit');
             const btnMove = document.getElementById('btnMove');
@@ -320,61 +301,65 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             } else {
                 toggleInputsLock(true);
                 if (btnEdit) btnEdit.disabled = false;
-                if (btnMove) btnMove.disabled = false;
-            }
-        }
+                if (btnMove) btnMove.disabled = false;    }      }
         function toggleInputsLock(lock) {
             const inputs = document.querySelectorAll('.contract-input');
             inputs.forEach(input => {
                 input.disabled = lock;
-            });
-        }
+            });   }
         function enableEditing() {
             toggleInputsLock(false);
-            alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');
-        }
-
+            alert('تم تفعيل وضع التعديل، يمكنك الآن تعديل بيانات العقد.');   }
+        
         async function moveBookingDate() {
             if (!contractId) {
                 alert('لا يمكن نقل حجز غير محفوظ بعد!');
-                return;
-            }
+                return; }
             const currentEventDate = document.getElementById('event_date').value;
             const newDateInput = prompt('أدخل التاريخ الجديد للحجز (بالصيغة YYYY-MM-DD):', currentEventDate);
             if (!newDateInput) return;
             const cleanNewDate = toEnglishDigits(newDateInput.trim());
             if (cleanNewDate.length < 8) {
                 alert('الرجاء إدخال تاريخ صحيح بالصيغة المطلوبة (مثال: 2026-10-15)');
-                return;
-            }
+                return;   }
             if (!confirm(`هل أنت متأكد من رغبتك في نقل هذا الحجز من تاريخ (${currentEventDate}) إلى التاريخ الجديد (${cleanNewDate})؟`)) {
-                return;
-            }
+                return;   }
             try {
+                // 1. تحديث التاريخ في جدول الحجوزات
                 const { error } = await supabaseClient
                     .from('bookings_table')
                     .update({ booking_date: cleanNewDate })
                     .eq('id', contractId);
                 if (error) throw error;
-                alert('تم نقل الحجز بنجاح إلى التاريخ الجديد!');
+
+                // 2. إرسال إشعار النقل إلى جدول الإشعارات (notifications) ليظهر في صفحة التقويم
+                const groomName = document.getElementById('groom_name').value.trim() || 'بدون اسم';
+                await supabaseClient
+                    .from('notifications')
+                    .insert([{
+                        title: 'نقل حجز',
+                        message: `تم نقل حجز الزبون "${groomName}" من تاريخ ${currentEventDate} إلى التاريخ الجديد ${cleanNewDate}`,
+                        link: `contract.html?date=${cleanNewDate}&id=${contractId}`,
+                        is_read: false
+                    }]);
+
+                alert('تم نقل الحجز بنجاح إلى التاريخ الجديد وإرسال إشعار للأدمن!');
                 window.location.href = `contract.html?date=${cleanNewDate}&id=${contractId}`;
             } catch (e) {
                 console.error('خطأ أثناء نقل الحجز:', e);
                 alert('حدث خطأ أثناء نقل الحجز بالسحابة: ' + e.message);
-            }
+            } 
         }
+
         function toEnglishDigits(str) {
             return String(str).replace(/[٠١٢٣٤٥٦٧٨٩]/g, function (d) {
                 return d.charCodeAt(0) - 1632;
-            });
-        }
+            }); }
         function convertInputToEnglish(input) {
-            if(input) input.value = toEnglishDigits(input.value);
-        }
+            if(input) input.value = toEnglishDigits(input.value);   }
         function parseEnglishNumber(val) {
             const cleanStr = toEnglishDigits(val).replace(/[^0-9.]/g, '');
-            return parseFloat(cleanStr) || 0;
-        }
+            return parseFloat(cleanStr) || 0;   }
         if (selectedDate) {
             const cleanSelectedDate = toEnglishDigits(selectedDate);
             document.getElementById('event_date').value = cleanSelectedDate;
@@ -382,8 +367,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             loadContractData();
         } else {
             alert('لم يتم تحديد التاريخ!');
-            window.location.href = 'dash.html';
-        }
+            window.location.href = 'dash.html';   }
         async function loadContractData() {
             try {
                 if (contractId) {
@@ -396,8 +380,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     if (data) {
                         if(data.booking_date) {
                             document.getElementById('event_date').value = data.booking_date;
-                            document.getElementById('page2_date').value = data.booking_date;
-                        }
+                            document.getElementById('page2_date').value = data.booking_date;      }
                         document.getElementById('groom_name').value = data.groom_name || '';
                         document.getElementById('hall_name').value = data.hall_name || '';
                         document.getElementById('boxColor').value = data.box_color || '#27ae60'; 
@@ -413,8 +396,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         document.getElementById('deposit').value = data.deposit || '0';
                         document.getElementById('general_notes').value = data.general_notes || '';
                         if(document.getElementById('general_notes5')) {
-                            document.getElementById('general_notes5').value = data.general_notes || '';
-                        }
+                            document.getElementById('general_notes5').value = data.general_notes || '';      }
                         document.getElementById('booked_by').value = data.booked_by || '';
                         if(data.event_day) document.getElementById('event_day').value = data.event_day;
                         if (data.services_data && Array.isArray(data.services_data)) {
@@ -434,8 +416,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                 }
             } catch (e) {
                 console.error('خطأ في جلب تفاصيل العقد من Supabase:', e);
-            }
-        }
+     }   }
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -459,11 +440,9 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     totalExtras += lineTotal;
                 } else {
                     if(totalCell) totalCell.value = "0";
-                }
-            });
+                }  });
             document.getElementById('extras_price').value = toEnglishDigits(totalExtras);
-            calculateMainTable();
-        }
+            calculateMainTable();    }
         function calculateMainTable() {
             const hallInput = document.getElementById('hall_price');
             const discountInput = document.getElementById('discount');
@@ -480,19 +459,16 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             const totalGeneral = finalPrice + extrasPrice;
             document.getElementById('total_general').value = toEnglishDigits(totalGeneral);
             const remaining = Math.max(0, totalGeneral - deposit);
-            document.getElementById('remaining_balance').value = toEnglishDigits(remaining);
-        }
+            document.getElementById('remaining_balance').value = toEnglishDigits(remaining);   }
         async function saveContract(isAdmin = false) {
             const groomName = document.getElementById('groom_name').value.trim();
             const eventDate = document.getElementById('event_date').value;
             if (!groomName) {
                 alert('يرجى إدخال اسم الزبون أولاً!');
-                return;
-            }
+                return;    }
             if (!eventDate) {
                 alert('التاريخ غير محدد!');
-                return;
-            }
+                return;  }
             const notesVal = document.getElementById('general_notes5') ? document.getElementById('general_notes5').value : document.getElementById('general_notes').value;
             const servicesPayload = [];
             const checks = document.querySelectorAll('.srv-check');
@@ -507,8 +483,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     qty: qtyInput ? qtyInput.value : "1",
                     price: priceInput ? priceInput.value : "0",
                     customName: customNameInput ? customNameInput.value : ""
-                });
-            });
+                });    });
             const payload = {
                 booking_date: eventDate,
                 groom_name: groomName,
@@ -546,8 +521,7 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                     if (error) throw error;
                     if (data && data.length > 0) {
                         savedBookingId = data[0].id;
-                    }
-                }
+                    }    }
                 toggleInputsLock(true);
                 applyContractModeState();
                 alert(isAdmin ? 'تم حفظ التعديلات واعتمادها بنجاح.' : 'تم حفظ العقد كمسودة معلقة بانتظار الموافقة.');
@@ -555,11 +529,9 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
             } catch (e) {
                 console.error('خطأ أثناء الحفظ في Supabase:', e);
                 alert('حدث خطأ أثناء الحفظ بالسحابة: ' + e.message);
-            }
-        }
+       }   }
         async function approveContract() {
-            await saveContract(true);
-        }
+            await saveContract(true);   }
         async function deleteContract() {
             if (!confirm('هل أنت متأكد من رغبتك في حذف هذا العقد نهائياً من السحابة؟')) return;
             try {
@@ -568,15 +540,13 @@ input, span, td, div { font-family: Arial, 'Segoe UI', sans-serif !important; }
                         .from('bookings_table')
                         .delete()
                         .eq('id', contractId);
-                    if (error) throw error;
-                }
+                    if (error) throw error;    }
                 alert('تم حذف العقد بنجاح.');
                 window.location.replace('dash.html');
             } catch (e) {
                 console.error('خطأ أثناء الحذف:', e);
                 alert('حدث خطأ أثناء الحذف: ' + e.message);
-            }
-        }
+            } }
         setupButtons();
         calculateServices();
     </script>
