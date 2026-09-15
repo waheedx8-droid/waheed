@@ -7,6 +7,16 @@
     <!-- مكتبة Supabase JS الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ضبط حقول الأرقام لتتوسع وتستوعب الأرقام الكبيرة وتمنع اختفائها */
+.main-table input.en-num, 
+.readonly-field.en-num,
+.deposit-row input.en-num {
+    min-width: 70px;
+    max-width: 100%;
+    text-overflow: clip; /* لمنع ظهور نقاط الإخفاء وجعل الرقم يظهر بالكامل أو يتداخل بوضوح */
+    direction: ltr !important; /* ضمان اتجاه الأرقام الإنجليزية من اليسار لليمين */
+    text-align: right;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background-color: #fef2f5; padding: 10px; color: #000; touch-action: manipulation; }
 .page { 
