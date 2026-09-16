@@ -367,12 +367,15 @@
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
                       if (currentUserRole === 'admin') {
+                          // استخراج اسم المستخدم الذي قام بالتعديل/الحفظ من السجل الجديد إن وجد
+                          let modifierName = (payload.new && payload.new.updated_by) ? payload.new.updated_by : 'مستخدم النظام';
+
                           if (payload.eventType === 'INSERT') {
-                              triggerNewBookingAlert("حجز جديد!", "تم إضافة حجز عرس جديد الآن.");
+                              triggerNewBookingAlert("حجز جديد!", `قام (${modifierName}) بإضافة حجز عرس جديد.`);
                           } else if (payload.eventType === 'DELETE') {
-                              triggerNewBookingAlert("حذف حجز!", "تم حذف حجز من النظام الآن.");
+                              triggerNewBookingAlert("حذف حجز!", `تم حذف حجز من النظام.`);
                           } else if (payload.eventType === 'UPDATE') {
-                              triggerNewBookingAlert("تعديل حجز!", "تم تحديث بيانات حجز الآن.");
+                              triggerNewBookingAlert("تعديل حجز!", `قام (${modifierName}) بتعديل بيانات حجز.`);
                           }
                       }
                       initCalendarSystem(false);
