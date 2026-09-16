@@ -221,20 +221,53 @@
 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
-        if (currentUserRole === 'admin') {
-            document.getElementById('roleDisplay').textContent = 'مدير (admin)';
-            document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-            document.getElementById('notifContainer').style.display = 'inline-block';
-            
-            const isSoundAllowed = localStorage.getItem('pwa_sound_allowed');
-            if (!isSoundAllowed) {
-                document.getElementById('soundToggleBtn').style.display = 'inline-block';
+        // دالة لجلب اسم المستخدم من جدول setting_table وتحديثه
+        async function loadCustomUsername() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('setting_table')
+                    .select('custom_user')
+                    .limit(1)
+                    .single();
+
+                const roleDisplay = document.getElementById('roleDisplay');
+                let displayName = 'مستخدم (user)';
+
+                if (!error && data && data.custom_user) {
+                    displayName = data.custom_user;
+                }
+
+                if (currentUserRole === 'admin') {
+                    document.getElementById('roleDisplay').textContent = `مدير: ${displayName}`;
+                    document.getElementById('dashboardBtn').style.display = 'inline-block'; 
+                    document.getElementById('notifContainer').style.display = 'inline-block';
+                    
+                    const isSoundAllowed = localStorage.getItem('pwa_sound_allowed');
+                    if (!isSoundAllowed) {
+                        document.getElementById('soundToggleBtn').style.display = 'inline-block';
+                    }
+                } else if (currentUserRole === 'read_only') {
+                    document.getElementById('roleDisplay').textContent = `قراءة فقط: ${displayName}`;
+                } else {
+                    document.getElementById('roleDisplay').textContent = displayName;
+                }
+            } catch (e) {
+                console.error('خطأ في جلب اسم المستخدم:', e);
+                // الحفاظ على السلوك القديم في حال حدوث خطأ
+                if (currentUserRole === 'admin') {
+                    document.getElementById('roleDisplay').textContent = 'مدير (admin)';
+                    document.getElementById('dashboardBtn').style.display = 'inline-block'; 
+                    document.getElementById('notifContainer').style.display = 'inline-block';
+                } else if (currentUserRole === 'read_only') {
+                    document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
+                } else {
+                    document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
+                }
             }
-        } else if (currentUserRole === 'read_only') {
-            document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
-        } else {
-            document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
+
+        // استدعاء دالة اسم المستخدم عند البداية
+        loadCustomUsername();
 
         function playBeepSound() {
             try {
