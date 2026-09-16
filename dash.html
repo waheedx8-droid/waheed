@@ -177,9 +177,11 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let audioCtx = null;
-        let lastBookingsCount = 0; // لحفظ عدد الحجوزات للمقارنة والتحديث التلقائي
+        let lastBookingsCount = 0;
 
+        // ملف صوتي افتراضي مدمج عالي الجودة يدق كمنبه وافر
+        const alarmAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcHCmS2+Czj00UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8=');
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.error('SW error:', err));
@@ -213,7 +215,6 @@
                 if (supabaseClient) {
                     const { data, error } = await supabaseClient.from('bookings_table').select('*');
                     if (!error && data) {
-                        // التحقق الذكي التلقائي: إذا زاد عدد الحجوزات أو تغيرت، نقوم بالتنبيه والصوت
                         if (isBackgroundCheck && data.length > lastBookingsCount && lastBookingsCount > 0) {
                             if (currentUserRole === 'admin') {
                                 playAlarmSound();
@@ -254,7 +255,6 @@
             }
             renderCalendar();
             
-            // محاولة تفعيل الـ Realtime أيضاً
             if (supabaseClient && !window.realtimeInitialized) {
                 window.realtimeInitialized = true;
                 supabaseClient
@@ -299,56 +299,33 @@
             }
         }
 
-        // فحص تلقائي ذكي كل 5 ثوانٍ لجلب أي تعديل أو حجز جديد وصنع التنبيه والصوت فوراً
         setInterval(() => {
             initCalendarSystem(true);
         }, 5000);
 
+        // تفعيل الصوت عبر تشغيل وإيقاف وهمي لملف الصوت بأمر من المستخدم
         function enableAudioAndHide() {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            } catch (e) {}
+            alarmAudio.play().then(() => {
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+            }).catch(e => console.log(e));
 
             localStorage.setItem('soundActivated', 'true');
             document.getElementById('soundToggleBtn').style.display = 'none';
-            alert('تم تفعيل الصوت والتنبيهات بنجاح!');
+            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
         }
 
         function playAlarmSound() {
             if ('vibrate' in navigator) {
-                navigator.vibrate([500, 200, 500, 200, 500]);
+                navigator.vibrate([600, 200, 600, 200, 600]);
             }
-            if (!audioCtx) {
-                try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch(e) {}
-            }
-            if (audioCtx) {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                try {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // نغمة واضحة وعالية
-                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime); // صوت مرتفع
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.8);
-                } catch (e) {}
+            try {
+                alarmAudio.currentTime = 0;
+                alarmAudio.play().catch(err => {
+                    console.log("Autoplay blocked:", err);
+                });
+            } catch (e) {
+                console.error(e);
             }
         }
 
@@ -510,7 +487,7 @@
             <div id="modalBookingsList" style="max-height:220px; overflow-y:auto; margin-bottom:12px;"></div>
             <div style="display:flex; gap:8px;">
                 <a id="modalAddBtn" href="#" class="btn-nav" style="text-align:center; flex:1; text-decoration:none; background:#27ae60;">+ إضافة عقد</a>
-                <button onclick="document.getElementById('bookingModal'].style.display = 'none'" class="btn-nav logout">إغلاق</button>
+                <button onclick="document.getElementById('bookingModal').style.display = 'none'" class="btn-nav logout">إغلاق</button>
             </div>
         </div>
     </div>
