@@ -66,7 +66,6 @@
             animation: pulse 1.2s infinite;
             font-size: 12px !important;
             padding: 8px 12px !important;
-            display: none;
             color: #fff;
             font-weight: bold;
         }
@@ -152,7 +151,7 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndNotifications()">🔔 انقر هنا لتفعيل الصوت والإشعارات</button>
+                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndNotifications()">🔔 تفعيل الصوت</button>
 
                 <div class="notification-container" id="notifContainer" style="display: none;">
                     <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
@@ -203,45 +202,53 @@
         let lastBookingsMapState = {};
         let swRegistration = null;
 
-        let currentUsername = 'مسؤول';
+        let currentUsername = 'مستخدم';
         let currentUserRole = 'user';
 
         async function fetchUserDataFromSettings() {
             try {
+                // جلب اسم المستخدم المسجل حالياً من التخزين المحلي للمتصفح
+                const localUser = localStorage.getItem('loggedCustomUser') || localStorage.getItem('username');
+                
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
                 
                 if (!error && data && data.length > 0) {
-                    let activeRow = data[0]; 
+                    let activeRow = null;
 
-                    let localUser = localStorage.getItem('loggedCustomUser') || localStorage.getItem('username');
+                    // البحث حصراً عن السطر الذي يطابق المستخدم المسجل دخوله فعلياً
                     if (localUser) {
-                        let found = data.find(row => row.custom_user && String(row.custom_user).trim() === String(localUser).trim());
-                        if (found) {
-                            activeRow = found;
-                        }
+                        activeRow = data.find(row => row.custom_user && String(row.custom_user).trim().toLowerCase() === String(localUser).trim().toLowerCase());
                     }
 
-                    currentUsername = activeRow.custom_user || 'مدير النظام';
+                    // إذا لم يتم العثور على مطابقة دقيقة، نأخذ أول سطر كخيار احتياطي أخير
+                    if (!activeRow) {
+                        activeRow = data[0];
+                    }
+
+                    // جلب اسم المستخدم وصلاحيته من الحقول الخاصة به في القاعدة
+                    currentUsername = activeRow.custom_user || localUser || 'مستخدم';
                     currentUserRole = activeRow.role_user || 'user';
+                } else if (localUser) {
+                    currentUsername = localUser;
                 }
             } catch (e) {
                 console.error("خطأ في جلب بيانات المستخدم:", e);
+                const localUser = localStorage.getItem('loggedCustomUser') || localStorage.getItem('username');
+                if (localUser) currentUsername = localUser;
             }
 
+            // تحديث واجهة المستخدم بناءً على صلاحيته واسمه الفعلي
             const roleDisplay = document.getElementById('roleDisplay');
             if (currentUserRole === 'admin') {
                 roleDisplay.textContent = `${currentUsername} (مدير النظام)`;
                 document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                 document.getElementById('notifContainer').style.display = 'inline-block';
-                
-                // إظهار زر التفعيل إذا لم يتم منح إذن الإشعارات أو تفعيل الصوت مسبقاً
-                if (!localStorage.getItem('pwa_sound_allowed') || Notification.permission !== 'granted') {
-                    document.getElementById('soundToggleBtn').style.display = 'inline-block';
-                }
             } else if (currentUserRole === 'read_only') {
                 roleDisplay.textContent = `${currentUsername} (قراءة فقط)`;
+                document.getElementById('notifContainer').style.display = 'none';
             } else {
                 roleDisplay.textContent = currentUsername;
+                document.getElementById('notifContainer').style.display = 'none';
             }
         }
 
@@ -290,12 +297,9 @@
             if ('vibrate' in navigator) navigator.vibrate(300);
             
             if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    console.log("تم تفعيل إذن الإشعارات بنجاح");
-                }
+                await Notification.requestPermission();
             }
-            document.getElementById('soundToggleBtn').style.display = 'none';
+            alert('تم تفعيل الصوت والإشعارات بنجاح!');
         }
 
         function triggerNewBookingAlert(title, message) {
@@ -306,12 +310,6 @@
                 navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title: title, body: message });
             } else if (swRegistration && swRegistration.active) {
                 swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title: title, body: message });
-            } else if ('Notification' in window && Notification.permission === 'granted') {
-                try {
-                    new Notification(title, { body: message, icon: 'icon.png' });
-                } catch(e) {
-                    console.log("System notification error:", e);
-                }
             }
 
             if (currentUserRole === 'admin') {
