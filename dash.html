@@ -142,7 +142,7 @@
                 <!-- زر تفعيل الصوت (يختفي بعد الضغط عليه نهائياً) -->
                 <button id="soundToggleBtn" class="btn-nav" onclick="enableAudioAndHide()" style="background: #8e44ad; display: none;">🔔 تفعيل الصوت</button>
 
-                <!-- زر الإشعارات الأصلي والقائمة المنسدلة -->
+                <!-- زر الإشعارات الأصلي -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
                     <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
                         📬 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
@@ -178,6 +178,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let audioCtx = null;
+        let lastBookingsCount = 0; // لحفظ عدد الحجوزات للمقارنة والتحديث التلقائي
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -197,7 +198,6 @@
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
             document.getElementById('notifContainer').style.display = 'inline-block';
             
-            // إظهار زر تفعيل الصوت فقط إذا لم يتم تفعيله مسبقاً في الذاكرة
             if (!localStorage.getItem('soundActivated')) {
                 document.getElementById('soundToggleBtn').style.display = 'inline-block';
             }
@@ -208,11 +208,19 @@
         }
 
         let allBookingsMap = {};
-        async function initCalendarSystem() {
+        async function initCalendarSystem(isBackgroundCheck = false) {
             try {
                 if (supabaseClient) {
                     const { data, error } = await supabaseClient.from('bookings_table').select('*');
                     if (!error && data) {
+                        // التحقق الذكي التلقائي: إذا زاد عدد الحجوزات أو تغيرت، نقوم بالتنبيه والصوت
+                        if (isBackgroundCheck && data.length > lastBookingsCount && lastBookingsCount > 0) {
+                            if (currentUserRole === 'admin') {
+                                playAlarmSound();
+                            }
+                        }
+                        lastBookingsCount = data.length;
+
                         allBookingsMap = {};
                         data.forEach(item => {
                             if (!item.booking_date) return;
@@ -246,14 +254,13 @@
             }
             renderCalendar();
             
-            // التحديث الحي الفوري للتقويم والصوت
+            // محاولة تفعيل الـ Realtime أيضاً
             if (supabaseClient && !window.realtimeInitialized) {
                 window.realtimeInitialized = true;
-                
                 supabaseClient
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
-                      initCalendarSystem(); 
+                      initCalendarSystem(false); 
                       if (payload.eventType === 'INSERT' && currentUserRole === 'admin') {
                           playAlarmSound(); 
                       }
@@ -292,33 +299,35 @@
             }
         }
 
-        // تفعيل الصوت وإخفاء زر التفعيل للأبد
+        // فحص تلقائي ذكي كل 5 ثوانٍ لجلب أي تعديل أو حجز جديد وصنع التنبيه والصوت فوراً
+        setInterval(() => {
+            initCalendarSystem(true);
+        }, 5000);
+
         function enableAudioAndHide() {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
                 }
-                // تشغيل صوت قصير للتأكيد
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
+                osc.stop(audioCtx.currentTime + 0.3);
             } catch (e) {}
 
             localStorage.setItem('soundActivated', 'true');
             document.getElementById('soundToggleBtn').style.display = 'none';
-            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
+            alert('تم تفعيل الصوت والتنبيهات بنجاح!');
         }
 
-        // تشغيل صوت التنبيه والاهتزاز عند حدوث حجز جديد
         function playAlarmSound() {
             if ('vibrate' in navigator) {
-                navigator.vibrate([400, 200, 400, 200, 400]);
+                navigator.vibrate([500, 200, 500, 200, 500]);
             }
             if (!audioCtx) {
                 try {
@@ -333,12 +342,12 @@
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(750, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // نغمة واضحة وعالية
+                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime); // صوت مرتفع
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.6);
+                    osc.stop(audioCtx.currentTime + 0.8);
                 } catch (e) {}
             }
         }
@@ -414,7 +423,7 @@
             document.getElementById('bookingModal').style.display = 'flex';
         }
 
-        initCalendarSystem();
+        initCalendarSystem(false);
 
         async function fetchNotifications() {
             try {
@@ -501,7 +510,7 @@
             <div id="modalBookingsList" style="max-height:220px; overflow-y:auto; margin-bottom:12px;"></div>
             <div style="display:flex; gap:8px;">
                 <a id="modalAddBtn" href="#" class="btn-nav" style="text-align:center; flex:1; text-decoration:none; background:#27ae60;">+ إضافة عقد</a>
-                <button onclick="document.getElementById('bookingModal').style.display = 'none'" class="btn-nav logout">إغلاق</button>
+                <button onclick="document.getElementById('bookingModal'].style.display = 'none'" class="btn-nav logout">إغلاق</button>
             </div>
         </div>
     </div>
