@@ -194,10 +194,6 @@
         </div>
     </div>
 
-    <audio id="alertAudio" preload="auto">
-        <source src="alert.mp3" type="audio/mpeg">
-    </audio>
-
     <script>
         const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
@@ -207,12 +203,12 @@
         let lastBookingsMapState = {};
         let swRegistration = null;
 
-        let currentUsername = 'مستخدم';
+        let currentUsername = 'مسؤول';
         let currentUserRole = 'user';
 
         async function fetchUserDataFromSettings() {
             try {
-                // جلب البيانات من جدول الإعدادات في Supabase مباشرة مع الاعتماد على عمود custom_user
+                // جلب البيانات من جدول الإعدادات في Supabase مع الاعتماد حصراً على عمود custom_user
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
                 
                 console.log("Settings Table Data:", data);
@@ -228,8 +224,8 @@
                         }
                     }
 
-                    // جلب القيمة حصراً من عمود custom_user
-                    currentUsername = activeRow.custom_user || 'مستخدم';
+                    // جلب القيمة حصراً من عمود custom_user دون السماح بظهور كلمة "مستخدم"
+                    currentUsername = activeRow.custom_user || 'مدير النظام';
                     currentUserRole = activeRow.role_user || 'user';
                 }
             } catch (e) {
@@ -265,12 +261,32 @@
 
         function playBeepSound() {
             try {
-                const audio = document.getElementById('alertAudio');
-                if (audio) {
-                    audio.currentTime = 0;
-                    audio.play().catch(e => console.log("Audio block:", e));
+                // توليد صوت تنبيه رقمي مضمون 100% داخل المتصفح بدون الاعتماد على ملفات خارجية
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                const audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
                 }
-            } catch(e) {}
+
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // نغمة التنبيه
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch(e) {
+                console.log("Audio play error:", e);
+            }
         }
 
         async function unlockAudioAndNotifications() {
