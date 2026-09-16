@@ -238,18 +238,33 @@
                 console.error('خطأ في جلب الحجوزات:', e);
             }
             renderCalendar();
-            if (currentUserRole === 'admin') {
-                fetchNotifications();
-                if (supabaseClient) {
+            
+            // تفعيل نظام الاستماع الحي (Realtime) لجدول الحجوزات والإشعارات معاً
+            if (supabaseClient && !window.realtimeInitialized) {
+                window.realtimeInitialized = true;
+                
+                // 1. مراقبة جدول الحجوزات لتحديث التقويم تلقائياً فوراً
+                supabaseClient
+                  .channel('public:bookings_table')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
+                      console.log('تغير في الحجوزات، جاري التحديث الذكي...');
+                      initCalendarSystem(); // إعادة تحميل خريطة الحجوزات ورسم التقويم ذاتياً
+                  })
+                  .subscribe();
+
+                // 2. مراقبة الإشعارات
+                if (currentUserRole === 'admin') {
+                    fetchNotifications();
                     supabaseClient
                       .channel('public:notifications')
                       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
                           fetchNotifications();
-                          playLoudAlarm(); // تشغيل المنبه الصوتي القوي فوراً
+                          playLoudAlarm();
                       })
                       .subscribe();
                 }
             }
+
             const urlParams = new URLSearchParams(window.location.search);
             const jumpDate = urlParams.get('jumpDate');
             if (jumpDate) {
@@ -277,18 +292,14 @@
             }
         }
 
-        // تفاعل المستخدم لتنشيط الصوت والصلاحية نهائياً
         async function initAudioAndPermission() {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') {
                     await audioCtx.resume();
                 }
-                // إصدار نغمة تجريبية للتأكد من عمل الصوت
                 playTone(800, 0.2);
-            } catch (e) {
-                console.log('Audio init error:', e);
-            }
+            } catch (e) {}
 
             if ('Notification' in window) {
                 await Notification.requestPermission();
@@ -298,15 +309,14 @@
             document.getElementById('pushNotifBtn').style.display = 'none';
         }
 
-        // دالة تشغيل نغمة منبه قوية ومتكررة
         function playTone(freq, duration) {
             if (!audioCtx) return;
             try {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'triangle'; // صوت حاد ومسموع بوضوح
+                osc.type = 'triangle';
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); // مستوى صوت مرتفع
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
@@ -315,11 +325,9 @@
         }
 
         function playLoudAlarm() {
-            // اهتزاز قوي للهاتف
             if ('vibrate' in navigator) {
                 navigator.vibrate([400, 200, 400, 200, 400]);
             }
-            // تشغيل رنين منبه متقطع (3 نبضات متتالية)
             if (audioCtx) {
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
