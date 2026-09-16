@@ -133,9 +133,13 @@
                 <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="العودة لوحة التحكم / تسجيل الدخول">لوحة التحكم</a>
+                
+                <!-- زر تفعيل الإشعارات الفورية -->
+                <button id="pushNotifBtn" class="btn-nav" onclick="subscribePushNotifications()" style="background: #8e44ad; display: none;" title="تفعيل إشعارات المتصفح">🔔 تفعيل الإشعارات</button>
+
                 <div class="notification-container" id="notifContainer" style="display: none;">
-                    <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
-                        🔔 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
+                    <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات داخل التطبيق">
+                        📬 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
                     </button>
                     <div id="notifDropdown" class="notification-dropdown">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">
@@ -165,6 +169,19 @@
         const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // تسجيل ملف Service Worker عند بدء التشغيل
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register('sw.js');
+                    console.log('Service Worker registered successfully:', reg.scope);
+                } catch (err) {
+                    console.error('Service Worker registration failed:', err);
+                }
+            });
+        }
+
         const monthNames = [
             "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
@@ -174,7 +191,8 @@
         if (currentUserRole === 'admin') {
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
             document.getElementById('notifContainer').style.display = 'inline-block';
-            document.getElementById('dashboardBtn').style.display = 'inline-block'; // يظهر للأدمن فقط هنا
+            document.getElementById('dashboardBtn').style.display = 'inline-block'; 
+            document.getElementById('pushNotifBtn').style.display = 'inline-block'; // يظهر للأدمن فقط لتفعيل إشعارات المتصفح
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
         } else {
@@ -225,6 +243,8 @@
                       .channel('public:notifications')
                       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
                           fetchNotifications();
+                          // إظهار إشعار عبر الـ Service Worker عند استقبال إشعار جديد في القاعدة
+                          showLocalPushNotification(payload.new.title, payload.new.message, payload.new.link);
                       })
                       .subscribe();
                 }
@@ -255,6 +275,34 @@
                 }, 100);
             }
         }
+
+        // دالة لإظهار إشعار متصفح محلي عبر الـ Service Worker
+        async function showLocalPushNotification(title, body, link) {
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification(title, {
+                    body: body,
+                    icon: '/favicon.ico', // يمكنك تغيير مسار الأيقونة إن توفرت
+                    data: { url: link || window.location.href }
+                });
+            }
+        }
+
+        // دالة طلب صلاحية إشعارات المتصفح
+        async function subscribePushNotifications() {
+            if (!('Notification' in window)) {
+                alert('متصفحك لا يدعم الإشعارات الفورية.');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                alert('تم تفعيل إشعارات المتصفح بنجاح!');
+                document.getElementById('pushNotifBtn').style.display = 'none';
+            } else {
+                alert('تم رفض إذن الإشعارات.');
+            }
+        }
+
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const monthIndex = currentDate.getMonth();
