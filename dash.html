@@ -37,16 +37,19 @@
         .logout { background: #e74c3c; }
         .logout:hover { background: #c0392b; }
         .user-tag { background: #2c3e50; color: white; padding: 4px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+        
         .notification-container { position: relative; display: inline-block; }
         .notification-badge-count { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 5px; font-size: 9px; font-weight: bold; }
+        
+        /* تعديل موقع القائمة المنسدلة لتناسب اللغة العربية وتظهر ضمن الشاشة */
         .notification-dropdown { 
             display: none; 
             position: absolute; 
-            left: 0; 
-            right: auto; 
+            left: auto; 
+            right: 0; 
             background: #fff; 
-            width: 250px; 
-            max-width: 85vw; 
+            width: 260px; 
+            max-width: 90vw; 
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
             z-index: 1200; 
             border-radius: 6px; 
@@ -57,6 +60,7 @@
         .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; word-break: break-word; }
         .notification-item:hover { background: #f1f1f1; }
         .notification-item.unread { font-weight: bold; background: #fdf2e9; }
+        
         /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
@@ -134,7 +138,7 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <!-- زر تفعيل إذن الإشعارات -->
+                <!-- زر تفعيل الإشعارات (يختفي تلقائياً إذا كانت مفعمة) -->
                 <button id="pushNotifBtn" class="btn-nav" onclick="requestNotificationPermission()" style="background: #8e44ad; display: none;">🔔 تفعيل الإشعارات</button>
 
                 <div class="notification-container" id="notifContainer" style="display: none;">
@@ -170,7 +174,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // تسجيل الـ Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.error('SW error:', err));
@@ -183,11 +186,16 @@
         ];
         let currentDate = new Date(); 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
+        
         if (currentUserRole === 'admin') {
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
             document.getElementById('notifContainer').style.display = 'inline-block';
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-            document.getElementById('pushNotifBtn').style.display = 'inline-block';
+            
+            // إظهار زر تفعيل الإشعارات فقط إذا لم يتم منح الإذن مسبقاً
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                document.getElementById('pushNotifBtn').style.display = 'inline-block';
+            }
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
         } else {
@@ -271,7 +279,6 @@
             }
         }
 
-        // طلب إذن الإشعارات من المتصفح
         async function requestNotificationPermission() {
             if (!('Notification' in window)) {
                 alert('متصفحك لا يدعم الإشعارات.');
@@ -282,34 +289,28 @@
                 alert('تم تفعيل الإشعارات بنجاح!');
                 document.getElementById('pushNotifBtn').style.display = 'none';
             } else {
-                alert('تم رفض إذن الإشعارات، يرجى تفعيلها من إعدادات المتصفح.');
+                alert('تم رفض إذن الإشعارات.');
             }
         }
 
-        // تشغيل صوت تنبيه مباشر واهتزاز وإظهار إشعار النظام
         function playAudioAlertAndShow(title, message) {
-            // 1. تشغيل صوت تنبيه نغمة قصيرة (Audio Web API) لتأكيد الصوت حتى بدون إذن كامل
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // نغمة D5 واضحة
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + 0.4);
-            } catch (e) {
-                console.log('Audio Context error:', e);
-            }
+            } catch (e) {}
 
-            // 2. تفعيل الاهتزاز إن توفر بالهاتف
             if ('vibrate' in navigator) {
                 navigator.vibrate([300, 100, 300]);
             }
 
-            // 3. إظهار الإشعار المرئي لنظام أندرويد
             if (Notification.permission === 'granted') {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.ready.then(reg => {
