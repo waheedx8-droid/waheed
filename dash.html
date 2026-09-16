@@ -38,6 +38,30 @@
         .logout:hover { background: #c0392b; }
         .user-tag { background: #2c3e50; color: white; padding: 4px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; }
         
+        .notification-container { position: relative; display: inline-block; }
+        .notification-badge-count { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 5px; font-size: 9px; font-weight: bold; }
+        
+        .notification-dropdown { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: auto; 
+            background: #fff; 
+            width: 250px; 
+            max-width: 85vw; 
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
+            z-index: 9999; 
+            border-radius: 6px; 
+            padding: 8px; 
+            text-align: right; 
+            border: 1px solid #ddd;
+            margin-top: 5px;
+        }
+        .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; word-break: break-word; }
+        .notification-item:hover { background: #f1f1f1; }
+        .notification-item.unread { font-weight: bold; background: #fdf2e9; }
+        
         /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
@@ -115,8 +139,24 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <!-- زر تفعيل التنبيهات الصوتية للإداري -->
-                <button id="pushNotifBtn" class="btn-nav" onclick="initAudioAndPermission()" style="background: #8e44ad; display: none;">🔔 تفعيل التنبيهات الصوتية</button>
+                <!-- زر تفعيل الصوت (يختفي بعد الضغط عليه نهائياً) -->
+                <button id="soundToggleBtn" class="btn-nav" onclick="enableAudioAndHide()" style="background: #8e44ad; display: none;">🔔 تفعيل الصوت</button>
+
+                <!-- زر الإشعارات الأصلي والقائمة المنسدلة -->
+                <div class="notification-container" id="notifContainer" style="display: none;">
+                    <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
+                        📬 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
+                    </button>
+                    <div id="notifDropdown" class="notification-dropdown">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">
+                            <span style="font-weight: bold; font-size: 12px;">الإشعارات الواردة</span>
+                            <button onclick="clearAllNotifications()" style="background: #e74c3c; color: white; border: none; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer;">حذف الكل</button>
+                        </div>
+                        <div id="notifList" style="max-height: 200px; overflow-y: auto;">
+                            <div style="padding: 6px; text-align: center; color: #777; font-size: 11px;">جاري تحميل الإشعارات...</div>
+                        </div>
+                    </div>
+                </div>
 
                 <span id="roleDisplay" class="user-tag">user</span>
                 <button class="btn-nav logout" onclick="logout()">خروج</button>
@@ -155,10 +195,11 @@
         if (currentUserRole === 'admin') {
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
+            document.getElementById('notifContainer').style.display = 'inline-block';
             
-            // إظهار زر التنبيهات فقط إذا لم يتم تفعيله مسبقاً في الـ localStorage
-            if (!localStorage.getItem('soundAlertsEnabled')) {
-                document.getElementById('pushNotifBtn').style.display = 'inline-block';
+            // إظهار زر تفعيل الصوت فقط إذا لم يتم تفعيله مسبقاً في الذاكرة
+            if (!localStorage.getItem('soundActivated')) {
+                document.getElementById('soundToggleBtn').style.display = 'inline-block';
             }
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
@@ -205,20 +246,23 @@
             }
             renderCalendar();
             
-            // تفعيل التحديث الحي (Realtime) لجدول الحجوزات bookings_table فقط
+            // التحديث الحي الفوري للتقويم والصوت
             if (supabaseClient && !window.realtimeInitialized) {
                 window.realtimeInitialized = true;
                 
                 supabaseClient
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
-                      console.log('تغير في جدول الحجوزات، جاري التحديث الفوري...', payload);
                       initCalendarSystem(); 
                       if (payload.eventType === 'INSERT' && currentUserRole === 'admin') {
-                          playLoudAlarm(); 
+                          playAlarmSound(); 
                       }
                   })
                   .subscribe();
+            }
+
+            if (currentUserRole === 'admin') {
+                fetchNotifications();
             }
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -248,41 +292,34 @@
             }
         }
 
-        async function initAudioAndPermission() {
+        // تفعيل الصوت وإخفاء زر التفعيل للأبد
+        function enableAudioAndHide() {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') {
-                    await audioCtx.resume();
+                    audioCtx.resume();
                 }
-                playTone(800, 0.2);
-            } catch (e) {}
-
-            // حفظ حالة التفعيل في ذاكرة المتصفح لكي تختفي الكلمة نهائياً
-            localStorage.setItem('soundAlertsEnabled', 'true');
-            document.getElementById('pushNotifBtn').style.display = 'none';
-            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
-        }
-
-        function playTone(freq, duration) {
-            if (!audioCtx) return;
-            try {
+                // تشغيل صوت قصير للتأكيد
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
-                osc.stop(audioCtx.currentTime + duration);
+                osc.stop(audioCtx.currentTime + 0.2);
             } catch (e) {}
+
+            localStorage.setItem('soundActivated', 'true');
+            document.getElementById('soundToggleBtn').style.display = 'none';
+            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
         }
 
-        function playLoudAlarm() {
+        // تشغيل صوت التنبيه والاهتزاز عند حدوث حجز جديد
+        function playAlarmSound() {
             if ('vibrate' in navigator) {
                 navigator.vibrate([400, 200, 400, 200, 400]);
             }
-            // إذا لم يتم تهيئة الوتساب الصوتي بعد، نحاول إنشاؤه تلقائياً
             if (!audioCtx) {
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -292,9 +329,17 @@
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
                 }
-                playTone(600, 0.3);
-                setTimeout(() => playTone(900, 0.3), 350);
-                setTimeout(() => playTone(1200, 0.5), 700);
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(750, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                } catch (e) {}
             }
         }
 
@@ -370,6 +415,42 @@
         }
 
         initCalendarSystem();
+
+        async function fetchNotifications() {
+            try {
+                const { data, error } = await supabaseClient.from('notifications').select('*').order('created_at', { ascending: false }).limit(10);
+                if (!error && data) {
+                    const unread = data.filter(n => !n.is_read).length;
+                    const countSpan = document.getElementById('notifCount');
+                    countSpan.textContent = unread;
+                    countSpan.style.display = unread > 0 ? 'inline-block' : 'none';
+                    
+                    document.getElementById('notifList').innerHTML = data.length === 0 ? '<div style="padding: 8px; text-align: center; color: #777; font-size: 11px;">لا توجد إشعارات</div>' : data.map(n => `
+                        <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="openNotificationLink(event, ${n.id}, '${n.link}')">
+                            <strong>${n.title}</strong>
+                            <p style="margin: 2px 0 0 0; color: #555; font-size: 11px;">${n.message}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function toggleNotifications() {
+            const d = document.getElementById('notifDropdown');
+            d.style.display = d.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function clearAllNotifications() {
+            if (!confirm('حذف جميع الإشعارات؟')) return;
+            await supabaseClient.from('notifications').delete().neq('id', 0);
+            fetchNotifications();
+        }
+
+        async function openNotificationLink(e, id, link) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            await supabaseClient.from('notifications').update({ is_read: true }).eq('id', id);
+            window.location.href = link;
+        }
 
         function normalizeArabicText(t) {
             return !t ? '' : t.toString().toLowerCase().replace(/[\s\-_]/g, '').replace(/[أإآا]/g, 'ا').replace(/[ةه]/g, 'ه').replace(/[ىي]/g, 'ي');
