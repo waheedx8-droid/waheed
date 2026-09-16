@@ -221,7 +221,7 @@
 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
-        // دالة لجلب اسم المستخدم من جدول setting_table وتحديثه
+        // دالة لجلب اسم المستخدم الحقيقي من جدول setting_table وعرضه بدلاً من كلمة يوزر
         async function loadCustomUsername() {
             try {
                 const { data, error } = await supabaseClient
@@ -230,15 +230,16 @@
                     .limit(1)
                     .single();
 
-                const roleDisplay = document.getElementById('roleDisplay');
-                let displayName = 'مستخدم (user)';
-
+                let displayName = '';
                 if (!error && data && data.custom_user) {
                     displayName = data.custom_user;
                 }
 
+                const roleDisplay = document.getElementById('roleDisplay');
+
                 if (currentUserRole === 'admin') {
-                    document.getElementById('roleDisplay').textContent = `مدير: ${displayName}`;
+                    // للأدمن يبقيها تظهر كمدير مع اسم الحساب المخصص إن وجد
+                    roleDisplay.textContent = displayName ? `مدير: ${displayName}` : 'مدير (admin)';
                     document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                     document.getElementById('notifContainer').style.display = 'inline-block';
                     
@@ -247,21 +248,22 @@
                         document.getElementById('soundToggleBtn').style.display = 'inline-block';
                     }
                 } else if (currentUserRole === 'read_only') {
-                    document.getElementById('roleDisplay').textContent = `قراءة فقط: ${displayName}`;
+                    roleDisplay.textContent = displayName ? `قراءة فقط: ${displayName}` : 'قراءة فقط (Read Only)';
                 } else {
-                    document.getElementById('roleDisplay').textContent = displayName;
+                    // للمستخدم العادي: عرض اسم المستخدم الحقيقي تماماً بدلاً من كلمة يوزر
+                    roleDisplay.textContent = displayName ? displayName : 'مستخدم';
                 }
             } catch (e) {
                 console.error('خطأ في جلب اسم المستخدم:', e);
-                // الحفاظ على السلوك القديم في حال حدوث خطأ
+                const roleDisplay = document.getElementById('roleDisplay');
                 if (currentUserRole === 'admin') {
-                    document.getElementById('roleDisplay').textContent = 'مدير (admin)';
+                    roleDisplay.textContent = 'مدير (admin)';
                     document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                     document.getElementById('notifContainer').style.display = 'inline-block';
                 } else if (currentUserRole === 'read_only') {
-                    document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
+                    roleDisplay.textContent = 'قراءة فقط (Read Only)';
                 } else {
-                    document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
+                    roleDisplay.textContent = 'مستخدم';
                 }
             }
         }
