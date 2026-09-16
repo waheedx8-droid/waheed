@@ -194,16 +194,20 @@
         </div>
     </div>
 
+    <!-- ملف صوتي جاهز من الإنترنت يعمل مباشرة بدون قيود AudioContext -->
+    <audio id="alertAudio" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
         const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let lastBookingsCount = 0;
-        let audioCtx = null;
         let swRegistration = null;
 
-        // تسجيل ملف sw.js (عامل الخدمة) تلقائياً عند فتح الصفحة
+        // تسجيل ملف sw.js الخاص بالـ PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -221,62 +225,46 @@
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
             document.getElementById('notifContainer').style.display = 'inline-block';
-            document.getElementById('soundToggleBtn').style.display = 'inline-block';
+            
+            // التحقق مما إذا كان المستخدم قد فعل الصوت مسبقاً
+            const isSoundAllowed = localStorage.getItem('pwa_sound_allowed');
+            if (!isSoundAllowed) {
+                document.getElementById('soundToggleBtn').style.display = 'inline-block';
+            }
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
         } else {
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            return audioCtx;
-        }
-
         function playBeepSound() {
             try {
-                const ctx = getAudioContext();
-                const now = ctx.currentTime;
-
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(950, now);
-                osc.frequency.setValueAtTime(1200, now + 0.15);
-                
-                gain.gain.setValueAtTime(0.6, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.start(now);
-                osc.stop(now + 0.5);
+                const audio = document.getElementById('alertAudio');
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log("Audio play blocked:", e));
+                }
             } catch(e) {
-                console.log("Audio context error:", e);
+                console.log("Sound error:", e);
             }
         }
 
         async function unlockAudioAndNotifications() {
+            // حفظ حالة التفعيل في ذاكرة المتصفح لكي لا يظهر الزر مرة أخرى بعد التحديث
+            localStorage.setItem('pwa_sound_allowed', 'true');
+            document.getElementById('soundToggleBtn').style.display = 'none';
+
             playBeepSound();
             if ('vibrate' in navigator) {
                 navigator.vibrate(300);
             }
 
-            // طلب صلاحيات إشعارات النظام من المتصفح
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    alert('تم تفعيل إشعارات النظام والصوت بنجاح!');
-                    document.getElementById('soundToggleBtn').style.display = 'none';
+                    alert('تم تفعيل الصوت والإشعارات بنجاح ولن يظهر هذا الزر مرة أخرى!');
                 } else {
-                    alert('يرجى السماح بالإشعارات من إعدادات المتصفح ليصلك التنبيه في شريط الهاتف العلوي.');
+                    alert('تم تفعيل الصوت بنجاح داخل التطبيق.');
                 }
             }
         }
@@ -287,7 +275,7 @@
                 navigator.vibrate([800, 200, 800, 200, 800]);
             }
 
-            // إرسال تنبيه لشريط الإشعارات العلوي عبر Service Worker (sw.js)
+            // إرسال إشعار لشريط النظام العلوي عبر Service Worker
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
                     type: 'SHOW_NOTIFICATION',
@@ -302,7 +290,6 @@
                 });
             }
 
-            // إظهار نافذة منبثقة واضحة داخل التطبيق
             if (currentUserRole === 'admin') {
                 document.getElementById('liveAlertText').textContent = message || "تمت إضافة حجز عرس جديد إلى النظام.";
                 document.getElementById('liveAlertModal').style.display = 'flex';
@@ -555,7 +542,7 @@
     </div>
     <!-- Modal نتائج البحث -->
     <div id="searchSelectionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1100; justify-content:center; align-items:center;">
-        <div style="background: #fff; padding:15px; border-radius:8px; width:90%; max-width:380px; text-align:right;">
+        <div style="background:#fff; padding:15px; border-radius:8px; width:90%; max-width:380px; text-align:right;">
             <h3 style="margin-bottom:8px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:15px;">نتائج البحث</h3>
             <p id="searchCountText" style="font-size:12px; color:#555; margin-bottom:8px;"></p>
             <div id="searchSelectionList" style="max-height:220px; overflow-y:auto; margin-bottom:12px;"></div>
