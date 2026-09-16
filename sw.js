@@ -4,9 +4,9 @@ self.addEventListener('message', event => {
         const title = event.data.title || 'حجز جديد';
         const options = {
             body: event.data.body || 'تمت إضافة حجز عرس جديد إلى النظام.',
-            icon: 'icon.png', // يمكنك وضع مسار أيقونة إذا توفرت لديك
+            icon: 'icon.png', // يمكنك استبدالها برابط أيقونة إذا أردت
             badge: 'icon.png',
-            vibrate: [200, 100, 200], // اهتزاز الهاتف
+            vibrate: [200, 100, 200], // اهتزاز الهاتف عند وصول الإشعار
             tag: 'new-booking',
             renotify: true,
             requireInteraction: true
@@ -18,7 +18,7 @@ self.addEventListener('message', event => {
     }
 });
 
-// التعامل مع الضغط على الإشعار لفتح التطبيق مباشرة
+// التعامل مع الضغط على الإشعار لفتح أو إعادة تركيز التطبيق مباشرة
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
