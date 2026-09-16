@@ -193,7 +193,7 @@
                             if (inputUser === 'admin' && inputPass === row.val) {
                                 isAdminAuthenticated = true;
                                 loggedRole = 'admin';
-                                loggedUsername = 'admin';
+                                loggedUsername = 'مدير النظام'; // اسم العرض للاستخدام العام
                             }
                         }
                         if (row.custom_user && row.custom_user === inputUser && row.val === inputPass) {
@@ -206,7 +206,10 @@
 
                 if (isAdminAuthenticated) {
                     localStorage.setItem('currentUserRole', 'admin');
-                    localStorage.setItem('currentUsername', 'admin');
+                    localStorage.setItem('currentUsername', loggedUsername);
+                    // حفظ اسم المستخدم الحقيقي في جدول setting_table كاسم نشط لتسهيل استرجاعه في التقويم
+                    await supabaseClient.from('settings_table').update({ custom_user: 'مدير النظام' }).eq('key_name', 1);
+
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
                     document.getElementById('topCalendarBtn').style.display = 'block';
@@ -284,7 +287,7 @@
             listDiv.innerHTML = '<div style="text-align:center; color:#777; font-size:11px;">جاري تحميل المستخدمين...</div>';
 
             try {
-                const { data, error } = await supabaseClient.from('settings_table').select('*').not('custom_user', 'is', null);
+                const { data, error } = await supabaseClient.from('settings_table').select('*').not('custom_user', 'is', null).neq('key_name', 1);
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
@@ -295,7 +298,6 @@
                 let html = '';
                 data.forEach(row => {
                     let roleTitle = row.role_user === 'read_only' ? 'قراءة فقط' : 'إضافة وتعديل';
-                    // استخدام custom_user كمعرف فريد ومضمون 100% للتعديل والحذف
                     html += `
                         <div style="background:#f9f9f9; border:1px solid #ddd; padding:6px 8px; border-radius:4px; margin-bottom:5px; font-size:11px; display:flex; justify-content:space-between; align-items:center;">
                             <div onclick="openEditUserModal('${row.custom_user}', '${row.val}', '${row.role_user}')" style="cursor:pointer; flex:1;" title="اضغط للتعديل">
@@ -355,7 +357,6 @@
             }
         }
 
-        // --- دوال نافذة تعديل المستخدم بالاعتماد على custom_user ---
         function openEditUserModal(username, password, role) {
             document.getElementById('oldUsernameInput').value = username;
             document.getElementById('editUsernameInput').value = username;
@@ -380,7 +381,6 @@
             }
 
             try {
-                // التحديث بالاعتماد على مطابقة اسم المستخدم القديم في العمود custom_user
                 const { error } = await supabaseClient
                     .from('settings_table')
                     .update({
