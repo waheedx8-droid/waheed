@@ -208,11 +208,8 @@
 
         async function fetchUserDataFromSettings() {
             try {
-                // جلب البيانات من جدول الإعدادات في Supabase مع الاعتماد حصراً على عمود custom_user
                 const { data, error } = await supabaseClient.from('settings_table').select('*');
                 
-                console.log("Settings Table Data:", data);
-
                 if (!error && data && data.length > 0) {
                     let activeRow = data[0]; 
 
@@ -224,7 +221,6 @@
                         }
                     }
 
-                    // جلب القيمة حصراً من عمود custom_user دون السماح بظهور كلمة "مستخدم"
                     currentUsername = activeRow.custom_user || 'مدير النظام';
                     currentUserRole = activeRow.role_user || 'user';
                 }
@@ -232,14 +228,14 @@
                 console.error("خطأ في جلب بيانات المستخدم:", e);
             }
 
-            // تحديث الواجهة بالعضوية واسم المستخدم
             const roleDisplay = document.getElementById('roleDisplay');
             if (currentUserRole === 'admin') {
                 roleDisplay.textContent = `${currentUsername} (مدير النظام)`;
                 document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                 document.getElementById('notifContainer').style.display = 'inline-block';
                 
-                if (!localStorage.getItem('pwa_sound_allowed')) {
+                // إظهار زر التفعيل إذا لم يتم منح إذن الإشعارات أو تفعيل الصوت مسبقاً
+                if (!localStorage.getItem('pwa_sound_allowed') || Notification.permission !== 'granted') {
                     document.getElementById('soundToggleBtn').style.display = 'inline-block';
                 }
             } else if (currentUserRole === 'read_only') {
@@ -261,7 +257,6 @@
 
         function playBeepSound() {
             try {
-                // توليد صوت تنبيه رقمي مضمون 100% داخل المتصفح بدون الاعتماد على ملفات خارجية
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 
@@ -274,7 +269,7 @@
                 const gainNode = audioCtx.createGain();
 
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // نغمة التنبيه
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
                 
                 gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
@@ -291,12 +286,16 @@
 
         async function unlockAudioAndNotifications() {
             localStorage.setItem('pwa_sound_allowed', 'true');
-            document.getElementById('soundToggleBtn').style.display = 'none';
             playBeepSound();
             if ('vibrate' in navigator) navigator.vibrate(300);
+            
             if ('Notification' in window) {
-                await Notification.requestPermission();
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    console.log("تم تفعيل إذن الإشعارات بنجاح");
+                }
             }
+            document.getElementById('soundToggleBtn').style.display = 'none';
         }
 
         function triggerNewBookingAlert(title, message) {
@@ -307,6 +306,12 @@
                 navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title: title, body: message });
             } else if (swRegistration && swRegistration.active) {
                 swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title: title, body: message });
+            } else if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(title, { body: message, icon: 'icon.png' });
+                } catch(e) {
+                    console.log("System notification error:", e);
+                }
             }
 
             if (currentUserRole === 'admin') {
@@ -469,7 +474,7 @@
                         </div>
                     `).join('');
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("خطأ في جلب الإشعارات:", e); }
         }
 
         function toggleNotifications() {
