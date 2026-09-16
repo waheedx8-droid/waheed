@@ -188,7 +188,7 @@
     <div id="liveAlertModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:20px; border-radius:10px; width:90%; max-width:350px; text-align:center; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
             <div style="font-size:35px; margin-bottom:10px;">🔔</div>
-            <h3 style="color:#c0392b; margin-bottom:10px; font-size:18px;">تنبيه حجز جديد!</h3>
+            <h3 id="liveAlertTitle" style="color:#c0392b; margin-bottom:10px; font-size:18px;">تنبيه تغيير في النظام!</h3>
             <p id="liveAlertText" style="color:#333; font-size:13px; margin-bottom:15px; line-height:1.5;"></p>
             <button onclick="closeLiveAlert()" style="background:#27ae60; color:#fff; border:none; padding:8px 20px; border-radius:5px; font-size:13px; font-weight:bold; cursor:pointer; width:100%;">حسناً، فهمت</button>
         </div>
@@ -205,9 +205,9 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let lastBookingsCount = 0;
+        let lastBookingsStateJSON = "";
         let swRegistration = null;
 
-        // تسجيل ملف sw.js الخاص بالـ PWA مع التأكد من جاهزيته لاستقبال الرسائل
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -226,7 +226,6 @@
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
             document.getElementById('notifContainer').style.display = 'inline-block';
             
-            // التحقق مما إذا كان المستخدم قد فعل الصوت مسبقاً
             const isSoundAllowed = localStorage.getItem('pwa_sound_allowed');
             if (!isSoundAllowed) {
                 document.getElementById('soundToggleBtn').style.display = 'inline-block';
@@ -250,7 +249,6 @@
         }
 
         async function unlockAudioAndNotifications() {
-            // حفظ حالة التفعيل في ذاكرة المتصفح لكي لا يظهر الزر مرة أخرى بعد التحديث
             localStorage.setItem('pwa_sound_allowed', 'true');
             document.getElementById('soundToggleBtn').style.display = 'none';
 
@@ -275,7 +273,6 @@
                 navigator.vibrate([800, 200, 800, 200, 800]);
             }
 
-            // إرسال إشعار لشريط النظام العلوي عبر Service Worker
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
                     type: 'SHOW_NOTIFICATION',
@@ -291,7 +288,8 @@
             }
 
             if (currentUserRole === 'admin') {
-                document.getElementById('liveAlertText').textContent = message || "تمت إضافة حجز عرس جديد إلى النظام.";
+                document.getElementById('liveAlertTitle').textContent = title;
+                document.getElementById('liveAlertText').textContent = message;
                 document.getElementById('liveAlertModal').style.display = 'flex';
             }
         }
@@ -313,12 +311,22 @@
                 if (supabaseClient) {
                     const { data, error } = await supabaseClient.from('bookings_table').select('*');
                     if (!error && data) {
-                        if (isBackgroundCheck && data.length > lastBookingsCount && lastBookingsCount > 0) {
+                        const currentStateJSON = JSON.stringify(data);
+
+                        if (isBackgroundCheck && lastBookingsStateJSON !== "" && currentStateJSON !== lastBookingsStateJSON) {
                             if (currentUserRole === 'admin') {
-                                triggerNewBookingAlert("حجز عرس جديد!", "تمت إضافة حجز جديد يرجى المراجعة.");
+                                if (data.length > lastBookingsCount) {
+                                    triggerNewBookingAlert("حجز عرس جديد!", "تمت إضافة حجز عرس جديد إلى النظام.");
+                                } else if (data.length < lastBookingsCount) {
+                                    triggerNewBookingAlert("حذف حجز!", "تم حذف حجز من النظام.");
+                                } else {
+                                    triggerNewBookingAlert("تعديل حجز!", "تم تعديل بيانات حجز في النظام.");
+                                }
                             }
                         }
+
                         lastBookingsCount = data.length;
+                        lastBookingsStateJSON = currentStateJSON;
 
                         allBookingsMap = {};
                         data.forEach(item => {
@@ -358,11 +366,16 @@
                 supabaseClient
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
-                      if (payload.eventType === 'INSERT' && currentUserRole === 'admin') {
-                          triggerNewBookingAlert("حجز جديد!", "تم إضافة حجز عرس جديد الآن."); 
-                      } else {
-                          initCalendarSystem(false);
+                      if (currentUserRole === 'admin') {
+                          if (payload.eventType === 'INSERT') {
+                              triggerNewBookingAlert("حجز جديد!", "تم إضافة حجز عرس جديد الآن.");
+                          } else if (payload.eventType === 'DELETE') {
+                              triggerNewBookingAlert("حذف حجز!", "تم حذف حجز من النظام الآن.");
+                          } else if (payload.eventType === 'UPDATE') {
+                              triggerNewBookingAlert("تعديل حجز!", "تم تحديث بيانات حجز الآن.");
+                          }
                       }
+                      initCalendarSystem(false);
                   })
                   .subscribe();
             }
