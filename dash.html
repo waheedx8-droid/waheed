@@ -221,7 +221,7 @@
 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
-        // دالة لجلب اسم المستخدم الحقيقي من جدول setting_table وعرضه بدلاً من كلمة يوزر
+        // دالة جلب اسم المستخدم بحيث تبقى كلمة "مدير" ثابتة للأدمن، ويُأخذ اسم المستخدم من جدول custom_user للمستخدم العادي
         async function loadCustomUsername() {
             try {
                 const { data, error } = await supabaseClient
@@ -230,16 +230,16 @@
                     .limit(1)
                     .single();
 
-                let displayName = '';
+                let customName = '';
                 if (!error && data && data.custom_user) {
-                    displayName = data.custom_user;
+                    customName = data.custom_user;
                 }
 
                 const roleDisplay = document.getElementById('roleDisplay');
 
                 if (currentUserRole === 'admin') {
-                    // للأدمن يبقيها تظهر كمدير مع اسم الحساب المخصص إن وجد
-                    roleDisplay.textContent = displayName ? `مدير: ${displayName}` : 'مدير (admin)';
+                    // للأدمن: كلمة مدير ثابتة ودائماً تظهر، ويظهر بجانبها الاسم المخصص إن وجد
+                    roleDisplay.textContent = customName ? `مدير: ${customName}` : 'مدير';
                     document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                     document.getElementById('notifContainer').style.display = 'inline-block';
                     
@@ -248,20 +248,18 @@
                         document.getElementById('soundToggleBtn').style.display = 'inline-block';
                     }
                 } else if (currentUserRole === 'read_only') {
-                    roleDisplay.textContent = displayName ? `قراءة فقط: ${displayName}` : 'قراءة فقط (Read Only)';
+                    roleDisplay.textContent = customName ? `قراءة فقط: ${customName}` : 'قراءة فقط';
                 } else {
-                    // للمستخدم العادي: عرض اسم المستخدم الحقيقي تماماً بدلاً من كلمة يوزر
-                    roleDisplay.textContent = displayName ? displayName : 'مستخدم';
+                    // للمستخدم العادي: أخذ الاسم حصرياً من جدول custom_user بدون إظهار كلمة مستخدم الثابتة
+                    roleDisplay.textContent = customName ? customName : 'مستخدم';
                 }
             } catch (e) {
                 console.error('خطأ في جلب اسم المستخدم:', e);
                 const roleDisplay = document.getElementById('roleDisplay');
                 if (currentUserRole === 'admin') {
-                    roleDisplay.textContent = 'مدير (admin)';
+                    roleDisplay.textContent = 'مدير';
                     document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                     document.getElementById('notifContainer').style.display = 'inline-block';
-                } else if (currentUserRole === 'read_only') {
-                    roleDisplay.textContent = 'قراءة فقط (Read Only)';
                 } else {
                     roleDisplay.textContent = 'مستخدم';
                 }
