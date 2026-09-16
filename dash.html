@@ -62,6 +62,20 @@
         .notification-item:hover { background: #f1f1f1; }
         .notification-item.unread { font-weight: bold; background: #fdf2e9; }
         
+        /* زر تفعيل الصوت البارز للـ Admin */
+        #soundToggleBtn {
+            background: #8e44ad !important;
+            animation: pulse 1.5s infinite;
+            font-size: 11px !important;
+            padding: 6px 10px !important;
+            display: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: #9b59b6 !important; }
+            100% { transform: scale(1); }
+        }
+
         /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
@@ -139,10 +153,10 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <!-- زر تفعيل الصوت (يختفي بعد الضغط عليه نهائياً) -->
-                <button id="soundToggleBtn" class="btn-nav" onclick="enableAudioAndHide()" style="background: #8e44ad; display: none;">🔔 تفعيل الصوت</button>
+                <!-- زر تفعيل الصوت البارز للأدمن -->
+                <button id="soundToggleBtn" class="btn-nav" onclick="forceActivateAudio()">🔔 اضغط هنا لتفعيل الصوت</button>
 
-                <!-- زر الإشعارات الأصلي -->
+                <!-- زر الإشعارات -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
                     <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
                         📬 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
@@ -172,20 +186,77 @@
             <div class="day-header">الجمعة</div>
         </div>
     </div>
+
     <script>
         const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let lastBookingsCount = 0;
-
-        // ملف صوتي افتراضي مدمج عالي الجودة يدق كمنبه وافر
-        const alarmAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcHCmS2+Czj00UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8UGEuS2+GytE8=');
+        let audioContextInstance = null;
         
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.error('SW error:', err));
-            });
+        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
+        
+        if (currentUserRole === 'admin') {
+            document.getElementById('roleDisplay').textContent = 'مدير (admin)';
+            document.getElementById('dashboardBtn').style.display = 'inline-block'; 
+            document.getElementById('notifContainer').style.display = 'inline-block';
+            document.getElementById('soundToggleBtn').style.display = 'inline-block';
+        } else if (currentUserRole === 'read_only') {
+            document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
+        } else {
+            document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
+        }
+
+        function forceActivateAudio() {
+            try {
+                audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContextInstance.state === 'suspended') {
+                    audioContextInstance.resume();
+                }
+                const osc = audioContextInstance.createOscillator();
+                const gain = audioContextInstance.createGain();
+                osc.frequency.setValueAtTime(600, audioContextInstance.currentTime);
+                gain.gain.setValueAtTime(0.4, audioContextInstance.currentTime);
+                osc.connect(gain);
+                gain.connect(audioContextInstance.destination);
+                osc.start();
+                osc.stop(audioContextInstance.currentTime + 0.3);
+            } catch(e) {
+                console.log(e);
+            }
+            
+            if ('vibrate' in navigator) {
+                navigator.vibrate(300);
+            }
+
+            document.getElementById('soundToggleBtn').style.display = 'none';
+            alert('تم تفعيل نظام التنبيهات الصوتية بنجاح!');
+        }
+
+        function playAlarmSound() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([600, 200, 600, 200, 600]);
+            }
+            try {
+                if (!audioContextInstance) {
+                    audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContextInstance.state === 'suspended') {
+                    audioContextInstance.resume();
+                }
+                const osc = audioContextInstance.createOscillator();
+                const gain = audioContextInstance.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, audioContextInstance.currentTime);
+                gain.gain.setValueAtTime(0.6, audioContextInstance.currentTime);
+                osc.connect(gain);
+                gain.connect(audioContextInstance.destination);
+                osc.start();
+                osc.stop(audioContextInstance.currentTime + 0.8);
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         const monthNames = [
@@ -193,23 +264,8 @@
             "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
         let currentDate = new Date(); 
-        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        
-        if (currentUserRole === 'admin') {
-            document.getElementById('roleDisplay').textContent = 'مدير (admin)';
-            document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-            document.getElementById('notifContainer').style.display = 'inline-block';
-            
-            if (!localStorage.getItem('soundActivated')) {
-                document.getElementById('soundToggleBtn').style.display = 'inline-block';
-            }
-        } else if (currentUserRole === 'read_only') {
-            document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
-        } else {
-            document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
-        }
-
         let allBookingsMap = {};
+
         async function initCalendarSystem(isBackgroundCheck = false) {
             try {
                 if (supabaseClient) {
@@ -303,32 +359,6 @@
             initCalendarSystem(true);
         }, 5000);
 
-        // تفعيل الصوت عبر تشغيل وإيقاف وهمي لملف الصوت بأمر من المستخدم
-        function enableAudioAndHide() {
-            alarmAudio.play().then(() => {
-                alarmAudio.pause();
-                alarmAudio.currentTime = 0;
-            }).catch(e => console.log(e));
-
-            localStorage.setItem('soundActivated', 'true');
-            document.getElementById('soundToggleBtn').style.display = 'none';
-            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
-        }
-
-        function playAlarmSound() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate([600, 200, 600, 200, 600]);
-            }
-            try {
-                alarmAudio.currentTime = 0;
-                alarmAudio.play().catch(err => {
-                    console.log("Autoplay blocked:", err);
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const monthIndex = currentDate.getMonth();
@@ -379,12 +409,14 @@
         
         let touchStartX = 0, touchEndX = 0;
         const el = document.getElementById('calendarContainer');
-        el.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
-        el.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchEndX < touchStartX - 130) changeMonth(1);
-            if (touchEndX > touchStartX + 130) changeMonth(-1);
-        }, {passive: true});
+        if (el) {
+            el.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+            el.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchEndX < touchStartX - 130) changeMonth(1);
+                if (touchEndX > touchStartX + 130) changeMonth(-1);
+            }, {passive: true});
+        }
 
         function openModal(dateStr, bookings) {
             document.getElementById('modalDateTitle').textContent = dateStr ? `حجوزات يوم: ${dateStr}` : 'إدارة اليوم';
