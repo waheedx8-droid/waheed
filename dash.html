@@ -155,7 +155,11 @@
         if (currentUserRole === 'admin') {
             document.getElementById('roleDisplay').textContent = 'مدير (admin)';
             document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-            document.getElementById('pushNotifBtn').style.display = 'inline-block';
+            
+            // إظهار زر التنبيهات فقط إذا لم يتم تفعيله مسبقاً في الـ localStorage
+            if (!localStorage.getItem('soundAlertsEnabled')) {
+                document.getElementById('pushNotifBtn').style.display = 'inline-block';
+            }
         } else if (currentUserRole === 'read_only') {
             document.getElementById('roleDisplay').textContent = 'قراءة فقط (Read Only)';
         } else {
@@ -209,9 +213,9 @@
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
                       console.log('تغير في جدول الحجوزات، جاري التحديث الفوري...', payload);
-                      initCalendarSystem(); // إعادة جلب الحجوزات ورسم التقويم ذاتياً
+                      initCalendarSystem(); 
                       if (payload.eventType === 'INSERT' && currentUserRole === 'admin') {
-                          playLoudAlarm(); // إصدار تنبيه صوتي عند إضافة حجز جديد
+                          playLoudAlarm(); 
                       }
                   })
                   .subscribe();
@@ -253,8 +257,10 @@
                 playTone(800, 0.2);
             } catch (e) {}
 
-            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
+            // حفظ حالة التفعيل في ذاكرة المتصفح لكي تختفي الكلمة نهائياً
+            localStorage.setItem('soundAlertsEnabled', 'true');
             document.getElementById('pushNotifBtn').style.display = 'none';
+            alert('تم تفعيل التنبيهات الصوتية بنجاح!');
         }
 
         function playTone(freq, duration) {
@@ -275,6 +281,12 @@
         function playLoudAlarm() {
             if ('vibrate' in navigator) {
                 navigator.vibrate([400, 200, 400, 200, 400]);
+            }
+            // إذا لم يتم تهيئة الوتساب الصوتي بعد، نحاول إنشاؤه تلقائياً
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch(e) {}
             }
             if (audioCtx) {
                 if (audioCtx.state === 'suspended') {
