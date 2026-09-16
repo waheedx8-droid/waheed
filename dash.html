@@ -61,7 +61,7 @@
         .notification-item:hover { background: #f1f1f1; }
         .notification-item.unread { font-weight: bold; background: #fdf2e9; }
         
-        /* زر تفعيل الصوت الإلزامي الكبير */
+        /* زر تفعيل الصوت والإشعارات الإلزامي */
         #soundToggleBtn {
             background: #8e44ad !important;
             animation: pulse 1.2s infinite;
@@ -153,8 +153,8 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <!-- زر تفعيل الصوت الإجباري للأدمن -->
-                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndHide()">🔊 انقر هنا لتفعيل صوت التنبيه</button>
+                <!-- زر تفعيل الصوت والإشعارات الإجباري للأدمن -->
+                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndNotifications()">🔔 انقر هنا لتفعيل الصوت والإشعارات</button>
 
                 <!-- زر الإشعارات -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
@@ -194,7 +194,7 @@
         
         let lastBookingsCount = 0;
         
-        // استخدام ملف صوتي حقيقي وواضح جداً (رنين جرس تنبيه نظامي)
+        // عنصر الصوت الصريح باستخدام رابط ملف MP3 عالي الوضوح
         const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         notificationSound.load();
 
@@ -211,37 +211,60 @@
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
 
-        // دالة فك حظر الصوت عند الضغط اليدوي لأول مرة
-        function unlockAudioAndHide() {
+        // دالة فك الحظر ومنح إذن الإشعارات الرسمية للهاتف والصوت معاً
+        function unlockAudioAndNotifications() {
+            // 1. طلب إذن إشعارات النظام العلوي
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    console.log("Notification permission:", permission);
+                });
+            }
+
+            // 2. تفعيل تشغيل الصوت البرمجي
             notificationSound.play().then(() => {
                 notificationSound.pause();
                 notificationSound.currentTime = 0;
                 document.getElementById('soundToggleBtn').style.display = 'none';
-                alert('تم تفعيل الصوت بنجاح! سيتم تنبيهك صوتياً عند أي حجز جديد.');
+                alert('تم تفعيل الصوت والإشعارات بنجاح!');
             }).catch(error => {
                 console.log("Audio unlock failed:", error);
                 alert('يرجى النقر مرة أخرى للسماح بالصوت.');
             });
+
             if ('vibrate' in navigator) {
                 navigator.vibrate(400);
             }
         }
 
-        function playAlarmSound() {
+        function playAlarmSoundAndShowSystemNotification(title, body) {
+            // تشغيل الاهتزاز
             if ('vibrate' in navigator) {
                 navigator.vibrate([800, 300, 800, 300, 800]);
             }
+            
+            // تشغيل الصوت الصريح
             try {
                 notificationSound.currentTime = 0;
                 notificationSound.play().catch(err => {
                     console.log("Play blocked by browser:", err);
-                    // إذا تم حظره، نظهر الزر مرة أخرى ليقوم المستخدم بالنقر عليه
                     if(currentUserRole === 'admin') {
                         document.getElementById('soundToggleBtn').style.display = 'inline-block';
                     }
                 });
             } catch (e) {
                 console.error(e);
+            }
+
+            // إظهار إشعار نظام علوي (Push Notification فوق بجانب الساعة)
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    new Notification(title || "حجز جديد!", {
+                        body: body || "تمت إضافة حجز جديد إلى النظام.",
+                        icon: "https://cdn-icons-png.flaticon.com/512/3233/3233483.png"
+                    });
+                } catch (err) {
+                    console.log("System notification error:", err);
+                }
             }
         }
 
@@ -259,7 +282,7 @@
                     if (!error && data) {
                         if (isBackgroundCheck && data.length > lastBookingsCount && lastBookingsCount > 0) {
                             if (currentUserRole === 'admin') {
-                                playAlarmSound();
+                                playAlarmSoundAndShowSystemNotification("حجز عرس جديد!", "تمت إضافة حجز جديد يرجى المراجعة.");
                             }
                         }
                         lastBookingsCount = data.length;
@@ -304,7 +327,7 @@
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
                       initCalendarSystem(false); 
                       if (payload.eventType === 'INSERT' && currentUserRole === 'admin') {
-                          playAlarmSound(); 
+                          playAlarmSoundAndShowSystemNotification("حجز جديد!", "تم إضافة حجز عرس جديد الآن."); 
                       }
                   })
                   .subscribe();
