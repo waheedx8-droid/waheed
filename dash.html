@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقويم الحجوزات - نظام تنظيم الأعراس</title>
-    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -62,21 +61,22 @@
         .notification-item:hover { background: #f1f1f1; }
         .notification-item.unread { font-weight: bold; background: #fdf2e9; }
         
-        /* زر تفعيل الصوت البارز للـ Admin */
+        /* زر تفعيل الصوت الإلزامي الكبير */
         #soundToggleBtn {
             background: #8e44ad !important;
-            animation: pulse 1.5s infinite;
-            font-size: 11px !important;
-            padding: 6px 10px !important;
+            animation: pulse 1.2s infinite;
+            font-size: 12px !important;
+            padding: 8px 12px !important;
             display: none;
+            color: #fff;
+            font-weight: bold;
         }
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); background: #9b59b6 !important; }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(142, 68, 173, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); }
         }
 
-        /* شبكة التقويم */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, minmax(0, 1fr)); 
@@ -153,8 +153,8 @@
                 <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
                 <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
                 
-                <!-- زر تفعيل الصوت البارز للأدمن -->
-                <button id="soundToggleBtn" class="btn-nav" onclick="forceActivateAudio()">🔔 اضغط هنا لتفعيل الصوت</button>
+                <!-- زر تفعيل الصوت الإجباري للأدمن -->
+                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndHide()">🔊 انقر هنا لتفعيل صوت التنبيه</button>
 
                 <!-- زر الإشعارات -->
                 <div class="notification-container" id="notifContainer" style="display: none;">
@@ -193,8 +193,11 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let lastBookingsCount = 0;
-        let audioContextInstance = null;
         
+        // استخدام ملف صوتي حقيقي وواضح جداً (رنين جرس تنبيه نظامي)
+        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        notificationSound.load();
+
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
         if (currentUserRole === 'admin') {
@@ -208,52 +211,35 @@
             document.getElementById('roleDisplay').textContent = 'مستخدم (user)';
         }
 
-        function forceActivateAudio() {
-            try {
-                audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContextInstance.state === 'suspended') {
-                    audioContextInstance.resume();
-                }
-                const osc = audioContextInstance.createOscillator();
-                const gain = audioContextInstance.createGain();
-                osc.frequency.setValueAtTime(600, audioContextInstance.currentTime);
-                gain.gain.setValueAtTime(0.4, audioContextInstance.currentTime);
-                osc.connect(gain);
-                gain.connect(audioContextInstance.destination);
-                osc.start();
-                osc.stop(audioContextInstance.currentTime + 0.3);
-            } catch(e) {
-                console.log(e);
-            }
-            
+        // دالة فك حظر الصوت عند الضغط اليدوي لأول مرة
+        function unlockAudioAndHide() {
+            notificationSound.play().then(() => {
+                notificationSound.pause();
+                notificationSound.currentTime = 0;
+                document.getElementById('soundToggleBtn').style.display = 'none';
+                alert('تم تفعيل الصوت بنجاح! سيتم تنبيهك صوتياً عند أي حجز جديد.');
+            }).catch(error => {
+                console.log("Audio unlock failed:", error);
+                alert('يرجى النقر مرة أخرى للسماح بالصوت.');
+            });
             if ('vibrate' in navigator) {
-                navigator.vibrate(300);
+                navigator.vibrate(400);
             }
-
-            document.getElementById('soundToggleBtn').style.display = 'none';
-            alert('تم تفعيل نظام التنبيهات الصوتية بنجاح!');
         }
 
         function playAlarmSound() {
             if ('vibrate' in navigator) {
-                navigator.vibrate([600, 200, 600, 200, 600]);
+                navigator.vibrate([800, 300, 800, 300, 800]);
             }
             try {
-                if (!audioContextInstance) {
-                    audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioContextInstance.state === 'suspended') {
-                    audioContextInstance.resume();
-                }
-                const osc = audioContextInstance.createOscillator();
-                const gain = audioContextInstance.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, audioContextInstance.currentTime);
-                gain.gain.setValueAtTime(0.6, audioContextInstance.currentTime);
-                osc.connect(gain);
-                gain.connect(audioContextInstance.destination);
-                osc.start();
-                osc.stop(audioContextInstance.currentTime + 0.8);
+                notificationSound.currentTime = 0;
+                notificationSound.play().catch(err => {
+                    console.log("Play blocked by browser:", err);
+                    // إذا تم حظره، نظهر الزر مرة أخرى ليقوم المستخدم بالنقر عليه
+                    if(currentUserRole === 'admin') {
+                        document.getElementById('soundToggleBtn').style.display = 'inline-block';
+                    }
+                });
             } catch (e) {
                 console.error(e);
             }
@@ -336,21 +322,6 @@
                     const [bYear, bMonth, bDay] = jumpDate.split('-').map(Number);
                     currentDate = new Date(bYear, bMonth - 1, 1);
                     renderCalendar();
-                    setTimeout(() => {
-                        const cells = document.querySelectorAll('.day-cell');
-                        cells.forEach(cell => {
-                            const dayNumElem = cell.querySelector('.day-number');
-                            if (dayNumElem && parseInt(dayNumElem.textContent) === bDay) {
-                                cell.style.transition = 'all 0.5s ease';
-                                cell.style.border = '2px solid #e74c3c';
-                                cell.style.backgroundColor = '#fadbd8';
-                                setTimeout(() => {
-                                    cell.style.border = '1px solid #e0e0e0';
-                                    cell.style.backgroundColor = '#fafafa';
-                                }, 3500);
-                            }
-                        });
-                    }, 150);
                 }, 100);
             }
         }
@@ -499,17 +470,6 @@
             const [y, m, d] = b.booking_date.split('-').map(Number);
             currentDate = new Date(y, m - 1, 1);
             renderCalendar();
-            setTimeout(() => {
-                document.querySelectorAll('.day-cell').forEach(cell => {
-                    const num = cell.querySelector('.day-number');
-                    if (num && parseInt(num.textContent) === d) {
-                        cell.style.transition = 'all 0.5s ease';
-                        cell.style.border = '2px solid #e74c3c';
-                        cell.style.backgroundColor = '#fadbd8';
-                        setTimeout(() => { cell.style.border = '1px solid #e0e0e0'; cell.style.backgroundColor = '#fafafa'; }, 3000);
-                    }
-                });
-            }, 100);
         }
     </script>
     <!-- Modal تفاصيل اليوم -->
