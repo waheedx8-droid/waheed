@@ -360,7 +360,7 @@
                             let title = "📝 تنبيه تعديل أو إضافة عقد";
                             let msg = "قام مستخدم بتعديل أو إضافة عقد جديد في النظام (كمسودة).";
                             triggerNewBookingAlert(title, msg);
-                            await createSystemNotification(title, msg);
+                            await createSystemNotification(title, msg, 'calendar.html');
                         }
 
                         lastBookingsCount = data.length;
@@ -407,10 +407,13 @@
                       let eventType = payload.eventType;
                       let newData = payload.new || payload.old;
                       let groomName = newData ? (newData.groom_name || 'بدون اسم') : 'العقد';
-                      let bookingDate = newData ? newData.booking_date : '';
+                      let bookingDate = newData ? (newData.booking_date ? newData.booking_date.split('T')[0] : '') : '';
+                      let bookingId = newData ? newData.id : '';
 
                       let title = "";
                       let msg = "";
+                      // بناء رابط دقيق يوجه مباشرة لصفحة تفاصيل العقد والتاريخ المطلوب
+                      let targetLink = `contract.html?date=${bookingDate}&id=${bookingId}`;
 
                       if (eventType === 'INSERT') {
                           title = "📝 تم حفظ مسودة عقد جديدة";
@@ -421,11 +424,12 @@
                       } else if (eventType === 'DELETE') {
                           title = "🗑️ تم حذف عقد";
                           msg = `تم حذف عقد من النظام.`;
+                          targetLink = 'calendar.html';
                       }
 
                       if (title) {
                           triggerNewBookingAlert(title, msg);
-                          await createSystemNotification(title, msg, `calendar.html?jumpDate=${bookingDate}`);
+                          await createSystemNotification(title, msg, targetLink);
                       }
                       initCalendarSystem(false);
                   })
@@ -560,6 +564,7 @@
         async function openNotificationLink(e, id, link) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
             await supabaseClient.from('notifications').update({ is_read: true }).eq('id', id);
+            // توجيه مباشر للرابط الصحيح (contract.html مع الـ id والتاريخ)
             window.location.href = link;
         }
 
