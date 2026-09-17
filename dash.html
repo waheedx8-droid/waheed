@@ -221,7 +221,6 @@
 
         const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
         
-        // دالة جلب اسم المستخدم بحيث تبقى كلمة "مدير" ثابتة للأدمن، ويُأخذ اسم المستخدم من جدول custom_user للمستخدم العادي
         async function loadCustomUsername() {
             try {
                 const { data, error } = await supabaseClient
@@ -238,7 +237,6 @@
                 const roleDisplay = document.getElementById('roleDisplay');
 
                 if (currentUserRole === 'admin') {
-                    // للأدمن: كلمة مدير ثابتة ودائماً تظهر، ويظهر بجانبها الاسم المخصص إن وجد
                     roleDisplay.textContent = customName ? `مدير: ${customName}` : 'مدير';
                     document.getElementById('dashboardBtn').style.display = 'inline-block'; 
                     document.getElementById('notifContainer').style.display = 'inline-block';
@@ -250,7 +248,6 @@
                 } else if (currentUserRole === 'read_only') {
                     roleDisplay.textContent = customName ? `قراءة فقط: ${customName}` : 'قراءة فقط';
                 } else {
-                    // للمستخدم العادي: أخذ الاسم حصرياً من جدول custom_user بدون إظهار كلمة مستخدم الثابتة
                     roleDisplay.textContent = customName ? customName : 'مستخدم';
                 }
             } catch (e) {
@@ -266,7 +263,6 @@
             }
         }
 
-        // استدعاء دالة اسم المستخدم عند البداية
         loadCustomUsername();
 
         function playBeepSound() {
@@ -297,6 +293,20 @@
                 } else {
                     alert('تم تفعيل الصوت بنجاح داخل التطبيق.');
                 }
+            }
+        }
+
+        async function createSystemNotification(title, message, link = 'calendar.html') {
+            try {
+                await supabaseClient.from('notifications').insert([{
+                    title: title,
+                    message: message,
+                    link: link,
+                    is_read: false,
+                    created_at: new Date().toISOString()
+                }]);
+            } catch (e) {
+                console.error('خطأ في حفظ الإشعار:', e);
             }
         }
 
@@ -347,14 +357,21 @@
                         const currentStateJSON = JSON.stringify(data);
 
                         if (isBackgroundCheck && lastBookingsStateJSON !== "" && currentStateJSON !== lastBookingsStateJSON) {
-                            if (currentUserRole === 'admin') {
-                                if (data.length > lastBookingsCount) {
-                                    triggerNewBookingAlert("حجز عرس جديد!", "تمت إضافة حجز عرس جديد إلى النظام.");
-                                } else if (data.length < lastBookingsCount) {
-                                    triggerNewBookingAlert("حذف حجز!", "تم حذف حجز من النظام.");
-                                } else {
-                                    triggerNewBookingAlert("تعديل حجز!", "تم تعديل بيانات حجز في النظام.");
-                                }
+                            if (data.length > lastBookingsCount) {
+                                let title = "حجز عرس جديد!";
+                                let msg = "تمت إضافة وتخزين حجز عرس جديد في النظام.";
+                                triggerNewBookingAlert(title, msg);
+                                await createSystemNotification(title, msg);
+                            } else if (data.length < lastBookingsCount) {
+                                let title = "حذف حجز!";
+                                let msg = "تم حذف حجز من النظام.";
+                                triggerNewBookingAlert(title, msg);
+                                await createSystemNotification(title, msg);
+                            } else {
+                                let title = "تعديل حجز!";
+                                let msg = "تم تحديث وحفظ بيانات عقد أو حجز في النظام.";
+                                triggerNewBookingAlert(title, msg);
+                                await createSystemNotification(title, msg);
                             }
                         }
 
@@ -398,15 +415,22 @@
                 window.realtimeInitialized = true;
                 supabaseClient
                   .channel('public:bookings_table')
-                  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, payload => {
-                      if (currentUserRole === 'admin') {
-                          if (payload.eventType === 'INSERT') {
-                              triggerNewBookingAlert("حجز جديد!", "تم إضافة حجز عرس جديد الآن.");
-                          } else if (payload.eventType === 'DELETE') {
-                              triggerNewBookingAlert("حذف حجز!", "تم حذف حجز من النظام الآن.");
-                          } else if (payload.eventType === 'UPDATE') {
-                              triggerNewBookingAlert("تعديل حجز!", "تم تحديث بيانات حجز الآن.");
-                          }
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, async payload => {
+                      if (payload.eventType === 'INSERT') {
+                          let title = "حجز جديد!";
+                          let msg = "تمت إضافة وتخزين حجز عرس جديد الآن.";
+                          triggerNewBookingAlert(title, msg);
+                          await createSystemNotification(title, msg);
+                      } else if (payload.eventType === 'DELETE') {
+                          let title = "حذف حجز!";
+                          let msg = "تم حذف حجز من النظام الآن.";
+                          triggerNewBookingAlert(title, msg);
+                          await createSystemNotification(title, msg);
+                      } else if (payload.eventType === 'UPDATE') {
+                          let title = "تعديل حجز!";
+                          let msg = "تم تحديث وحفظ بيانات عقد أو حجز الآن.";
+                          triggerNewBookingAlert(title, msg);
+                          await createSystemNotification(title, msg);
                       }
                       initCalendarSystem(false);
                   })
