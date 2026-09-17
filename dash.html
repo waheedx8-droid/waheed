@@ -207,7 +207,7 @@
         let lastBookingsCount = 0;
         let lastBookingsStateJSON = "";
         let swRegistration = null;
-        let globalSystemUsername = 'مستخدم'; // متغير لتخزين اسم المستخدم الحالي
+        let globalSystemUsername = 'مستخدم';
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -224,18 +224,22 @@
         
         async function loadCustomUsername() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('setting_table')
-                    .select('custom_user')
-                    .limit(1)
-                    .single();
+                // البحث عن اسم المستخدم في الذاكرة المحلية أولاً
+                let customName = localStorage.getItem('currentUsername') || localStorage.getItem('loggedUser') || '';
 
-                let customName = '';
-                if (!error && data && data.custom_user) {
-                    customName = data.custom_user;
-                    globalSystemUsername = customName; // حفظ الاسم عالمياً
+                if (!customName) {
+                    const { data, error } = await supabaseClient
+                        .from('setting_table')
+                        .select('custom_user')
+                        .limit(1)
+                        .single();
+
+                    if (!error && data && data.custom_user) {
+                        customName = data.custom_user;
+                    }
                 }
 
+                globalSystemUsername = customName || 'مستخدم';
                 const roleDisplay = document.getElementById('roleDisplay');
 
                 if (currentUserRole === 'admin') {
@@ -415,8 +419,6 @@
                       let title = "";
                       let msg = "";
                       let targetLink = `contract.html?date=${bookingDate}&id=${bookingId}`;
-
-                      // استخدام اسم المستخدم الذي قام بالعملية (إن وُجد في الجدول أو المعرف العام)
                       let activeUser = (newData && newData.updated_by) ? newData.updated_by : globalSystemUsername;
 
                       if (eventType === 'INSERT') {
