@@ -47,7 +47,7 @@
             left: 0; 
             right: auto; 
             background: #fff; 
-            width: 250px; 
+            width: 280px; 
             max-width: 85vw; 
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
             z-index: 9999; 
@@ -207,6 +207,7 @@
         let lastBookingsCount = 0;
         let lastBookingsStateJSON = "";
         let swRegistration = null;
+        let globalSystemUsername = 'مستخدم'; // متغير لتخزين اسم المستخدم الحالي
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -232,6 +233,7 @@
                 let customName = '';
                 if (!error && data && data.custom_user) {
                     customName = data.custom_user;
+                    globalSystemUsername = customName; // حفظ الاسم عالمياً
                 }
 
                 const roleDisplay = document.getElementById('roleDisplay');
@@ -358,7 +360,7 @@
 
                         if (isBackgroundCheck && lastBookingsStateJSON !== "" && currentStateJSON !== lastBookingsStateJSON) {
                             let title = "📝 تنبيه تعديل أو إضافة عقد";
-                            let msg = "قام مستخدم بتعديل أو إضافة عقد جديد في النظام (كمسودة).";
+                            let msg = `قام المستخدم (${globalSystemUsername}) بتعديل أو إضافة عقد في النظام.`;
                             triggerNewBookingAlert(title, msg);
                             await createSystemNotification(title, msg, 'calendar.html');
                         }
@@ -412,18 +414,20 @@
 
                       let title = "";
                       let msg = "";
-                      // بناء رابط دقيق يوجه مباشرة لصفحة تفاصيل العقد والتاريخ المطلوب
                       let targetLink = `contract.html?date=${bookingDate}&id=${bookingId}`;
+
+                      // استخدام اسم المستخدم الذي قام بالعملية (إن وُجد في الجدول أو المعرف العام)
+                      let activeUser = (newData && newData.updated_by) ? newData.updated_by : globalSystemUsername;
 
                       if (eventType === 'INSERT') {
                           title = "📝 تم حفظ مسودة عقد جديدة";
-                          msg = `قام المستخدم بحفظ عقد جديد للعريس (${groomName}) كـ مسودة (باللون الفضي).`;
+                          msg = `قام المستخدم (${activeUser}) بحفظ عقد جديد للعريس (${groomName}) كـ مسودة (باللون الفضي).`;
                       } else if (eventType === 'UPDATE') {
                           title = "🔄 تم تعديل أو نقل مسودة عقد";
-                          msg = `قام المستخدم بتعديل أو نقل عقد العريس (${groomName}) وأصبح كمسودة.`;
+                          msg = `قام المستخدم (${activeUser}) بتعديل أو نقل عقد العريس (${groomName}) وأصبح كمسودة.`;
                       } else if (eventType === 'DELETE') {
                           title = "🗑️ تم حذف عقد";
-                          msg = `تم حذف عقد من النظام.`;
+                          msg = `قام المستخدم (${activeUser}) بحذف عقد من النظام.`;
                           targetLink = 'calendar.html';
                       }
 
@@ -564,7 +568,6 @@
         async function openNotificationLink(e, id, link) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
             await supabaseClient.from('notifications').update({ is_read: true }).eq('id', id);
-            // توجيه مباشر للرابط الصحيح (contract.html مع الـ id والتاريخ)
             window.location.href = link;
         }
 
