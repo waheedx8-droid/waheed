@@ -3,352 +3,531 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقويم الحجوزات - نظام تنظيم الأعراس</title>
+    <title>تقويم الحجوزات والعقود</title>
+    <!-- تضمين مكتبات Supabase و FontAwesome و Google Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { 
-            background-color: #fef2f5; 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            min-height: 100vh; 
-            padding: 5px; 
-            touch-action: pan-y; 
-            overflow-x: hidden; 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
         }
-        .calendar-container { 
-            width: 100% !important; 
-            max-width: 100% !important; 
-            margin: 0 auto;
-            background: #fff; 
-            padding: 10px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            direction: rtl;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
             position: relative;
-            overflow-x: hidden;
         }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-        .calendar-header h2 { font-size: 17px; color: #2c3e50; }
-        .header-buttons { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; width: 100%; position: relative; }
-        .btn-nav { background: #3498db; color: white; border: none; padding: 6px 8px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-nav:hover { background: #2980b9; }
-        .logout { background: #e74c3c; }
-        .logout:hover { background: #c0392b; }
-        .user-tag { background: #2c3e50; color: white; padding: 4px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; }
-        
-        .notification-container { position: relative; display: inline-block; }
-        .notification-badge-count { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 5px; font-size: 9px; font-weight: bold; }
-        
-        .notification-dropdown { 
-            display: none; 
-            position: absolute; 
-            top: 100%; 
-            left: 0; 
-            right: auto; 
-            background: #fff; 
-            width: 250px; 
-            max-width: 85vw; 
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2); 
-            z-index: 9999; 
-            border-radius: 6px; 
-            padding: 8px; 
-            text-align: right; 
-            border: 1px solid #ddd;
-            margin-top: 5px;
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
-        .notification-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; cursor: pointer; color: #333; word-break: break-word; }
-        .notification-item:hover { background: #f1f1f1; }
-        .notification-item.unread { font-weight: bold; background: #fdf2e9; }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
         
-        #soundToggleBtn {
-            background: #8e44ad !important;
-            animation: pulse 1.2s infinite;
-            font-size: 12px !important;
-            padding: 8px 12px !important;
-            display: none;
-            color: #fff;
+        /* زر الإشعارات والنافذة المنسدلة */
+        .notification-bell {
+            position: relative;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+        .notification-bell:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 50%;
             font-weight: bold;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(142, 68, 173, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); }
+        .notifications-dropdown {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 320px;
+            background: white;
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .notifications-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notifications-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        .notification-item.unread {
+            background: #ebf5fb;
+            font-weight: 600;
+        }
+        .notification-time {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
         }
 
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, minmax(0, 1fr)); 
-            gap: 2px; 
-            width: 100%;
+        /* حاوية التقويم الرئيسية */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
-        .day-header { 
-            font-weight: bold; 
-            font-size: 10.5px; 
-            background: #f8f9fa; 
-            padding: 5px 1px; 
-            text-align: center; 
-            border-radius: 4px;
+        .calendar-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .calendar-header h2 {
+            font-size: 20px;
             color: #2c3e50;
         }
-        .day-cell { 
-            background: #fafafa; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 4px; 
-            min-height: 85px; 
-            display: flex; 
-            flex-direction: column; 
-            text-align: right; 
-            position: relative; 
-            padding: 2px; 
-            cursor: pointer; 
-            overflow: hidden;
+        .nav-btn {
+            background: #ecf0f1;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: 0.3s;
         }
-        .day-number { 
-            font-weight: bold; 
-            font-size: 11px; 
-            text-align: left; 
-            padding: 1px 3px; 
-            border-bottom: 1px solid #eee; 
-            margin-bottom: 2px; 
-            color: #333;
+        .nav-btn:hover {
+            background: #3498db;
+            color: white;
         }
-        .booking-badge { 
-            font-size: 11.5px; 
-            font-weight: 700;
-            padding: 3px 4px; 
-            margin-bottom: 2px; 
-            border-radius: 3px; 
-            color: #fff; 
-            display: block; 
-            text-decoration: none; 
-            white-space: normal;     
-            overflow: hidden;     
-            text-overflow: ellipsis;  
-            max-width: 100%;
-            line-height: 1.2;
-        }
-        .badge-hall { 
-            font-size: 11px; 
+
+        /* شبكة أيام التقويم */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8f9fa;
             font-weight: bold;
-            display: block; 
+            text-align: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(110px, auto);
+        }
+        .day-cell {
+            border-bottom: 1px solid #eee;
+            border-left: 1px solid #eee;
+            padding: 8px;
+            background: #fff;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .day-cell:nth-child(7n) {
+            border-left: none;
+        }
+        .day-cell:hover {
+            background: #fdfefe;
+        }
+        .day-cell.other-month {
+            background: #fafafa;
+            color: #bdc3c7;
+        }
+        .day-number {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: inline-block;
+            width: 26px;
+            height: 26px;
+            text-align: center;
+            line-height: 26px;
+            border-radius: 50%;
+        }
+        .day-cell.today .day-number {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* قائمة الحجوزات داخل الخلية */
+        .bookings-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .booking-badge {
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: white;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .booking-badge:hover {
+            transform: scale(1.02);
+        }
+
+        /* النافذة المنبثقة (Popup) للتنبيهات الفورية */
+        #alert-modal {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 2000;
+            max-width: 350px;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #alert-modal h4 {
+            margin-bottom: 5px;
+            font-size: 15px;
+            color: #3498db;
+        }
+        #alert-modal p {
+            font-size: 13px;
+            color: #ecf0f1;
+        }
+
+        /* تصميم متجاوب للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .days-grid {
+                grid-auto-rows: minmax(80px, auto);
+            }
+            .day-cell {
+                padding: 4px;
+            }
+            .booking-badge {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="calendar-container" id="calendarContainer">
-        <div class="calendar-header">
-            <h2 id="monthYearDisplay"></h2>
-            <div style="display: flex; gap: 5px; width: 100%; margin-top: 5px; flex-wrap: wrap;">
-                <input type="text" id="searchInput" placeholder="ابحث عن اسم العريس..." style="flex: 1; min-width: 140px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
-                <button class="btn-nav" onclick="searchGroom()" style="background: #27ae60;">بحث</button>
-            </div>
-            <div class="header-buttons">
-                <button class="btn-nav" onclick="changeMonth(-1)">الشهر السابق</button>
-                <button class="btn-nav" onclick="changeMonth(1)">الشهر التالي</button>
-                <button class="btn-nav" onclick="goToToday()" style="background: #27ae60;">اليوم</button>
-                <a id="dashboardBtn" href="index.html" class="btn-nav" style="background: #d35400; display: none;" title="لوحة التحكم">لوحة التحكم</a>
-                
-                <button id="soundToggleBtn" class="btn-nav" onclick="unlockAudioAndNotifications()">🔔 انقر هنا لتفعيل الصوت والإشعارات</button>
 
-                <div class="notification-container" id="notifContainer" style="display: none;">
-                    <button class="btn-nav" onclick="toggleNotifications()" style="background: #e67e22;" title="الإشعارات">
-                        📬 <span id="notifCount" class="notification-badge-count" style="display: none;">0</span>
-                    </button>
-                    <div id="notifDropdown" class="notification-dropdown">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">
-                            <span style="font-weight: bold; font-size: 12px;">الإشعارات الواردة</span>
-                            <button onclick="clearAllNotifications()" style="background: #e74c3c; color: white; border: none; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer;">حذف الكل</button>
-                        </div>
-                        <div id="notifList" style="max-height: 200px; overflow-y: auto;">
-                            <div style="padding: 6px; text-align: center; color: #777; font-size: 11px;">جاري تحميل الإشعارات...</div>
-                        </div>
+    <header>
+        <h1><i class="fa-solid fa-calendar-days"></i> تقويم الحجوزات والعقود</h1>
+        <div class="header-actions">
+            <!-- زر الإشعارات (للآدمن فقط أو حسب الصلاحية) -->
+            <div class="notification-bell" id="notificationBell" onclick="toggleNotificationsDropdown()" title="الإشعارات">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+                
+                <div class="notifications-dropdown" id="notificationsDropdown" onclick="event.stopPropagation()">
+                    <div class="notifications-header">
+                        <span>الإشعارات الفورية</span>
+                        <span style="font-size: 11px; cursor: pointer; color: #3498db;" onclick="markAllAsRead()">تحديد الكل مقروء</span>
+                    </div>
+                    <div class="notifications-body" id="notificationsList">
+                        <div style="padding: 15px; text-align: center; color: #888; font-size: 12px;">لا توجد إشعارات جديدة</div>
                     </div>
                 </div>
+            </div>
 
-                <span id="roleDisplay" class="user-tag">user</span>
-                <button class="btn-nav logout" onclick="logout()">خروج</button>
+            <a href="index.html" class="btn"><i class="fa-solid fa-house"></i> الرئيسية</a>
+            <button class="btn btn-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> تسجيل خروج</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-right"></i></button>
+                <h2 id="monthYearDisplay">الشهر والسنة</h2>
+                <button class="nav-btn" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-left"></i></button>
+            </div>
+            
+            <div class="weekdays">
+                <div>الأحد</div>
+                <div>الإثنين</div>
+                <div>الثلاثاء</div>
+                <div>الأربعاء</div>
+                <div>الخميس</div>
+                <div>الجمعة</div>
+                <div>السبت</div>
+            </div>
+            
+            <div class="days-grid" id="daysGrid">
+                <!-- الأيام تتولد ديناميكياً عبر JavaScript -->
             </div>
         </div>
-        <div class="calendar-grid" id="calendarDays">
-            <div class="day-header">السبت</div>
-            <div class="day-header">الأحد</div>
-            <div class="day-header">الإثنين</div>
-            <div class="day-header">الثلاثاء</div>
-            <div class="day-header">الأربعاء</div>
-            <div class="day-header">الخميس</div>
-            <div class="day-header">الجمعة</div>
-        </div>
     </div>
 
-    <!-- نافذة منبثقة فورية للتنبيه داخل التطبيق -->
-    <div id="liveAlertModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:20px; border-radius:10px; width:90%; max-width:350px; text-align:center; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
-            <div style="font-size:35px; margin-bottom:10px;">🔔</div>
-            <h3 id="liveAlertTitle" style="color:#c0392b; margin-bottom:10px; font-size:18px;">تنبيه تغيير في النظام!</h3>
-            <p id="liveAlertText" style="color:#333; font-size:13px; margin-bottom:15px; line-height:1.5;"></p>
-            <button onclick="closeLiveAlert()" style="background:#27ae60; color:#fff; border:none; padding:8px 20px; border-radius:5px; font-size:13px; font-weight:bold; cursor:pointer; width:100%;">حسناً، فهمت</button>
-        </div>
+    <!-- نافذة منبثقة للتنبيهات الفورية على الشاشة -->
+    <div id="alert-modal">
+        <h4 id="alertModalTitle">تنبيه جديد</h4>
+        <p id="alertModalText">هناك تحديث جديد في الحجوزات.</p>
     </div>
 
-    <!-- ملف الصوت المحلي alert.mp3 الموجود في نفس المجلد -->
-    <audio id="alertAudio" preload="auto">
-        <source src="alert.mp3" type="audio/mpeg">
-    </audio>
+    <!-- عنصر صوت التنبيه (يصدر تنبيهاً صوتياً خفيفاً عند حدوث تغيير) -->
+    <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
-        const SUPABASE_URL = 'https://lgzhmamxyawldbpucxeu.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'sb_publishable_V_ZFiFCH2QD2_kLqPY9JBg_ndDdXMJ_'; 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+        // المتغيرات العامة للتقويم والنظام
+        let currentDate = new Date();
+        let supabaseClient = null;
+        let allBookingsMap = {};
         let lastBookingsCount = 0;
         let lastBookingsStateJSON = "";
-        let swRegistration = null;
+        let currentUserRole = 'user'; // افتراضي، يتم تحديثه من الجلسة
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    swRegistration = reg;
-                    console.log('Service Worker registered successfully');
-                }).catch(err => {
-                    console.log('Service Worker registration failed: ', err);
-                });
+        // تهيئة Supabase وبيانات الاعتماد (تأكد من مطابقتها لبيانات مشروعك)
+        const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // محاولة تهيئة عميل Supabase
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+            
+            // قراءة دور المستخدم الحالي من التخزين المحلي إن توفر
+            const sessionData = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+            if (sessionData) {
+                try {
+                    const parsed = JSON.parse(sessionData);
+                    currentUserRole = parsed.role || 'user';
+                } catch(e) {}
+            }
+
+            initCalendarSystem(false);
+
+            // تفعيل التحقق الخلفي الدورى (Polling) كل 10 ثوانٍ كضمان إضافي للـ Realtime
+            setInterval(() => {
+                initCalendarSystem(true);
+            }, 10000);
+
+            // إغلاق قائمة الإشعارات عند النقر في أي مكان خارجها
+            document.addEventListener('click', () => {
+                const dropdown = document.getElementById('notificationsDropdown');
+                if (dropdown) dropdown.style.display = 'none';
             });
+        });
+
+        // دالة تبديل إظهار/إخفاء قائمة الإشعارات المنسدلة
+        function toggleNotificationsDropdown() {
+            event.stopPropagation();
+            const dropdown = document.getElementById('notificationsDropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+            }
         }
 
-        const currentUserRole = localStorage.getItem('currentUserRole') || 'user';
-        
-        async function loadCustomUsername() {
+        // جلب الإشعارات من قاعدة البيانات (إن وجدت جدول إشعارات أو سيتم استخدام الذاكرة المؤقتة)
+        async function fetchNotifications() {
+            if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient
-                    .from('setting_table')
-                    .select('custom_user')
-                    .limit(1)
-                    .single();
+                    .from('system_notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
 
-                let customName = '';
-                if (!error && data && data.custom_user) {
-                    customName = data.custom_user;
-                }
-
-                const roleDisplay = document.getElementById('roleDisplay');
-
-                if (currentUserRole === 'admin') {
-                    roleDisplay.textContent = customName ? `مدير: ${customName}` : 'مدير';
-                    document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-                    document.getElementById('notifContainer').style.display = 'inline-block';
-                    
-                    const isSoundAllowed = localStorage.getItem('pwa_sound_allowed');
-                    if (!isSoundAllowed) {
-                        document.getElementById('soundToggleBtn').style.display = 'inline-block';
-                    }
-                } else if (currentUserRole === 'read_only') {
-                    roleDisplay.textContent = customName ? `قراءة فقط: ${customName}` : 'قراءة فقط';
-                } else {
-                    roleDisplay.textContent = customName ? customName : 'مستخدم';
+                if (!error && data) {
+                    renderNotificationsUI(data);
                 }
             } catch (e) {
-                console.error('خطأ في جلب اسم المستخدم:', e);
-                const roleDisplay = document.getElementById('roleDisplay');
-                if (currentUserRole === 'admin') {
-                    roleDisplay.textContent = 'مدير';
-                    document.getElementById('dashboardBtn').style.display = 'inline-block'; 
-                    document.getElementById('notifContainer').style.display = 'inline-block';
+                console.log("جدول الإشعارات غير مفعل أو غير موجود، يتم استخدام التنبيهات المحلية.");
+            }
+        }
+
+        // عرض الإشعارات في الواجهة
+        function renderNotificationsUI(notifications) {
+            const listEl = document.getElementById('notificationsList');
+            const countEl = document.getElementById('notificationCount');
+            if (!listEl) return;
+
+            if (notifications.length === 0) {
+                listEl.innerHTML = `<div style="padding: 15px; text-align: center; color: #888; font-size: 12px;">لا توجد إشعارات جديدة</div>`;
+                if (countEl) countEl.style.display = 'none';
+                return;
+            }
+
+            let unreadCount = notifications.filter(n => !n.is_read).length;
+            if (countEl) {
+                if (unreadCount > 0) {
+                    countEl.innerText = unreadCount;
+                    countEl.style.display = 'inline-block';
                 } else {
-                    roleDisplay.textContent = 'مستخدم';
+                    countEl.style.display = 'none';
                 }
             }
+
+            let html = '';
+            notifications.forEach(n => {
+                let timeStr = new Date(n.created_at || Date.now()).toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+                html += `
+                    <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}', '${n.link || ''}')">
+                        <div><strong>${n.title}</strong></div>
+                        <div style="color: #555; margin-top: 2px;">${n.message}</div>
+                        <div class="notification-time">${timeStr}</div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
         }
 
-        loadCustomUsername();
-
-        function playBeepSound() {
+        // إنشاء إشعار جديد في النظام وإرساله لقاعدة البيانات
+        async function createSystemNotification(title, message, link = '') {
+            if (!supabaseClient) return;
             try {
-                const audio = document.getElementById('alertAudio');
-                if (audio) {
-                    audio.currentTime = 0;
-                    audio.play().catch(e => console.log("Audio play blocked:", e));
-                }
-            } catch(e) {
-                console.log("Sound error:", e);
-            }
-        }
-
-        async function unlockAudioAndNotifications() {
-            localStorage.setItem('pwa_sound_allowed', 'true');
-            document.getElementById('soundToggleBtn').style.display = 'none';
-
-            playBeepSound();
-            if ('vibrate' in navigator) {
-                navigator.vibrate(300);
-            }
-
-            if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    alert('تم تفعيل الصوت والإشعارات بنجاح ولن يظهر هذا الزر مرة أخرى!');
-                } else {
-                    alert('تم تفعيل الصوت بنجاح داخل التطبيق.');
-                }
-            }
-        }
-
-        async function createSystemNotification(title, message, link = 'calendar.html') {
-            try {
-                await supabaseClient.from('notifications').insert([{
+                await supabaseClient.from('system_notifications').insert([{
                     title: title,
                     message: message,
                     link: link,
                     is_read: false,
                     created_at: new Date().toISOString()
                 }]);
+                fetchNotifications();
             } catch (e) {
-                console.error('خطأ في حفظ الإشعار:', e);
+                console.error("خطأ في حفظ الإشعار:", e);
             }
         }
 
+        // التعامل مع النقر على إشعار
+        async function handleNotificationClick(id, link) {
+            if (supabaseClient) {
+                await supabaseClient.from('system_notifications').update({ is_read: true }).eq('id', id);
+            }
+            if (link) {
+                window.location.href = link;
+            } else {
+                fetchNotifications();
+            }
+        }
+
+        // تحديد كل الإشعارات كمقروءة
+        async function markAllAsRead() {
+            if (!supabaseClient) return;
+            try {
+                await supabaseClient.from('system_notifications').update({ is_read: true }).eq('is_read', false);
+                fetchNotifications();
+            } catch(e) {}
+        }
+
+        // تشغيل التنبيه البصري (Popup) والصوتي
         function triggerNewBookingAlert(title, message) {
-            playBeepSound();
-            if ('vibrate' in navigator) {
-                navigator.vibrate([800, 200, 800, 200, 800]);
+            const modal = document.getElementById('alert-modal');
+            const titleEl = document.getElementById('alertModalTitle');
+            const textEl = document.getElementById('alertModalText');
+            const audio = document.getElementById('alertSound');
+
+            if (titleEl) titleEl.innerText = title;
+            if (textEl) textEl.innerText = message;
+            
+            if (modal) {
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 6000);
             }
 
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'SHOW_NOTIFICATION',
-                    title: title,
-                    body: message
-                });
-            } else if (swRegistration && swRegistration.active) {
-                swRegistration.active.postMessage({
-                    type: 'SHOW_NOTIFICATION',
-                    title: title,
-                    body: message
-                });
-            }
-
-            if (currentUserRole === 'admin') {
-                document.getElementById('liveAlertTitle').textContent = title;
-                document.getElementById('liveAlertText').textContent = message;
-                document.getElementById('liveAlertModal').style.display = 'flex';
+            if (audio) {
+                audio.play().catch(err => console.log("تم حظر التشغيل التلقائي للصوت من المتصفح"));
             }
         }
 
-        function closeLiveAlert() {
-            document.getElementById('liveAlertModal').style.display = 'none';
-            location.reload();
-        }
-
-        const monthNames = [
-            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-        ];
-        let currentDate = new Date(); 
-        let allBookingsMap = {};
-
+        // جلب الحجوزات وتفعيل نظام الـ Realtime والتحقق الخلفي الشامل
         async function initCalendarSystem(isBackgroundCheck = false) {
             try {
                 if (supabaseClient) {
@@ -356,23 +535,12 @@
                     if (!error && data) {
                         const currentStateJSON = JSON.stringify(data);
 
+                        // التحقق الخلفي في حال حدوث تغييرات خارجية
                         if (isBackgroundCheck && lastBookingsStateJSON !== "" && currentStateJSON !== lastBookingsStateJSON) {
-                            if (data.length > lastBookingsCount) {
-                                let title = "حجز عرس جديد!";
-                                let msg = "تمت إضافة وتخزين حجز عرس جديد في النظام.";
-                                triggerNewBookingAlert(title, msg);
-                                await createSystemNotification(title, msg);
-                            } else if (data.length < lastBookingsCount) {
-                                let title = "حذف حجز!";
-                                let msg = "تم حذف حجز من النظام.";
-                                triggerNewBookingAlert(title, msg);
-                                await createSystemNotification(title, msg);
-                            } else {
-                                let title = "تعديل حجز!";
-                                let msg = "تم تحديث وحفظ بيانات عقد أو حجز في النظام.";
-                                triggerNewBookingAlert(title, msg);
-                                await createSystemNotification(title, msg);
-                            }
+                            let title = "📝 تحديث في العقود/المسودات";
+                            let msg = "قام مستخدم بتعديل أو حفظ مسودة أو حجز في النظام.";
+                            triggerNewBookingAlert(title, msg);
+                            await createSystemNotification(title, msg);
                         }
 
                         lastBookingsCount = data.length;
@@ -392,9 +560,11 @@
                             }
                             if (!allBookingsMap[dateKey]) allBookingsMap[dateKey] = [];
                             
+                            // تحديد اللون: إذا كانت مسودة تكون باللون الفضي تلقائياً
                             let finalColor = item.box_color || '#27ae60';
-                            if (item.status === 'pending' || !item.status) {
-                                finalColor = '#95a5a6';
+                            let isDraft = (item.status === 'pending' || !item.status);
+                            if (isDraft) {
+                                finalColor = '#95a5a6'; // اللون الفضي للمسودات
                             }
                             allBookingsMap[dateKey].push({
                                 id: item.id,
@@ -411,27 +581,40 @@
             }
             renderCalendar();
             
+            // ==========================================
+            // تفعيل نظام الاستماع الفوري (Realtime) المحدث
+            // ==========================================
             if (supabaseClient && !window.realtimeInitialized) {
                 window.realtimeInitialized = true;
                 supabaseClient
                   .channel('public:bookings_table')
                   .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings_table' }, async payload => {
-                      if (payload.eventType === 'INSERT') {
-                          let title = "حجز جديد!";
-                          let msg = "تمت إضافة وتخزين حجز عرس جديد الآن.";
-                          triggerNewBookingAlert(title, msg);
-                          await createSystemNotification(title, msg);
-                      } else if (payload.eventType === 'DELETE') {
-                          let title = "حذف حجز!";
-                          let msg = "تم حذف حجز من النظام الآن.";
-                          triggerNewBookingAlert(title, msg);
-                          await createSystemNotification(title, msg);
-                      } else if (payload.eventType === 'UPDATE') {
-                          let title = "تعديل حجز!";
-                          let msg = "تم تحديث وحفظ بيانات عقد أو حجز الآن.";
-                          triggerNewBookingAlert(title, msg);
-                          await createSystemNotification(title, msg);
+                      let eventType = payload.eventType;
+                      let newData = payload.new || payload.old;
+                      let groom = newData ? (newData.groom_name || 'بدون اسم') : 'عقد';
+                      let bookingDate = newData ? newData.booking_date : '';
+
+                      let title = "";
+                      let msg = "";
+
+                      if (eventType === 'INSERT') {
+                          title = "📝 تم حفظ مسودة جديدة (باللون الفضي)";
+                          msg = `قام المستخدم بحفظ عقد جديد للعريس (${groom}) كـ مسودة.`;
+                      } else if (eventType === 'UPDATE') {
+                          title = "🔄 تم تعديل أو نقل مسودة/عقد";
+                          msg = `قام المستخدم بتعديل أو نقل عقد العريس (${groom}) وأصبح باللون الفضي/مسودة.`;
+                      } else if (eventType === 'DELETE') {
+                          title = "🗑️ تم حذف عقد";
+                          msg = `تم حذف عقد من النظام.`;
                       }
+
+                      if (title) {
+                          // تشغيل التنبيه والصوت فوراً للآدمن
+                          triggerNewBookingAlert(title, msg);
+                          // حفظ الإشعار في قاعدة البيانات
+                          await createSystemNotification(title, msg, `calendar.html?jumpDate=${bookingDate}`);
+                      }
+
                       initCalendarSystem(false);
                   })
                   .subscribe();
@@ -441,6 +624,7 @@
                 fetchNotifications();
             }
 
+            // فحص الانتقال المباشر لتاريخ محدد عبر الـ URL
             const urlParams = new URLSearchParams(window.location.search);
             const jumpDate = urlParams.get('jumpDate');
             if (jumpDate) {
@@ -453,173 +637,91 @@
             }
         }
 
-        setInterval(() => {
-            initCalendarSystem(true);
-        }, 5000);
-
+        // رسم وترتيب التقويم الشهري
         function renderCalendar() {
             const year = currentDate.getFullYear();
-            const monthIndex = currentDate.getMonth();
-            const monthNumber = monthIndex + 1;
-            document.getElementById('monthYearDisplay').innerHTML = `${monthNames[monthIndex]} (${monthNumber}) - ${year}`;
-            const daysContainer = document.getElementById('calendarDays');
-            daysContainer.innerHTML = `
-                <div class="day-header">السبت</div>
-                <div class="day-header">الأحد</div>
-                <div class="day-header">الإثنين</div>
-                <div class="day-header">الثلاثاء</div>
-                <div class="day-header">الأربعاء</div>
-                <div class="day-header">الخميس</div>
-                <div class="day-header">الجمعة</div>
-            `;
-            const jsDay = new Date(year, monthIndex, 1).getDay();
-            const firstDayIndex = (jsDay + 1) % 7; 
-            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell';
-                emptyCell.style.background = '#fcfcfc';
-                emptyCell.style.border = 'none';
-                emptyCell.onclick = () => openModal('', []);
-                daysContainer.appendChild(emptyCell);
+            const month = currentDate.getMonth();
+
+            const monthNames = ["يناير (1)", "فبراير (2)", "مارس (3)", "أبريل (4)", "مايو (5)", "يونيو (6)", "يوليو (7)", "أغسطس (8)", "سبتمبر (9)", "كتوبر (10)", "نوفمبر (11)", "ديسمبر (12)"];
+            const displayEl = document.getElementById('monthYearDisplay');
+            if (displayEl) {
+                displayEl.innerText = `${monthNames[month]} ${year}`;
             }
-            for (let day = 1; day <= totalDays; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-                const fullDatestr = `${year}-${String(monthNumber).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                let cellContent = `<div class="day-number">${day}</div>`;
-                const dayBookings = allBookingsMap[fullDatestr] || [];
-                dayCell.onclick = () => openModal(fullDatestr, dayBookings);
-                dayBookings.forEach(booking => {
-                    cellContent += `
-                        <div class="booking-badge" style="background-color: ${booking.boxColor};" title="${booking.groomName}">
-                            <span class="badge-hall"> ${booking.hallName}</span>
-                        </div>
-                    `;
-                });
-                dayCell.innerHTML = cellContent;
-                daysContainer.appendChild(dayCell);
+
+            const daysGrid = document.getElementById('daysGrid');
+            if (!daysGrid) return;
+            daysGrid.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const prevTotalDays = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonthYear = (today.getFullYear() === year && today.getMonth() === month);
+
+            let htmlContent = '';
+
+            // أيام الشهر السابق المكملة للسطر الأول
+            for (let i = firstDayIndex; i > 0; i--) {
+                let pDay = prevTotalDays - i + 1;
+                htmlContent += `<div class="day-cell other-month"><span class="day-number">${pDay}</span></div>`;
             }
-        }
-        function changeMonth(offset) { currentDate.setMonth(currentDate.getMonth() + offset); renderCalendar(); }
-        function goToToday() { currentDate = new Date(); renderCalendar(); }
-        function logout() { localStorage.clear(); window.location.replace('index.html'); }
-        
-        let touchStartX = 0, touchEndX = 0;
-        const el = document.getElementById('calendarContainer');
-        if (el) {
-            el.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
-            el.addEventListener('touchend', e => {
-                touchEndX = e.changedTouches[0].screenX;
-                if (touchEndX < touchStartX - 130) changeMonth(1);
-                if (touchEndX > touchStartX + 130) changeMonth(-1);
-            }, {passive: true});
-        }
 
-        function openModal(dateStr, bookings) {
-            document.getElementById('modalDateTitle').textContent = dateStr ? `حجوزات يوم: ${dateStr}` : 'إدارة اليوم';
-            let listHTML = bookings.length === 0 ? '<p style="text-align:center; color:#777; font-size:12px; padding:10px;">لا توجد حجوزات مسجلة.</p>' : '';
-            bookings.forEach(b => {
-                let btn = currentUserRole !== 'read_only' ? `<a href="contract.html?date=${dateStr}&id=${b.id}" class="btn-nav" style="padding:4px 8px; font-size:11px; background:#2980b9;">التفاصيل</a>` : '';
-                listHTML += `<div style="background:#f9f9f9; border:1px solid #ddd; padding:8px; border-radius:4px; margin-bottom:6px; font-size:12px; display:flex; justify-content:space-between; align-items:center;"><div><strong>العريس:</strong> ${b.groomName}<br><span style="color:#555;"><strong>الصالة:</strong> ${b.hallName}</span></div>${btn}</div>`;
-            });
-            document.getElementById('modalBookingsList').innerHTML = listHTML;
-            const addBtn = document.getElementById('modalAddBtn');
-            addBtn.style.display = currentUserRole === 'read_only' ? 'none' : 'block';
-            addBtn.href = dateStr ? `contract.html?date=${dateStr}` : 'contract.html';
-            document.getElementById('bookingModal').style.display = 'flex';
-        }
+            // أيام الشهر الحالي
+            for (let d = 1; d <= totalDays; d++) {
+                let mFormatted = String(month + 1).padStart(2, '0');
+                let dFormatted = String(d).padStart(2, '0');
+                let dateKey = `${year}-${mFormatted}-${dFormatted}`;
 
-        initCalendarSystem(false);
+                let isToday = (isCurrentMonthYear && today.getDate() === d);
+                let dayClass = `day-cell ${isToday ? 'today' : ''}`;
 
-        async function fetchNotifications() {
-            try {
-                const { data, error } = await supabaseClient.from('notifications').select('*').order('created_at', { ascending: false }).limit(10);
-                if (!error && data) {
-                    const unread = data.filter(n => !n.is_read).length;
-                    const countSpan = document.getElementById('notifCount');
-                    countSpan.textContent = unread;
-                    countSpan.style.display = unread > 0 ? 'inline-block' : 'none';
-                    
-                    document.getElementById('notifList').innerHTML = data.length === 0 ? '<div style="padding: 8px; text-align: center; color: #777; font-size: 11px;">لا توجد إشعارات</div>' : data.map(n => `
-                        <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="openNotificationLink(event, ${n.id}, '${n.link}')">
-                            <strong>${n.title}</strong>
-                            <p style="margin: 2px 0 0 0; color: #555; font-size: 11px;">${n.message}</p>
-                        </div>
-                    `).join('');
+                let bookingsHtml = '';
+                if (allBookingsMap[dateKey] && allBookingsMap[dateKey].length > 0) {
+                    bookingsHtml = `<div class="bookings-container">`;
+                    allBookingsMap[dateKey].forEach(b => {
+                        let titleText = `${b.groomName || 'بدون اسم'} (${b.hallName || 'بدون قاعة'})`;
+                        bookingsHtml += `<div class="booking-badge" style="background-color: ${b.boxColor};" title="${titleText}" onclick="openBookingDetails('${b.id}')">${b.groomName || 'عقد'}</div>`;
+                    });
+                    bookingsHtml += `</div>`;
                 }
-            } catch (e) { console.error(e); }
+
+                htmlContent += `
+                    <div class="${dayClass}">
+                        <span class="day-number">${d}</span>
+                        ${bookingsHtml}
+                    </div>
+                `;
+            }
+
+            // أيام الشهر التالي لإكمال الشبكة
+            const totalCellsSoFar = firstDayIndex + totalDays;
+            const remainingCells = (totalCellsSoFar % 7 === 0) ? 0 : (7 - (totalCellsSoFar % 7));
+            for (let n = 1; n <= remainingCells; n++) {
+                htmlContent += `<div class="day-cell other-month"><span class="day-number">${n}</span></div>`;
+            }
+
+            daysGrid.innerHTML = htmlContent;
         }
 
-        function toggleNotifications() {
-            const d = document.getElementById('notifDropdown');
-            d.style.display = d.style.display === 'block' ? 'none' : 'block';
-        }
-
-        async function clearAllNotifications() {
-            if (!confirm('حذف جميع الإشعارات؟')) return;
-            await supabaseClient.from('notifications').delete().neq('id', 0);
-            fetchNotifications();
-        }
-
-        async function openNotificationLink(e, id, link) {
-            if (e) { e.preventDefault(); e.stopPropagation(); }
-            await supabaseClient.from('notifications').update({ is_read: true }).eq('id', id);
-            window.location.href = link;
-        }
-
-        function normalizeArabicText(t) {
-            return !t ? '' : t.toString().toLowerCase().replace(/[\s\-_]/g, '').replace(/[أإآا]/g, 'ا').replace(/[ةه]/g, 'ه').replace(/[ىي]/g, 'ي');
-        }
-
-        async function searchGroom() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) { alert('ادخل اسم العريس للبحث.'); return; }
-            const { data } = await supabaseClient.from('bookings_table').select('*');
-            if (!data || data.length === 0) { alert('لا توجد حجوزات.'); return; }
-            const matched = data.filter(i => normalizeArabicText(i.groom_name).includes(normalizeArabicText(query)));
-            if (matched.length === 0) { alert('لم يتم العثور على نتائج.'); return; }
-            
-            document.getElementById('searchCountText').textContent = `تم العثور على (${matched.length}) نتيجة:`;
-            document.getElementById('searchSelectionList').innerHTML = matched.map(b => `
-                <div onclick='selectAndJump(${JSON.stringify(b)})' style="background:#f9f9f9; border:1px solid #ddd; padding:8px; border-radius:5px; margin-bottom:6px; cursor:pointer;">
-                    <p style="margin:0 0 2px 0; font-size:12px;"><strong>العريس:</strong> ${b.groom_name}</p>
-                    <p style="margin:0 0 2px 0; font-size:11px; color:#555;"><strong>التاريخ:</strong> ${b.booking_date} | <strong>الصالة:</strong> ${b.hall_name}</p>
-                </div>
-            `).join('');
-            document.getElementById('searchSelectionModal').style.display = 'flex';
-        }
-
-        function closeSearchSelectionModal() { document.getElementById('searchSelectionModal').style.display = 'none'; }
-        function selectAndJump(b) { closeSearchSelectionModal(); jumpToBookingDate(b); }
-        function jumpToBookingDate(b) {
-            if (!b.booking_date) return;
-            const [y, m, d] = b.booking_date.split('-').map(Number);
-            currentDate = new Date(y, m - 1, 1);
+        // التنقل بين الأشهر بالسابق والتالي
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
             renderCalendar();
         }
+
+        // فتح تفاصيل الحجوزات عند النقر على البادج
+        function openBookingDetails(bookingId) {
+            // توجيه المستخدم لصفحة تعديل العقد أو عرض التفاصيل الخاصة بالمعرف
+            window.location.href = `index.html?edit_id=${bookingId}`;
+        }
+
+        // تسجيل الخروج العادي
+        function logout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
     </script>
-    <!-- Modal تفاصيل اليوم -->
-    <div id="bookingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:15px; border-radius:8px; width:90%; max-width:380px; text-align:right;">
-            <h3 id="modalDateTitle" style="margin-bottom:12px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:15px;"></h3>
-            <div id="modalBookingsList" style="max-height:220px; overflow-y:auto; margin-bottom:12px;"></div>
-            <div style="display:flex; gap:8px;">
-                <a id="modalAddBtn" href="#" class="btn-nav" style="text-align:center; flex:1; text-decoration:none; background:#27ae60;">+ إضافة عقد</a>
-                <button onclick="document.getElementById('bookingModal').style.display = 'none'" class="btn-nav logout">إغلاق</button>
-            </div>
-        </div>
-    </div>
-    <!-- Modal نتائج البحث -->
-    <div id="searchSelectionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1100; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:15px; border-radius:8px; width:90%; max-width:380px; text-align:right;">
-            <h3 style="margin-bottom:8px; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:6px; font-size:15px;">نتائج البحث</h3>
-            <p id="searchCountText" style="font-size:12px; color:#555; margin-bottom:8px;"></p>
-            <div id="searchSelectionList" style="max-height:220px; overflow-y:auto; margin-bottom:12px;"></div>
-            <div style="display:flex; justify-content:flex-end;">
-                <button onclick="closeSearchSelectionModal()" class="btn-nav logout" style="padding:5px 10px; font-size:11px;">إغلاق</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
